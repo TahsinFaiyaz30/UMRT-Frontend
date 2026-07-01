@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: #180804;
+  overscroll-behavior-y: none;
+}
+
+/* Ensure the page is scrollable */
+html {
+  overflow-y: scroll;
+}
+
+/* Lenis / ScrollTrigger: keep html the scroll container */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Hide the canvas overlay from receiving DOM events so DOM controls work. */
+canvas {
+  outline: none;
+  touch-action: none;
+}
+
+/* Custom scrollbar — subtle, matches the Mars palette. */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 178, 124, 0.4);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Larger title clamp on very small screens. */
+@media (max-width: 640px) {
+  h1 {
+    letter-spacing: -0.05em;
+  }
+}

@@ -1,0 +1,13 @@
+# Drop the user's 3D model here.
+
+Expected paths used by `lib/modelConfig.ts`:
+
+- `/models/main-model.glb`        — primary model (the rover, astronaut, etc.)
+- `/models/main-model-low.glb`    — optional lightweight version for the loading scene
+
+Both files are optional. If neither is present, a procedural proxy
+rover will render so the page is never blank.
+
+To compress / optimise a model with `gltf-transform`:
+
+  npx gltf-transform optimize main-model.glb main-model.optimized.glb
