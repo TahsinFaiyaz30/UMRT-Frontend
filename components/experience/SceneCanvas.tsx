@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { PerformanceMonitor, PerspectiveCamera, Preload } from '@react-three/drei';
+import { PerformanceMonitor, PerspectiveCamera } from '@react-three/drei';
 import { useProgress } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Group } from 'three';
@@ -37,22 +37,42 @@ export function SceneCanvas({
   const { active, progress } = useProgress();
   const cameraGroupRef = useRef<Group | null>(null);
   const rigRef = useRef<ModelRigHandle | null>(null);
-  const [minDelayDone, setMinDelayDone] = useState(false);
+  // Keep the renderer in `frameloop="demand"` until the user actually
+  // scrolls or interacts with the page. This prevents the WebGL renderer
+  // from painting every frame from t=0 (which is what was making the
+  // page feel "not responding" during the very first long task).
+  const [alwaysRender, setAlwaysRender] = useState(false);
 
+  // Switch to the hero scene as soon as the GLB + textures finish
+  // loading — no artificial 900 ms or 600 ms delays. If everything is
+  // cached, the user sees the hero on the next animation frame.
+  // We require both `!active` (no asset currently in-flight) AND
+  // `progress >= 100` to ensure the procedural running-rover stays
+  // visible until the real model has truly finished loading.
   useEffect(() => {
-    const t = window.setTimeout(() => setMinDelayDone(true), 900);
-    return () => window.clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    if (!minDelayDone) return;
     if (mode === 'hero') return;
-    if (!active && progress >= 99) {
+    if (!active && progress >= 100) {
       setMode('hero');
-    } else if (!active && progress > 30 && minDelayDone) {
-      window.setTimeout(() => setMode('hero'), 600);
     }
-  }, [active, progress, minDelayDone, mode]);
+  }, [active, progress, mode]);
+
+  // Promote the Canvas to a continuous render loop on first real
+  // interaction. Before that, R3F only paints when something calls
+  // `invalidate()` (e.g. a `useFrame` returning after state change).
+  useEffect(() => {
+    if (alwaysRender) return;
+    const enable = () => setAlwaysRender(true);
+    window.addEventListener('pointerdown', enable, { once: true, passive: true });
+    window.addEventListener('wheel', enable, { once: true, passive: true });
+    window.addEventListener('scroll', enable, { once: true, passive: true });
+    window.addEventListener('keydown', enable, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', enable);
+      window.removeEventListener('wheel', enable);
+      window.removeEventListener('scroll', enable);
+      window.removeEventListener('keydown', enable);
+    };
+  }, [alwaysRender]);
 
   const dprMax = useMemo(() => dprFor(quality), [quality]);
 
@@ -71,17 +91,19 @@ export function SceneCanvas({
       }}
       camera={{ position: [0, 1.6, 14], fov: 38, near: 0.1, far: 200 }}
       style={{ background: '#4A2818' }}
-      // Performance optimizations
-      frameloop="demand"
+      // Stay in demand mode while idle so the GPU isn't woken up on
+      // every frame for no reason. We flip to "always" as soon as the
+      // user actually interacts (see the effect above).
+      frameloop={alwaysRender ? 'always' : 'demand'}
       flat={false}
       onCreated={(state) => {
-        // Switch to continuous rendering once created
-        state.setFrameloop('always');
-        // Enable logarithmic depth buffer for large scenes
         const gl = state.gl;
         gl.sortObjects = true;
         gl.toneMapping = THREE.ACESFilmicToneMapping;
         gl.toneMappingExposure = 1.1;
+        // Mark the canvas as opaque and don't waste GPU on background
+        // clears every frame while still in demand mode.
+        gl.setClearColor('#4A2818', 1);
       }}
     >
       <PerformanceMonitor
@@ -103,7 +125,6 @@ export function SceneCanvas({
               reduceMotion={reduceMotion || getReducedMotion()}
             />
             <FreeExploreControls progressRef={progressRef} />
-            <Preload all />
           </>
         ) : (
           <LoadingScene quality={quality} progress={progress / 100} />

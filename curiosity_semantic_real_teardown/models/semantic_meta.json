@@ -1,0 +1,461 @@
+{
+  "center": [
+    0.004125714302062988,
+    1.1152029410004616,
+    0.31309938430786133
+  ],
+  "bounds_min": [
+    -1.3867778778076172,
+    0.007619485259056091,
+    -1.659246802330017
+  ],
+  "bounds_max": [
+    1.3950293064117432,
+    2.222786396741867,
+    2.2854455709457397
+  ],
+  "motions": {
+    "camera_mast": {
+      "explode": [
+        0.0,
+        1.65,
+        0.2
+      ],
+      "rot": [
+        0.0,
+        0.12,
+        0.0
+      ],
+      "start": 0.04,
+      "end": 0.2
+    },
+    "robotic_arm_turret": {
+      "explode": [
+        1.28,
+        0.62,
+        1.02
+      ],
+      "rot": [
+        0.16,
+        0.2,
+        -0.1
+      ],
+      "start": 0.1,
+      "end": 0.3
+    },
+    "upper_deck": {
+      "explode": [
+        0.0,
+        0.82,
+        0.2
+      ],
+      "rot": [
+        0.05,
+        0.0,
+        0.0
+      ],
+      "start": 0.18,
+      "end": 0.4
+    },
+    "rear_power_comms": {
+      "explode": [
+        -0.65,
+        0.38,
+        -1.02
+      ],
+      "rot": [
+        0.0,
+        -0.18,
+        0.05
+      ],
+      "start": 0.24,
+      "end": 0.48
+    },
+    "warm_electronics_box": {
+      "explode": [
+        0.0,
+        0.28,
+        0.0
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "start": 0.28,
+      "end": 0.54
+    },
+    "central_frame": {
+      "explode": [
+        0.0,
+        -0.4,
+        0.0
+      ],
+      "rot": [
+        0.06,
+        0.0,
+        0.0
+      ],
+      "start": 0.34,
+      "end": 0.62
+    },
+    "left_rocker_bogie": {
+      "explode": [
+        -0.95,
+        -0.2,
+        0.0
+      ],
+      "rot": [
+        0.05,
+        -0.12,
+        0.05
+      ],
+      "start": 0.42,
+      "end": 0.7
+    },
+    "right_rocker_bogie": {
+      "explode": [
+        0.95,
+        -0.2,
+        0.0
+      ],
+      "rot": [
+        0.05,
+        0.12,
+        -0.05
+      ],
+      "start": 0.42,
+      "end": 0.7
+    },
+    "wheel_left_front": {
+      "explode": [
+        -0.76,
+        -0.48,
+        0.72
+      ],
+      "rot": [
+        0.0,
+        -0.3,
+        0.12
+      ],
+      "start": 0.5,
+      "end": 0.76
+    },
+    "wheel_left_mid": {
+      "explode": [
+        -1.02,
+        -0.24,
+        0.0
+      ],
+      "rot": [
+        0.0,
+        -0.3,
+        0.12
+      ],
+      "start": 0.52,
+      "end": 0.78
+    },
+    "wheel_left_rear": {
+      "explode": [
+        -0.76,
+        -0.34,
+        -0.72
+      ],
+      "rot": [
+        0.0,
+        -0.3,
+        0.12
+      ],
+      "start": 0.54,
+      "end": 0.8
+    },
+    "wheel_right_front": {
+      "explode": [
+        0.76,
+        -0.48,
+        0.72
+      ],
+      "rot": [
+        0.0,
+        0.3,
+        -0.12
+      ],
+      "start": 0.5,
+      "end": 0.76
+    },
+    "wheel_right_mid": {
+      "explode": [
+        1.02,
+        -0.24,
+        0.0
+      ],
+      "rot": [
+        0.0,
+        0.3,
+        -0.12
+      ],
+      "start": 0.52,
+      "end": 0.78
+    },
+    "wheel_right_rear": {
+      "explode": [
+        0.76,
+        -0.34,
+        -0.72
+      ],
+      "rot": [
+        0.0,
+        0.3,
+        -0.12
+      ],
+      "start": 0.54,
+      "end": 0.8
+    }
+  },
+  "parts": [
+    {
+      "name": "wheel_left_front__000",
+      "label": "wheel_left_front"
+    },
+    {
+      "name": "wheel_left_mid__001",
+      "label": "wheel_left_mid"
+    },
+    {
+      "name": "wheel_left_rear__002",
+      "label": "wheel_left_rear"
+    },
+    {
+      "name": "wheel_right_front__003",
+      "label": "wheel_right_front"
+    },
+    {
+      "name": "wheel_right_mid__004",
+      "label": "wheel_right_mid"
+    },
+    {
+      "name": "wheel_right_rear__005",
+      "label": "wheel_right_rear"
+    },
+    {
+      "name": "camera_mast__006",
+      "label": "camera_mast"
+    },
+    {
+      "name": "left_rocker_bogie__007",
+      "label": "left_rocker_bogie"
+    },
+    {
+      "name": "rear_power_comms__008",
+      "label": "rear_power_comms"
+    },
+    {
+      "name": "right_rocker_bogie__009",
+      "label": "right_rocker_bogie"
+    },
+    {
+      "name": "robotic_arm_turret__010",
+      "label": "robotic_arm_turret"
+    },
+    {
+      "name": "upper_deck__011",
+      "label": "upper_deck"
+    },
+    {
+      "name": "warm_electronics_box__012",
+      "label": "warm_electronics_box"
+    },
+    {
+      "name": "wheel_left_front__013",
+      "label": "wheel_left_front"
+    },
+    {
+      "name": "wheel_left_mid__014",
+      "label": "wheel_left_mid"
+    },
+    {
+      "name": "wheel_left_rear__015",
+      "label": "wheel_left_rear"
+    },
+    {
+      "name": "wheel_right_front__016",
+      "label": "wheel_right_front"
+    },
+    {
+      "name": "wheel_right_mid__017",
+      "label": "wheel_right_mid"
+    },
+    {
+      "name": "wheel_right_rear__018",
+      "label": "wheel_right_rear"
+    },
+    {
+      "name": "camera_mast__019",
+      "label": "camera_mast"
+    },
+    {
+      "name": "left_rocker_bogie__020",
+      "label": "left_rocker_bogie"
+    },
+    {
+      "name": "rear_power_comms__021",
+      "label": "rear_power_comms"
+    },
+    {
+      "name": "right_rocker_bogie__022",
+      "label": "right_rocker_bogie"
+    },
+    {
+      "name": "robotic_arm_turret__023",
+      "label": "robotic_arm_turret"
+    },
+    {
+      "name": "upper_deck__024",
+      "label": "upper_deck"
+    },
+    {
+      "name": "warm_electronics_box__025",
+      "label": "warm_electronics_box"
+    },
+    {
+      "name": "left_rocker_bogie__026",
+      "label": "left_rocker_bogie"
+    },
+    {
+      "name": "rear_power_comms__027",
+      "label": "rear_power_comms"
+    },
+    {
+      "name": "robotic_arm_turret__028",
+      "label": "robotic_arm_turret"
+    },
+    {
+      "name": "upper_deck__029",
+      "label": "upper_deck"
+    },
+    {
+      "name": "warm_electronics_box__030",
+      "label": "warm_electronics_box"
+    },
+    {
+      "name": "camera_mast__031",
+      "label": "camera_mast"
+    },
+    {
+      "name": "left_rocker_bogie__032",
+      "label": "left_rocker_bogie"
+    },
+    {
+      "name": "rear_power_comms__033",
+      "label": "rear_power_comms"
+    },
+    {
+      "name": "right_rocker_bogie__034",
+      "label": "right_rocker_bogie"
+    },
+    {
+      "name": "robotic_arm_turret__035",
+      "label": "robotic_arm_turret"
+    },
+    {
+      "name": "upper_deck__036",
+      "label": "upper_deck"
+    },
+    {
+      "name": "warm_electronics_box__037",
+      "label": "warm_electronics_box"
+    },
+    {
+      "name": "wheel_left_front__038",
+      "label": "wheel_left_front"
+    },
+    {
+      "name": "wheel_left_mid__039",
+      "label": "wheel_left_mid"
+    },
+    {
+      "name": "wheel_left_rear__040",
+      "label": "wheel_left_rear"
+    },
+    {
+      "name": "wheel_right_front__041",
+      "label": "wheel_right_front"
+    },
+    {
+      "name": "wheel_right_mid__042",
+      "label": "wheel_right_mid"
+    },
+    {
+      "name": "wheel_right_rear__043",
+      "label": "wheel_right_rear"
+    },
+    {
+      "name": "camera_mast__044",
+      "label": "camera_mast"
+    },
+    {
+      "name": "left_rocker_bogie__045",
+      "label": "left_rocker_bogie"
+    },
+    {
+      "name": "right_rocker_bogie__046",
+      "label": "right_rocker_bogie"
+    },
+    {
+      "name": "robotic_arm_turret__047",
+      "label": "robotic_arm_turret"
+    },
+    {
+      "name": "upper_deck__048",
+      "label": "upper_deck"
+    },
+    {
+      "name": "warm_electronics_box__049",
+      "label": "warm_electronics_box"
+    },
+    {
+      "name": "camera_mast__050",
+      "label": "camera_mast"
+    },
+    {
+      "name": "rear_power_comms__051",
+      "label": "rear_power_comms"
+    },
+    {
+      "name": "right_rocker_bogie__052",
+      "label": "right_rocker_bogie"
+    },
+    {
+      "name": "robotic_arm_turret__053",
+      "label": "robotic_arm_turret"
+    },
+    {
+      "name": "upper_deck__054",
+      "label": "upper_deck"
+    },
+    {
+      "name": "warm_electronics_box__055",
+      "label": "warm_electronics_box"
+    },
+    {
+      "name": "left_rocker_bogie__056",
+      "label": "left_rocker_bogie"
+    },
+    {
+      "name": "right_rocker_bogie__057",
+      "label": "right_rocker_bogie"
+    },
+    {
+      "name": "left_rocker_bogie__058",
+      "label": "left_rocker_bogie"
+    },
+    {
+      "name": "rear_power_comms__059",
+      "label": "rear_power_comms"
+    },
+    {
+      "name": "warm_electronics_box__060",
+      "label": "warm_electronics_box"
+    }
+  ]
+}

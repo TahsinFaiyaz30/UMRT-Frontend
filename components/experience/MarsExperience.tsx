@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SceneCanvas } from './SceneCanvas';
 import { HeroOverlay, sectionMeta, type SectionId } from './HeroOverlay';
+import { LoadingCanvasShell } from './LoadingCanvasShell';
 import { detectQuality, getReducedMotion } from '@/lib/performance';
 import { phases } from '@/lib/scrollTimeline';
 
@@ -15,6 +16,25 @@ if (typeof window !== 'undefined') {
 
 /** Threshold for entering free-explore mode (last phase start). */
 const FREE_EXPLORE_START = phases[phases.length - 1].start;
+
+/**
+ * Schedule work after the browser has had a chance to paint the initial
+ * frame. Falls back to setTimeout when `requestIdleCallback` is missing
+ * (older Safari). Caps the delay so we never wait forever.
+ */
+function whenIdle(cb: () => void, timeout = 250) {
+  if (typeof window === 'undefined') return;
+  const ric = (
+    window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    }
+  ).requestIdleCallback;
+  if (typeof ric === 'function') {
+    ric(cb, { timeout });
+  } else {
+    window.setTimeout(cb, Math.min(timeout, 50));
+  }
+}
 
 /**
  * Top-level client component for the Mars landing experience.
@@ -30,6 +50,10 @@ export default function MarsExperience() {
   const [reduceMotion, setReduceMotion] = useState(false);
   const [noWebGL, setNoWebGL] = useState(false);
   const [freeExplore, setFreeExplore] = useState(false);
+  // Defer mounting the WebGL Canvas until the browser has painted the
+  // DOM shell and gone idle. This is the key change that prevents the
+  // "page isn't responding" warning at startup.
+  const [canvasReady, setCanvasReady] = useState(false);
 
   // Probe for WebGL support — degrade to a static hero if missing.
   useEffect(() => {
@@ -40,6 +64,11 @@ export default function MarsExperience() {
     } catch {
       setNoWebGL(true);
     }
+  }, []);
+
+  // Schedule the canvas mount for after first paint + idle time.
+  useEffect(() => {
+    whenIdle(() => setCanvasReady(true), 400);
   }, []);
 
   // Reduced-motion preference (also re-checked inside SceneCanvas).
@@ -55,43 +84,62 @@ export default function MarsExperience() {
   useEffect(() => {
     if (reduceMotion) return undefined;
 
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    });
-
+    // Defer one frame so layout is stable before we boot Lenis and
+    // register ScrollTrigger. This avoids an early forced reflow on
+    // the first paint, which was a contributor to long tasks.
     let rafId = 0;
-    const raf = (time: number) => {
-      lenis.raf(time);
+    let lenis: Lenis | null = null;
+    let mounted = true;
+
+    const boot = () => {
+      if (!mounted) return;
+      lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+      });
+
+      const raf = (time: number) => {
+        lenis?.raf(time);
+        rafId = requestAnimationFrame(raf);
+      };
       rafId = requestAnimationFrame(raf);
+
+      // Throttle React state updates: we mutate progressRef freely (every
+      // frame for the 3D scene) but only call setState when the visible
+      // progress changes by ≥0.5% — that keeps React from re-rendering
+      // HeroOverlay on every scroll tick.
+      let lastUi = -1;
+      const onScroll = () => {
+        ScrollTrigger.update();
+        const h = document.documentElement.scrollHeight - window.innerHeight;
+        const p = h > 0 ? window.scrollY / h : 0;
+        const clamped = Math.max(0, Math.min(1, p));
+        progressRef.current = clamped;
+
+        if (Math.abs(clamped - lastUi) >= 0.005) {
+          lastUi = clamped;
+          setUiProgress(clamped);
+        }
+
+        // Toggle free-explore mode when we reach the final phase.
+        const shouldExplore = clamped >= FREE_EXPLORE_START;
+        setFreeExplore((prev) => (prev !== shouldExplore ? shouldExplore : prev));
+      };
+      // Lenis already dispatches scroll events; no need for a second listener.
+      lenis.on('scroll', onScroll);
+
+      // Initialise ScrollTrigger after layout
+      requestAnimationFrame(() => ScrollTrigger.refresh());
     };
-    rafId = requestAnimationFrame(raf);
 
-    const onScroll = () => {
-      ScrollTrigger.update();
-      const h = document.documentElement.scrollHeight - window.innerHeight;
-      const p = h > 0 ? window.scrollY / h : 0;
-      const clamped = Math.max(0, Math.min(1, p));
-      progressRef.current = clamped;
-      setUiProgress(clamped);
-
-      // Toggle free-explore mode when we reach the final phase.
-      const shouldExplore = clamped >= FREE_EXPLORE_START;
-      setFreeExplore((prev) => (prev !== shouldExplore ? shouldExplore : prev));
-    };
-    lenis.on('scroll', onScroll);
-
-    // Also listen to native scroll events for fallback
-    window.addEventListener('scroll', onScroll, { passive: true });
-
-    // Initialise ScrollTrigger after layout
-    requestAnimationFrame(() => ScrollTrigger.refresh());
+    const handle = requestAnimationFrame(boot);
 
     return () => {
+      mounted = false;
+      cancelAnimationFrame(handle);
       cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', onScroll);
-      lenis.destroy();
+      lenis?.destroy();
     };
   }, [reduceMotion]);
 
@@ -121,15 +169,23 @@ export default function MarsExperience() {
 
       {/* Canvas: full-viewport background, fixed to viewport.
           pointer-events are enabled in free-explore mode so OrbitControls
-          can receive mouse/touch input for pan, rotate, and zoom. */}
+          can receive mouse/touch input for pan, rotate, and zoom.
+          We render the lightweight loading scene first and only swap in
+          the heavy Canvas after the browser goes idle — this keeps the
+          first paint cheap and prevents the "page isn't responding"
+          warning while still showing the animated rover. */}
       <div
         className={`fixed inset-0 ${freeExplore ? 'z-30' : 'z-0 pointer-events-none'}`}
       >
-        <SceneCanvas progressRef={progressRef} reduceMotion={reduceMotion} />
+        {canvasReady ? (
+          <SceneCanvas progressRef={progressRef} reduceMotion={reduceMotion} />
+        ) : (
+          <LoadingCanvasShell />
+        )}
       </div>
 
       {/* DOM overlay: scroll-driving sections in document flow */}
-      <HeroOverlay loading={false} progress={uiProgress} />
+      <HeroOverlay loading={!canvasReady} progress={uiProgress} />
 
       {/* Section markers used as ScrollTrigger anchors */}
       {sectionMeta.map((s) => (

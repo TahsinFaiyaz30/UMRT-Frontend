@@ -1,6 +1,12 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
+
+const DismantleSection = dynamic(
+  () => import('./DismantleSection'),
+  { ssr: false },
+);
 
 export type SectionId =
   | 'hero_intro'
@@ -120,6 +126,9 @@ export function HeroOverlay({
             <p className="font-display text-2xl">Drag to explore • Scroll or pinch to zoom</p>
           </div>
         </div>
+
+        {/* Dismantle section — appears after free explore, before footer */}
+        <DismantleSection />
       </div>
 
       {/* Bottom progress bar (fixed) */}

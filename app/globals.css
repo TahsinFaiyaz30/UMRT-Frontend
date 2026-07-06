@@ -60,3 +60,20 @@ canvas {
     letter-spacing: -0.05em;
   }
 }
+
+/* Tiny shimmer for the dynamic-import loading shell. Keeps the page
+   visibly responsive while the heavy 3D chunk finishes hydrating. */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+/* Solid placeholder painted before the WebGL Canvas mounts.
+   Matches the in-scene clear colour so there's no visual flash. */
+.canvas-placeholder {
+  background: #4a2818;
+}

@@ -2,7 +2,7 @@
 
 import { OrbitControls } from '@react-three/drei';
 import { useEffect, useRef } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { phases } from '@/lib/scrollTimeline';
 
@@ -17,7 +17,6 @@ export function FreeExploreControls({
   progressRef: React.RefObject<number>;
 }) {
   const ref = useRef<OrbitControlsImpl>(null);
-  const { camera } = useThree();
 
   useFrame(() => {
     if (!ref.current) return;
@@ -33,7 +32,6 @@ export function FreeExploreControls({
   return (
     <OrbitControls
       ref={ref}
-      args={[camera]}
       enableDamping
       dampingFactor={0.08}
       enablePan

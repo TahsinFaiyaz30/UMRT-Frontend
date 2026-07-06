@@ -53,6 +53,25 @@ function fbm2(x: number, y: number): number {
 const textureCache = new Map<string, THREE.Texture>();
 const textureLoader = typeof window !== 'undefined' ? new THREE.TextureLoader() : null;
 
+/**
+ * Schedule a callback for when the browser is idle. Used to defer
+ * texture loads so the first paint stays cheap — image decode for a
+ * 1.3 MB PNG can easily take 100–300 ms on the main thread.
+ */
+function whenIdle(cb: () => void, timeout = 250) {
+  if (typeof window === 'undefined') return;
+  const ric = (
+    window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    }
+  ).requestIdleCallback;
+  if (typeof ric === 'function') {
+    ric(cb, { timeout });
+  } else {
+    window.setTimeout(cb, Math.min(timeout, 50));
+  }
+}
+
 function useAsyncTexture(url: string): THREE.Texture | null {
   const [texture, setTexture] = useState<THREE.Texture | null>(() => textureCache.get(url) ?? null);
 
@@ -63,17 +82,29 @@ function useAsyncTexture(url: string): THREE.Texture | null {
     }
     if (!textureLoader) return;
 
-    textureLoader.load(
-      url,
-      (tex) => {
-        textureCache.set(url, tex);
-        setTexture(tex);
-      },
-      undefined,
-      (err) => {
-        console.warn(`Failed to load texture: ${url}`, err);
-      },
-    );
+    // Defer the texture load so it doesn't compete with the initial
+    // first-paint work. The fallback colour shows in the meantime.
+    let cancelled = false;
+    whenIdle(() => {
+      if (cancelled) return;
+      textureLoader.load(
+        url,
+        (tex) => {
+          if (cancelled) return;
+          textureCache.set(url, tex);
+          setTexture(tex);
+        },
+        undefined,
+        (err) => {
+          if (cancelled) return;
+          console.warn(`Failed to load texture: ${url}`, err);
+        },
+      );
+    }, 150);
+
+    return () => {
+      cancelled = true;
+    };
   }, [url]);
 
   return texture;
