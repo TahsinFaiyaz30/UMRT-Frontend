@@ -72,11 +72,6 @@ web_modules/
 # Yarn Integrity file
 .yarn-integrity
 
-# 3D model assets — keep folder, ignore large binaries
-!/public/models/.gitkeep
-/public/models/*.glb
-/public/models/*.gltf
-
 # dotenv environment variable files
 .env
 .env.development.local
