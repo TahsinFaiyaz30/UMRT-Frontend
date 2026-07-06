@@ -37,6 +37,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${inter.variable} ${spaceGrotesk.variable} bg-mars-900`}
     >
+      <head>
+        {/*
+          Preload the GLB at the byte level. The browser starts the network
+          fetch the moment it sees this <link> — *before* React mounts and
+          *before* `useGLTF` runs. By the time MarsExperience mounts, the
+          file is either already in cache (warm) or already streaming
+          (cold). Either way, the long-task is no longer on the JS thread.
+
+          We use as="fetch" with crossOrigin so the response goes into the
+          HTTP cache, not just the memory cache.
+        */}
+        <link
+          rel="preload"
+          as="fetch"
+          crossOrigin="anonymous"
+          href="/models/curiosity_v4_semantic_external.glb"
+        />
+      </head>
       <body className="min-h-screen bg-mars-900 font-body text-mars-50 antialiased">
         {children}
       </body>

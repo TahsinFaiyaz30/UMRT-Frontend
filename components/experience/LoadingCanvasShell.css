@@ -1,0 +1,37 @@
+.lcs-root {
+  background: radial-gradient(circle at 50% 60%, #6B3818 0%, #4A2818 55%, #2A1208 100%);
+}
+
+.lcs-horizon {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 33%;
+  background: linear-gradient(to top, rgba(160, 104, 56, 0.55), rgba(74, 40, 24, 0) 80%);
+  pointer-events: none;
+}
+
+.lcs-rover {
+  width: 96px;
+  height: 96px;
+  will-change: transform;
+  animation: lcsRun 5s ease-in-out infinite alternate;
+}
+
+.lcs-rover svg {
+  animation: lcsBob 0.4s linear infinite;
+  transform-origin: 48px 78px;
+}
+
+@keyframes lcsRun {
+  0% { transform: translateX(-120px); }
+  100% { transform: translateX(120px); }
+}
+
+@keyframes lcsBob {
+  0% { transform: translateY(0) rotate(-1deg); }
+  25% { transform: translateY(-4px) rotate(-1.4deg); }
+  50% { transform: translateY(0) rotate(1deg); }
+  75% { transform: translateY(-4px) rotate(1.4deg); }
+  100% { transform: translateY(0) rotate(-1deg); }
+}

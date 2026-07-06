@@ -2,24 +2,22 @@
 
 import dynamic from 'next/dynamic';
 
-// Three.js / WebGL must run in the browser; keep the experience client-only.
-// We render a tiny DOM-only shell synchronously so the browser can paint
-// and mark the page responsive immediately, instead of stalling on a heavy
-// chunk that mounts a WebGL context + R3F Canvas.
+// MarsExperience must run client-only because it boots WebGL + Lenis +
+// ScrollTrigger. The dynamic() import is required for ssr:false.
+//
+// The fallback below is what the user sees during the very first paint
+// (typically < 1 frame on warm devices, at most a couple of frames
+// while the dynamic-imported chunk streams in). It is deliberately a
+// CONTINUATION of the live scene's clear color and a static Mars sky
+// gradient — NOT a spinner or shimmer — so there is no visual "loading"
+// stage. The instant SceneCanvas mounts inside MarsExperience it paints
+// the same gradient as its first frame, and Suspense within R3F keeps
+// the same colour visible until the GLB finishes parsing.
 const MarsExperience = dynamic(
   () => import('@/components/experience/MarsExperience'),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex h-screen w-full items-center justify-center bg-mars-900 text-mars-50">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-1.5 w-40 overflow-hidden rounded-full bg-mars-700/60">
-            <div className="h-full w-1/3 animate-[shimmer_1.2s_ease-in-out_infinite] rounded-full bg-mars-300" />
-          </div>
-          <p className="text-xs uppercase tracking-[0.4em] text-mars-200/70">Preparing Mission</p>
-        </div>
-      </div>
-    ),
+    loading: () => <div className="page-pre-paint" />,
   },
 );
 

@@ -12,7 +12,7 @@ import { MeshStandardMaterial } from 'three';
  *  - and as a permanent fallback if the user model is missing.
  *
  * The mesh is intentionally simple (one material) so it stays cheap.
- * We give it a "running" animation by bobbing the body and rotating the wheels.
+ * In running mode only the wheels rotate; the chassis stays planted.
  */
 export function ProxyRover({
   running = true,
@@ -31,13 +31,8 @@ export function ProxyRover({
   const wheelBackL = useRef<Group>(null);
   const wheelBackR = useRef<Group>(null);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (!running) return;
-    const t = state.clock.elapsedTime;
-    // bob
-    if (root.current) {
-      root.current.position.y = 0.05 + Math.sin(t * 8) * 0.03;
-    }
     // spin wheels
     const wheels = [wheelFrontL.current, wheelFrontR.current, wheelBackL.current, wheelBackR.current];
     for (const w of wheels) {

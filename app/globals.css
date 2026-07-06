@@ -77,3 +77,20 @@ canvas {
 .canvas-placeholder {
   background: #4a2818;
 }
+
+/* Pre-paint fallback painted during the dynamic-import of the heavy
+   MarsExperience chunk. Intentionally identical to the first frame of
+   the live scene (radial gradient with a warm sun-side glow centred
+   slightly below the horizon) so users see no obvious "loading" stage.
+   The page appears ALREADY LOADED the moment the JS chunk resolves. */
+.page-pre-paint {
+  height: 100vh;
+  width: 100%;
+  background: #2a1208;
+  background-image: radial-gradient(
+    circle at 50% 60%,
+    #6b3818 0%,
+    #4a2818 55%,
+    #2a1208 100%
+  );
+}

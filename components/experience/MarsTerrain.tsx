@@ -157,7 +157,19 @@ export function MarsGround({
   quality?: Quality;
 }) {
   const seg = quality === 'low' ? 64 : quality === 'medium' ? 96 : 128;
-  const geometry = useMemo(() => createTerrain(size, seg, heightScale), [size, seg, heightScale]);
+  // Defer the synchronous 16k-vertex terrain build into the idle window
+  // so it doesn't run on the same frame as the WebGL context creation.
+  const [geometry, setGeometry] = useState<THREE.PlaneGeometry | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    whenIdle(() => {
+      if (cancelled) return;
+      setGeometry(createTerrain(size, seg, heightScale));
+    }, 100);
+    return () => {
+      cancelled = true;
+    };
+  }, [size, seg, heightScale]);
 
   const colorMap = useAsyncTexture('/textures/mars_surface.png');
   const normalMap = useAsyncTexture('/textures/mars_normal.png');
@@ -189,6 +201,17 @@ export function MarsGround({
 
   // Fallback color while textures load
   const fallbackColor = useMemo(() => new THREE.Color('#A06838'), []);
+
+  if (!geometry) {
+    // Show a flat, untextured disc while the real terrain is being built
+    // in the idle callback. The user only ever sees this for a few ms.
+    return (
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
+        <circleGeometry args={[size / 2, 32]} />
+        <meshStandardMaterial color={fallbackColor} roughness={1} />
+      </mesh>
+    );
+  }
 
   return (
     <mesh geometry={geometry} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>

@@ -30,8 +30,6 @@ export type ModelConfig = {
   rotationY: number;
   /** Names of animations on the model to consider "running". */
   runningAnimationNames: string[];
-  /** Fallback bobbing if no animation is found. */
-  fallbackBobAmplitude: number;
   hotspots: Hotspot[];
 };
 
@@ -52,13 +50,17 @@ export type CameraConfig = {
 };
 
 export const modelConfig: ModelConfig = {
-  mainPath: '/models/main-model.glb',
+  // The semantic Curiosity GLB has all the proper part labels
+  // (`wheel_left_front__013`, `camera_mast__006`, etc.) — this is the
+  // SAME file DismantleScene already loads, so drei caches it the
+  // first time and the hero scene pays 0 network cost after that.
+  mainPath: '/models/curiosity_v4_semantic_external.glb',
   lowPolyPath: null,
+  // Authored bounds (~2.22 m tall) — keep scale at 1, no auto-normalisation.
   scale: 1,
   basePosition: [0, 0, 0],
   rotationY: 0,
   runningAnimationNames: ['run', 'Run', 'running', 'Running', 'walk', 'Walk'],
-  fallbackBobAmplitude: 0.05,
   hotspots: [
     {
       id: 'head',

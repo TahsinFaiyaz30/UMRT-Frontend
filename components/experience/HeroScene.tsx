@@ -1,9 +1,11 @@
 'use client';
 
 import { forwardRef, useMemo } from 'react';
+import type { RefObject } from 'react';
 import type { Quality } from '@/lib/performance';
 import { fogDensityFor, particleCountFor } from '@/lib/performance';
 import { ModelRig, ModelRigHandle } from './ModelRig';
+import { DismantleRig } from './DismantleRig';
 import {
   MarsGround,
   MarsRocks,
@@ -71,8 +73,25 @@ const ROCKS: RockData[] = [
  *   - 2 texture maps (color + normal) at 256px
  *   - ~8 total draw calls
  */
-export const HeroScene = forwardRef<ModelRigHandle, { quality: Quality }>(function HeroScene(
-  { quality },
+export const HeroScene = forwardRef<
+  ModelRigHandle,
+  {
+    quality: Quality;
+    /**
+     * Optional dismantle-progress ref. When provided AND the user
+     * triggers the Rover Teardown button, we swap ModelRig for
+     * DismantleRig and animate the same GLB in place on the Mars
+     * surface — no scene change, no camera change, no environment
+     * change.
+     */
+    dismantleProgressRef?: RefObject<number>;
+    /** 0..1 elapsed time for lift/landing timing during teardown. */
+    dismantleTimelineRef?: RefObject<number>;
+    /** True while the teardown is animating (the 6 s window). */
+    dismantleActive?: boolean;
+  }
+>(function HeroScene(
+  { quality, dismantleProgressRef, dismantleTimelineRef, dismantleActive },
   ref,
 ) {
   const dustCount = particleCountFor(quality);
@@ -99,7 +118,19 @@ export const HeroScene = forwardRef<ModelRigHandle, { quality: Quality }>(functi
       {/* All dust in 1 draw call */}
       <MarsDust count={Math.min(dustCount, 150)} spread={35} height={6} />
 
-      <ModelRig ref={ref} running />
+      {/*
+        Either the normal rover rig (default) or the in-place
+        dismantle rig (during the 6 s window). They never both mount
+        at the same time so we never double-load the GLB.
+      */}
+      {dismantleActive && dismantleProgressRef ? (
+        <DismantleRig
+          progressRef={dismantleProgressRef}
+          timelineRef={dismantleTimelineRef}
+        />
+      ) : (
+        <ModelRig ref={ref} running />
+      )}
     </>
   );
 });

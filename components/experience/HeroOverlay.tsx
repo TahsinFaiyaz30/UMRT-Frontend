@@ -1,12 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import dynamic from 'next/dynamic';
-
-const DismantleSection = dynamic(
-  () => import('./DismantleSection'),
-  { ssr: false },
-);
 
 export type SectionId =
   | 'hero_intro'
@@ -28,6 +22,10 @@ export const sectionMeta: { id: SectionId; label: string; title: string; body: s
   { id: 'final_recenter', label: 'Recenter', title: 'MISSION READY', body: 'All systems nominal. Ready for hands-on exploration.', side: 'right' },
   { id: 'free_explore_unlock', label: 'Free Explore', title: 'YOUR TURN', body: 'Drag to rotate. Scroll or pinch to zoom. Inspect the rover from any angle.', side: 'right' },
 ];
+
+const cinematicSections = sectionMeta.filter(
+  (s) => s.id !== 'hero_intro' && s.id !== 'free_explore_unlock',
+);
 
 /**
  * DOM overlay: hero text, scroll-driven section panels, the loading UI
@@ -79,7 +77,7 @@ export function HeroOverlay({
       </div>
 
       {/* Scroll sections — IN DOCUMENT FLOW to create scroll height */}
-      <div ref={sectionsRef} className="relative z-10">
+      <div ref={sectionsRef} className="pointer-events-none relative z-10">
         {/* Hero block */}
         <div
           id="hero_intro"
@@ -100,7 +98,7 @@ export function HeroOverlay({
         </div>
 
         {/* Section panels. Each panel sits next to a "phase" id used by the scroll director. */}
-        {sectionMeta.slice(1).map((s) => (
+        {cinematicSections.map((s) => (
           <div
             key={s.id}
             id={s.id}
@@ -119,16 +117,14 @@ export function HeroOverlay({
           </div>
         ))}
 
-        {/* Final phase: free explore hint, larger CTA */}
-        <div id="free_explore_unlock" data-phase="free_explore_unlock" className="pointer-events-none relative flex h-screen items-end justify-center pb-24">
-          <div className="pointer-events-auto rounded-3xl bg-black/50 px-8 py-6 text-center text-mars-50 backdrop-blur-md">
-            <p className="mb-2 text-xs uppercase tracking-[0.4em] text-mars-200/80">Free Explore</p>
-            <p className="font-display text-2xl">Drag to explore • Scroll or pinch to zoom</p>
-          </div>
-        </div>
-
-        {/* Dismantle section — appears after free explore, before footer */}
-        <DismantleSection />
+        {/* Final phase: free explore. This intentionally renders no
+            text/card so the canvas can receive drag gestures directly. */}
+        <div
+          id="free_explore_unlock"
+          data-phase="free_explore_unlock"
+          className="pointer-events-none relative min-h-[220vh]"
+          aria-hidden="true"
+        />
       </div>
 
       {/* Bottom progress bar (fixed) */}

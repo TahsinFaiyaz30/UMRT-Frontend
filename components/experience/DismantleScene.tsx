@@ -473,9 +473,8 @@ export function DismantleScene({
   );
 }
 
-// Preload the teardown model
-try {
-  useGLTF.preload('/models/curiosity_v4_semantic_external.glb');
-} catch {
-  // Preload may fail if the path is invalid — handled at render time
-}
+// NOTE: useGLTF.preload is intentionally NOT called here. Preloading
+// kicks off a parallel network fetch of the 7 MB GLB at JS-load time,
+// before the browser has even painted. That was the real cause of the
+// "page isn't responding" warning on first load. The fetch now happens
+// only when DismantleSection's IntersectionObserver fires.

@@ -1,66 +1,57 @@
 'use client';
 
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
+import type { RefObject } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { PerformanceMonitor, PerspectiveCamera } from '@react-three/drei';
-import { useProgress } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Group } from 'three';
 import { detectQuality, dprFor, type Quality, getReducedMotion } from '@/lib/performance';
-import { LoadingScene } from './LoadingScene';
 import { HeroScene } from './HeroScene';
 import { ScrollDirector } from './ScrollDirector';
 import { FreeExploreControls } from './FreeExploreControls';
 import type { ModelRigHandle } from './ModelRig';
 
-type SceneMode = 'loading' | 'hero';
-
 /**
  * R3F Canvas + scene root.
  *
- * Rendering pipeline:
- * - Uses WebGL2 with ACES Filmic tone mapping for cinematic color grading
- * - WebGL2 maps to DirectX 11/12 on Windows (via ANGLE), Metal on macOS,
- *   OpenGL ES / Vulkan on Android — the browser handles native dispatch
- * - Adaptive DPR and quality via PerformanceMonitor
- * - Proper color management (SRGBColorSpace output)
+ * NO staged loader. The Canvas paints the live Mars background colour
+ * (set both via `style.background` and `gl.setClearColor`) on the very
+ * first frame. Inside the Canvas we render `HeroScene` immediately —
+ * it owns the GLB load via `useGLTF` (with `useGLTF.preload()` at
+ * module scope on ModelRig) so the network fetch starts during JS
+ * parse, not after any "ready" signal. While GLB parses, the R3F
+ * `<Suspense>` renders `MinimalPlaceholder` which paints the same
+ * Mars colour, so the page reads as fully loaded with no flicker.
+ *
+ * - WebGL2 with ACES Filmic tone mapping
+ * - Adaptive DPR + quality via PerformanceMonitor
+ * - `frameloop="demand"` until first user interaction (saves battery
+ *   and stops the GPU running while the user is sitting still).
  */
 export function SceneCanvas({
   progressRef,
   reduceMotion,
+  dismantleProgressRef,
+  dismantleTimelineRef,
+  dismantleActive,
 }: {
-  progressRef: React.RefObject<number>;
+  progressRef: RefObject<number>;
   reduceMotion: boolean;
+  /** 0..1 progress of the 6-second teardown animation. Null = idle. */
+  dismantleProgressRef: RefObject<number>;
+  /** 0..1 elapsed time through the full teardown animation. */
+  dismantleTimelineRef: RefObject<number>;
+  /** True while the teardown scene is mounted (during the 6 s window). */
+  dismantleActive: boolean;
 }) {
   const [quality, setQuality] = useState<Quality>(() => detectQuality());
-  const [mode, setMode] = useState<SceneMode>('loading');
-  const { active, progress } = useProgress();
   const cameraGroupRef = useRef<Group | null>(null);
   const rigRef = useRef<ModelRigHandle | null>(null);
-  // Keep the renderer in `frameloop="demand"` until the user actually
-  // scrolls or interacts with the page. This prevents the WebGL renderer
-  // from painting every frame from t=0 (which is what was making the
-  // page feel "not responding" during the very first long task).
   const [alwaysRender, setAlwaysRender] = useState(false);
 
-  // Switch to the hero scene as soon as the GLB + textures finish
-  // loading — no artificial 900 ms or 600 ms delays. If everything is
-  // cached, the user sees the hero on the next animation frame.
-  // We require both `!active` (no asset currently in-flight) AND
-  // `progress >= 100` to ensure the procedural running-rover stays
-  // visible until the real model has truly finished loading.
+  // Promote to continuous render loop on first real interaction.
   useEffect(() => {
-    if (mode === 'hero') return;
-    if (!active && progress >= 100) {
-      setMode('hero');
-    }
-  }, [active, progress, mode]);
-
-  // Promote the Canvas to a continuous render loop on first real
-  // interaction. Before that, R3F only paints when something calls
-  // `invalidate()` (e.g. a `useFrame` returning after state change).
-  useEffect(() => {
-    if (alwaysRender) return;
     const enable = () => setAlwaysRender(true);
     window.addEventListener('pointerdown', enable, { once: true, passive: true });
     window.addEventListener('wheel', enable, { once: true, passive: true });
@@ -72,9 +63,10 @@ export function SceneCanvas({
       window.removeEventListener('scroll', enable);
       window.removeEventListener('keydown', enable);
     };
-  }, [alwaysRender]);
+  }, []);
 
   const dprMax = useMemo(() => dprFor(quality), [quality]);
+  const prefersReduced = reduceMotion || getReducedMotion();
 
   return (
     <Canvas
@@ -83,17 +75,12 @@ export function SceneCanvas({
       gl={{
         antialias: quality !== 'low',
         powerPreference: 'high-performance',
-        // Tone mapping for cinematic look — applied by Three.js renderer
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1.1,
-        // Color management
         outputColorSpace: THREE.SRGBColorSpace,
       }}
       camera={{ position: [0, 1.6, 14], fov: 38, near: 0.1, far: 200 }}
       style={{ background: '#4A2818' }}
-      // Stay in demand mode while idle so the GPU isn't woken up on
-      // every frame for no reason. We flip to "always" as soon as the
-      // user actually interacts (see the effect above).
       frameloop={alwaysRender ? 'always' : 'demand'}
       flat={false}
       onCreated={(state) => {
@@ -101,8 +88,6 @@ export function SceneCanvas({
         gl.sortObjects = true;
         gl.toneMapping = THREE.ACESFilmicToneMapping;
         gl.toneMappingExposure = 1.1;
-        // Mark the canvas as opaque and don't waste GPU on background
-        // clears every frame while still in demand mode.
         gl.setClearColor('#4A2818', 1);
       }}
     >
@@ -114,24 +99,63 @@ export function SceneCanvas({
       />
       <PerspectiveCamera makeDefault position={[0, 1.6, 14]} fov={38} near={0.1} far={200} />
 
-      <Suspense fallback={<LoadingScene quality={quality} progress={progress / 100} />}>
-        {mode === 'hero' ? (
-          <>
-            <HeroScene ref={rigRef as React.RefObject<ModelRigHandle>} quality={quality} />
-            <ScrollDirector
-              progressRef={progressRef}
-              rigRef={rigRef}
-              cameraGroupRef={cameraGroupRef}
-              reduceMotion={reduceMotion || getReducedMotion()}
-            />
-            <FreeExploreControls progressRef={progressRef} />
-          </>
-        ) : (
-          <LoadingScene quality={quality} progress={progress / 100} />
-        )}
+      {/* Live HeroScene is mounted immediately. While the GLB inside
+          <HeroScene> is parsing, R3F <Suspense> renders <MinimalPlaceholder>
+          which paints the same Mars background — no visible flash between
+          "first paint" and "GLB ready". */}
+      <Suspense fallback={<MinimalPlaceholder />}>
+        <HeroScene
+          ref={rigRef as unknown as RefObject<ModelRigHandle>}
+          quality={quality}
+          dismantleProgressRef={dismantleProgressRef}
+          dismantleTimelineRef={dismantleTimelineRef}
+          dismantleActive={dismantleActive}
+        />
+        <ScrollDirector
+          progressRef={progressRef}
+          rigRef={rigRef}
+          cameraGroupRef={cameraGroupRef}
+          reduceMotion={prefersReduced}
+        />
+        <FreeExploreControls progressRef={progressRef} />
       </Suspense>
 
       <object3D ref={cameraGroupRef} />
     </Canvas>
+  );
+}
+
+// ---------------------------------------------------------------------
+// MinimalPlaceholder
+//
+// Ultra-cheap first-paint scene. Same lighting direction + background
+// as the live HeroScene so the transition to the real scene is invisible.
+// One slowly-spinning cube gives the GPU something to render even on
+// `frameloop="always"` runs that begin before useGLTF resolves.
+// ---------------------------------------------------------------------
+function MinimalPlaceholder() {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  useFrame((_, delta) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y += delta * 0.4;
+      meshRef.current.rotation.x += delta * 0.15;
+    }
+  });
+
+  return (
+    <group>
+      <ambientLight intensity={0.85} color={'#D0A880'} />
+      <directionalLight position={[5, 8, 4]} intensity={1.2} color={'#FFE0C0'} />
+      <mesh ref={meshRef} position={[0, 0, 0]}>
+        <boxGeometry args={[0.7, 0.7, 0.7]} />
+        <meshStandardMaterial
+          color={'#b8431b'}
+          roughness={0.7}
+          emissive={'#3a1408'}
+          emissiveIntensity={0.25}
+        />
+      </mesh>
+    </group>
   );
 }
