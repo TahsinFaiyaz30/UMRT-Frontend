@@ -56,7 +56,7 @@ export function HeroOverlay({
   return (
     <>
       {/* Fixed decorative elements (loading bar, progress) */}
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-10">
+      <div className="pointer-events-none fixed inset-x-0 top-20 z-10">
         {/* Top loading bar — visible while assets warm up. */}
         <div
           className={`transition-opacity duration-500 ${

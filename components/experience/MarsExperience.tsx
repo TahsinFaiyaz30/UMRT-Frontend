@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { SceneCanvas } from './SceneCanvas';
 import { HeroOverlay, sectionMeta, type SectionId } from './HeroOverlay';
 import { Footer } from './Footer';
+import { PremiumNavbar } from '@/components/navbar';
 import { TeardownOverlay } from './TeardownOverlay';
 import { detectQuality, getReducedMotion } from '@/lib/performance';
 import { phases } from '@/lib/scrollTimeline';
@@ -281,9 +282,13 @@ export default function MarsExperience() {
           otherwise the fixed Canvas paints on top because fixed
           elements live in the page-level stacking context by default. */}
       <div className="relative isolate w-full bg-mars-900 text-mars-50">
-        {/* Quality badge for devs; also serves as a header. Stays at
-            z-30 inside this root so it floats above the canvas. */}
-        <div className="pointer-events-none fixed left-4 top-4 z-30 rounded-full bg-black/30 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-mars-200/80 backdrop-blur">
+        {/* Premium navigation bar — fixed at top, z-50 floats above
+            everything else inside this stacking context. */}
+        <PremiumNavbar />
+
+        {/* Quality badge for devs. Positioned below the navbar (top-20)
+            so it doesn't overlap the fixed nav bar. */}
+        <div className="pointer-events-none fixed left-4 top-20 z-30 rounded-full bg-black/30 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-mars-200/80 backdrop-blur">
           Quality: {detectQuality()}
         </div>
 

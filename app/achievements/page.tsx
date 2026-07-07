@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import AchievementsHero from '@/components/achievements/AchievementsHero';
 import AchievementsStats from '@/components/achievements/AchievementsStats';
 import AchievementsFooter from '@/components/achievements/AchievementsFooter';
+import { PremiumNavbar } from '@/components/navbar';
 
 /**
  * HelixGallery3D — 3D scroll-driven helix timeline/gallery.
@@ -51,21 +52,24 @@ const HelixGallery3D = dynamic(
 
 export default function AchievementsPage() {
   return (
-    <main className="bg-mars-900">
-      {/* Full-screen hero with particles and glassmorphism card */}
-      <AchievementsHero />
+    <>
+      <PremiumNavbar />
+      <main className="bg-mars-900">
+        {/* Full-screen hero with particles and glassmorphism card */}
+        <AchievementsHero />
 
-      {/* Animated stats counters */}
-      <AchievementsStats />
+        {/* Animated stats counters */}
+        <AchievementsStats />
 
-      {/* 
-        The 3D scroll-driven helix completely replaces the old 2D timeline 
-        and acts as the main chronological achievements display.
-      */}
-      <HelixGallery3D />
+        {/* 
+          The 3D scroll-driven helix completely replaces the old 2D timeline 
+          and acts as the main chronological achievements display.
+        */}
+        <HelixGallery3D />
 
-      {/* CTA footer with particles */}
-      <AchievementsFooter />
-    </main>
+        {/* CTA footer with particles */}
+        <AchievementsFooter />
+      </main>
+    </>
   );
 }

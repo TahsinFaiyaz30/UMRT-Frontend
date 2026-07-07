@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 /* ------------------------------------------------------------------ */
@@ -109,7 +110,7 @@ export default function AchievementsFooter() {
           }`}
         >
           {/* Primary — Join UMRT */}
-          <a
+          <Link
             href="/join"
             className="group relative inline-flex items-center gap-2.5 overflow-hidden rounded-full bg-gradient-to-r from-mars-300 to-mars-400 px-8 py-3.5 text-sm font-semibold tracking-wide text-mars-900 shadow-[0_4px_24px_rgba(255,138,77,0.35)] transition-all duration-300 hover:shadow-[0_6px_36px_rgba(255,138,77,0.55)] hover:scale-[1.04]"
           >
@@ -118,16 +119,16 @@ export default function AchievementsFooter() {
 
             <RocketIcon />
             <span className="relative">Join UMRT</span>
-          </a>
+          </Link>
 
           {/* Secondary — Back to Home */}
-          <a
+          <Link
             href="/"
             className="inline-flex items-center gap-2.5 rounded-full border border-mars-300/30 bg-mars-800/40 px-8 py-3.5 text-sm font-medium tracking-wide text-mars-100 backdrop-blur transition-all duration-300 hover:border-mars-300/60 hover:bg-mars-700/50 hover:text-mars-50 hover:scale-[1.03]"
           >
             <ArrowLeftIcon />
             <span>Back to Home</span>
-          </a>
+          </Link>
         </div>
 
         {/* Subtle divider */}

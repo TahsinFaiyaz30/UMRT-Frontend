@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { megaMenus } from './megaMenuConfig';
 import { useMegaMenu } from './useMegaMenu';
 import { MegaMenuPanel, MegaMenuStyles } from './MegaMenuPanel';
@@ -70,8 +71,8 @@ export function PremiumNavbar() {
       >
         <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-6 px-6 lg:h-[72px] lg:px-10">
           {/* Left zone — brand */}
-          <a
-            href="#top"
+          <Link
+            href="/"
             className="group inline-flex items-center gap-2.5 text-mars-50"
             aria-label="UMRT home"
           >
@@ -89,7 +90,7 @@ export function PremiumNavbar() {
                 Mars Rover
               </span>
             </span>
-          </a>
+          </Link>
 
           {/* Center zone — mega-menu triggers */}
           <nav
@@ -146,7 +147,7 @@ export function PremiumNavbar() {
             })}
 
             {/* Achievements — direct link, no mega-menu */}
-            <a
+            <Link
               href="/achievements"
               className="group relative inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-mars-100/85 transition-colors duration-200 hover:bg-white/5 hover:text-mars-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-mars-300/60"
             >
@@ -167,7 +168,7 @@ export function PremiumNavbar() {
                 <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
               </svg>
               Achievements
-            </a>
+            </Link>
           </nav>
 
           {/* Right zone — utility icons + CTA */}

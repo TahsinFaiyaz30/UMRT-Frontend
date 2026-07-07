@@ -36,7 +36,7 @@ export function MegaMenuPanel({
       onMouseLeave={onPanelLeave}
       // `relative` so the ::after safe-bridge is anchored to this box.
       className={[
-        'relative w-[min(1120px,calc(100vw-3rem))]',
+        'mega-panel relative w-[min(1120px,calc(100vw-3rem))]',
         'transition-all duration-200 ease-out',
         mounted
           ? 'pointer-events-auto translate-y-0 opacity-100'
@@ -141,7 +141,9 @@ const SAFE_TRIANGLE_STYLE: CSSProperties = {
  */
 export function MegaMenuStyles() {
   return (
-    <style jsx global>{`
+    <style
+      dangerouslySetInnerHTML={{
+        __html: `
       .mega-panel::after {
         content: '';
         position: absolute;
@@ -160,11 +162,12 @@ export function MegaMenuStyles() {
         height: 14px;
         background: transparent;
       }
-      /* When the panel is mounted, extend the trigger's bridge too. */
       .mega-trigger[data-open='true']::after {
         background: transparent;
       }
-    `}</style>
+    `,
+      }}
+    />
   );
 }
 
