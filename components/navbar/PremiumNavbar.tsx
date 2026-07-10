@@ -48,6 +48,31 @@ export function PremiumNavbar() {
           ))}
         </nav>
 
+        <div className="umrt-nav-hover-panel">
+          <div className="umrt-nav-hover-inner">
+            <div className="umrt-nav-hover-column">
+              <span>THE MACHINE</span>
+              <Link href="/#part_focus_1"><b>Vision mast</b><small>Stereo perception + terrain intelligence.</small></Link>
+              <Link href="/#part_focus_2_left"><b>Science arm</b><small>Sample handling and field manipulation.</small></Link>
+              <Link href="/#part_focus_3_right"><b>Mobility</b><small>Rocker-bogie traversal architecture.</small></Link>
+            </div>
+
+            <div className="umrt-nav-hover-column">
+              <span>THE MISSION</span>
+              <Link href="/achievements"><b>Competition archive</b><small>Eight milestones across five seasons.</small></Link>
+              <Link href="/#final_recenter"><b>System teardown</b><small>Inspect the rover by subsystem.</small></Link>
+              <Link href="/#free_explore_unlock"><b>Free 3D lab</b><small>Orbit, pan, zoom, and control the explosion.</small></Link>
+            </div>
+
+            <Link href="/#free_explore_unlock" className="umrt-nav-hover-feature">
+              <span>ENGINEERING BRIEF</span>
+              <strong>ROVER<br />SYSTEM 04</strong>
+              <p>A complete interactive surface for exploring the machine UMRT takes beyond the road.</p>
+              <b>ENTER THE LAB <i>→</i></b>
+            </Link>
+          </div>
+        </div>
+
         <Link href="/#free_explore_unlock" className="umrt-nav-action">
           EXPLORE <span>↗</span>
         </Link>
@@ -61,31 +86,6 @@ export function PremiumNavbar() {
         >
           <span />
         </button>
-      </div>
-
-      <div className="umrt-nav-hover-panel">
-        <div className="umrt-nav-hover-inner">
-          <div className="umrt-nav-hover-column">
-            <span>THE MACHINE</span>
-            <Link href="/#part_focus_1"><b>Vision mast</b><small>Stereo perception + terrain intelligence.</small></Link>
-            <Link href="/#part_focus_2"><b>Science arm</b><small>Sample handling and field manipulation.</small></Link>
-            <Link href="/#part_focus_3"><b>Mobility</b><small>Rocker-bogie traversal architecture.</small></Link>
-          </div>
-
-          <div className="umrt-nav-hover-column">
-            <span>THE MISSION</span>
-            <Link href="/achievements"><b>Competition archive</b><small>Eight milestones across five seasons.</small></Link>
-            <Link href="/#system_teardown"><b>System teardown</b><small>Inspect the rover by subsystem.</small></Link>
-            <Link href="/#free_explore_unlock"><b>Free 3D lab</b><small>Orbit, pan, zoom, and control the explosion.</small></Link>
-          </div>
-
-          <Link href="/#free_explore_unlock" className="umrt-nav-hover-feature">
-            <span>ENGINEERING BRIEF</span>
-            <strong>ROVER<br />SYSTEM 04</strong>
-            <p>A complete interactive surface for exploring the machine UMRT takes beyond the road.</p>
-            <b>ENTER THE LAB <i>→</i></b>
-          </Link>
-        </div>
       </div>
 
       <nav className="umrt-mobile-panel" aria-label="Mobile navigation" data-lenis-prevent>

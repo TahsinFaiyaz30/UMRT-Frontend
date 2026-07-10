@@ -111,7 +111,7 @@ export default function AchievementsFooter() {
         >
           {/* Primary — Join UMRT */}
           <Link
-            href="/join"
+            href="mailto:marsrover@uiu.ac.bd?subject=Joining%20the%20UIU%20Mars%20Rover%20Team"
             className="group relative inline-flex items-center gap-2.5 overflow-hidden rounded-full bg-gradient-to-r from-mars-300 to-mars-400 px-8 py-3.5 text-sm font-semibold tracking-wide text-mars-900 shadow-[0_4px_24px_rgba(255,138,77,0.35)] transition-all duration-300 hover:shadow-[0_6px_36px_rgba(255,138,77,0.55)] hover:scale-[1.04]"
           >
             {/* Shine sweep on hover */}

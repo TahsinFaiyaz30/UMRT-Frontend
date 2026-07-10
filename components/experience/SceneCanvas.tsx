@@ -61,13 +61,13 @@ export function SceneCanvas({
       shadows
       dpr={[1, dprMax]}
       gl={{
-        antialias: true,
+        antialias: dprMax <= 1.25,
         powerPreference: 'high-performance',
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1.1,
         outputColorSpace: THREE.SRGBColorSpace,
       }}
-      camera={{ position: [5.2, 2.7, 8.4], fov: 34, near: 0.1, far: 200 }}
+      camera={{ position: [5.45, 1.55, 7.0], fov: 32, near: 0.1, far: 200 }}
       style={{ background: '#080302' }}
       frameloop="always"
       flat={false}
@@ -79,7 +79,14 @@ export function SceneCanvas({
         gl.setClearColor('#080302', 1);
       }}
     >
-      <PerspectiveCamera makeDefault position={[5.2, 2.7, 8.4]} fov={34} near={0.1} far={200} />
+      <PerspectiveCamera
+        makeDefault
+        position={[5.45, 1.55, 7.0]}
+        fov={32}
+        near={0.1}
+        far={200}
+        onUpdate={(camera) => camera.layers.enable(1)}
+      />
 
       {/* Live HeroScene is mounted immediately. While the GLB inside
           <HeroScene> is parsing, R3F <Suspense> renders <MinimalPlaceholder>

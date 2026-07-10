@@ -60,7 +60,7 @@ export const modelConfig: ModelConfig = {
   scale: 1,
   // The authored wheel contact plane is ~0.007 m above the model origin.
   // The displaced terrain settles at ~-0.15 m in the central landing zone.
-  basePosition: [0, -0.16, 0],
+  basePosition: [0, -0.2, 0],
   rotationY: -0.32,
   runningAnimationNames: ['run', 'Run', 'running', 'Running', 'walk', 'Walk'],
   hotspots: [
@@ -95,10 +95,10 @@ export const cameraConfig: CameraConfig = {
   fov: 34,
   near: 0.1,
   far: 200,
-  start: [5.2, 2.7, 8.4],
+  start: [5.45, 1.55, 7.0],
   reveal: [-3.6, 2.15, 5.2],
   closeup: [2.25, 1.85, 3.35],
-  targetStart: [0, 1.05, 0],
+  targetStart: [0.3, 0.72, 0],
   targetReveal: [0, 1.05, 0],
 };
 

@@ -141,7 +141,6 @@ export function HeroOverlay({ progress }: { loading?: boolean; progress: number 
   return (
     <div className="mission-overlay" style={{ '--mission-progress': progress } as CSSProperties}>
       <div className="mission-atmosphere" aria-hidden="true">
-        <div className="mission-grid" />
         <div className="mission-grain" />
         <div className="mission-vignette" />
         <div className="mission-crosshair mission-crosshair-a" />

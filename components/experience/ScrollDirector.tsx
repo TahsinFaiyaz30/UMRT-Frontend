@@ -16,15 +16,15 @@ type CameraKeyframe = {
 };
 
 const CAMERA_PATH: CameraKeyframe[] = [
-  { at: 0.00, position: [5.25, 2.65, 8.1], target: [0, 1.05, 0], fov: 34 },
-  { at: 0.12, position: [3.15, 2.25, 5.65], target: [0, 1.02, 0], fov: 32 },
+  { at: 0.00, position: [5.45, 1.55, 7.0], target: [0.3, 0.72, 0], fov: 32 },
+  { at: 0.12, position: [3.15, 2.25, 5.65], target: [0.35, 1.02, 0], fov: 32 },
   { at: 0.25, position: [-4.05, 2.35, 5.5], target: [0, 1.0, 0], fov: 35 },
   { at: 0.38, position: [2.15, 2.15, 3.55], target: [0, 1.58, 0.15], fov: 31 },
   { at: 0.51, position: [-3.5, 1.65, 4.0], target: [-0.62, 0.95, 0.42], fov: 33 },
   { at: 0.64, position: [3.65, 1.08, 3.95], target: [0.32, 0.58, 0.18], fov: 34 },
   { at: 0.76, position: [0.15, 2.65, 7.25], target: [0, 1.0, 0.15], fov: 36 },
-  { at: 0.84, position: [-0.25, 2.85, 8.2], target: [0, 1.08, 0.1], fov: 37 },
-  { at: 0.92, position: [4.35, 2.35, 6.45], target: [0, 1.0, 0], fov: 35 },
+  { at: 0.84, position: [-0.25, 2.45, 8.2], target: [0, 0.9, 0.1], fov: 36 },
+  { at: 0.92, position: [5.15, 1.7, 6.85], target: [0, 0.82, 0], fov: 33 },
 ];
 
 function easeInOut(value: number) {
@@ -65,6 +65,11 @@ export function ScrollDirector({
     const progress = clamp(progressRef.current ?? 0);
     if (progress >= phases[phases.length - 1].start) {
       scene.userData.freeExploreActive = true;
+      if (rigRef.current) {
+        rigRef.current.setOffsetX(modelOffsetXAt(progress));
+        const freeGroup = rigRef.current.group;
+        if (freeGroup) freeGroup.position.y = modelConfig.basePosition[1];
+      }
       return;
     }
     scene.userData.freeExploreActive = false;
@@ -115,7 +120,7 @@ export function ScrollDirector({
       }
     }
 
-    gl.toneMappingExposure = 1.08 + Math.sin(progress * Math.PI) * 0.18;
+    gl.toneMappingExposure = 1.16;
   });
 
   return null;

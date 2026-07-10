@@ -27,13 +27,16 @@ export function detectQuality(): Quality {
 export function dprFor(quality: Quality): number {
   if (quality === 'low') return 1;
   if (quality === 'medium') return Math.min(window.devicePixelRatio || 1, 1.5);
-  return Math.min(window.devicePixelRatio || 1, 2);
+  // A physical pixel cap avoids turning a 1080p retina canvas into a 4K
+  // multisampled framebuffer. This tier is chosen once at startup and never
+  // silently downgrades the scene after the user begins exploring it.
+  return Math.min(window.devicePixelRatio || 1, 1.65);
 }
 
 export function particleCountFor(quality: Quality): number {
-  if (quality === 'low') return 60;
-  if (quality === 'medium') return 180;
-  return 320;
+  if (quality === 'low') return 140;
+  if (quality === 'medium') return 380;
+  return 680;
 }
 
 export function fogDensityFor(quality: Quality): number {

@@ -7,6 +7,8 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { MOUSE, TOUCH } from 'three';
 import { phases } from '@/lib/scrollTimeline';
 
+const PAN_RADIUS = 3.6;
+
 /**
  * Enables drei <OrbitControls> only after the last scroll phase.
  * Before that, the ScrollDirector owns the camera. After the user
@@ -23,6 +25,16 @@ export function FreeExploreControls({
     if (!ref.current) return;
     const active = (progressRef.current ?? 0) >= phases[phases.length - 1].start;
     ref.current.enabled = active;
+    if (active) {
+      const target = ref.current.target;
+      const radial = Math.hypot(target.x, target.z);
+      if (radial > PAN_RADIUS) {
+        const scale = PAN_RADIUS / radial;
+        target.x *= scale;
+        target.z *= scale;
+      }
+      target.y = Math.min(1.65, Math.max(0.28, target.y));
+    }
   });
 
   useEffect(() => {
@@ -44,9 +56,9 @@ export function FreeExploreControls({
       zoomSpeed={0.92}
       minDistance={1.65}
       maxDistance={16}
-      minPolarAngle={0.12}
-      maxPolarAngle={Math.PI * 0.88}
-      target={[0, 1, 0]}
+      minPolarAngle={0.48}
+      maxPolarAngle={Math.PI * 0.48}
+      target={[0, 0.82, 0]}
       mouseButtons={{
         LEFT: MOUSE.ROTATE,
         MIDDLE: MOUSE.DOLLY,

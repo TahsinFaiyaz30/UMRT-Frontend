@@ -161,7 +161,7 @@ export default function MarsExperience() {
   useEffect(() => {
     try {
       const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+      const gl = canvas.getContext('webgl2');
       if (!gl) setNoWebGL(true);
     } catch {
       setNoWebGL(true);
@@ -177,7 +177,7 @@ export default function MarsExperience() {
   }, []);
 
   useEffect(() => {
-    if (reduceMotion) return undefined;
+    if (reduceMotion || loaderVisible) return undefined;
     const lenis = new Lenis({
       duration: 1.05,
       easing: (value: number) => Math.min(1, 1.001 - Math.pow(2, -10 * value)),
@@ -196,7 +196,7 @@ export default function MarsExperience() {
       cancelAnimationFrame(frame);
       lenis.destroy();
     };
-  }, [reduceMotion, syncScrollProgress]);
+  }, [loaderVisible, reduceMotion, syncScrollProgress]);
 
   useEffect(() => {
     if (!manualDismantle) return undefined;

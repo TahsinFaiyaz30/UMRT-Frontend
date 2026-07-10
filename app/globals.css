@@ -100,8 +100,6 @@ button {
   inset: 0;
   z-index: 0;
   height: 100svh;
-  transform: translate3d(calc(var(--pointer-x) * -3px), calc(var(--pointer-y) * -2px), 0) scale(1.012);
-  transition: transform 160ms linear;
 }
 
 .mission-overlay {
@@ -117,19 +115,6 @@ button {
   z-index: 1;
   overflow: hidden;
   pointer-events: none;
-}
-
-.mission-grid {
-  position: absolute;
-  inset: 0;
-  opacity: 0.16;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 8vw 8vw;
-  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 0%, transparent 76%);
-  mask-image: radial-gradient(circle at 50% 50%, black 0%, transparent 76%);
-  transform: translate3d(calc(var(--pointer-x) * 5px), calc(var(--pointer-y) * 5px), 0);
 }
 
 .mission-grain {
@@ -397,18 +382,6 @@ button {
   height: 100svh;
   padding: 12vh clamp(24px, 7vw, 110px) 10vh;
   overflow: hidden;
-}
-
-.mission-chapter-sticky::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 1px;
-  background: linear-gradient(transparent, rgba(216, 255, 79, 0.3), transparent);
-  transform: translateX(calc(var(--chapter-depth) * 72vw)) scaleY(var(--chapter-visibility));
-  opacity: 0.7;
 }
 
 .mission-chapter-right .mission-chapter-sticky {
@@ -1735,6 +1708,8 @@ html[data-mission-loading='true'] body {
 .achievement-helix-sticky canvas {
   position: absolute !important;
   inset: 0;
+  pointer-events: none;
+  touch-action: pan-y !important;
 }
 
 .achievement-orbit-card {
@@ -2084,7 +2059,9 @@ html[data-mission-loading='true'] body {
     padding: 0 clamp(20px, 4vw, 62px);
     overflow: hidden;
     opacity: 0;
-    transition: max-height 260ms ease, opacity 200ms ease, padding 260ms ease;
+    visibility: hidden;
+    pointer-events: none;
+    transition: max-height 260ms ease, opacity 200ms ease, padding 260ms ease, visibility 0s linear 260ms;
   }
 
   .umrt-nav[data-open='true'] .umrt-mobile-panel {
@@ -2092,6 +2069,9 @@ html[data-mission-loading='true'] body {
     padding-top: 18px;
     padding-bottom: 28px;
     opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0s;
   }
 
   .umrt-mobile-panel a {

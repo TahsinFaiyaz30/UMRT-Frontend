@@ -25,7 +25,7 @@ export type Phase = {
 };
 
 export const phases: Phase[] = [
-  { name: 'hero_intro',          start: 0.00, end: 0.12, label: 'First contact',      hotspotIndex: null, modelOffsetX: 0 },
+  { name: 'hero_intro',          start: 0.00, end: 0.12, label: 'First contact',      hotspotIndex: null, modelOffsetX: 2.35 },
   { name: 'zoom_in',             start: 0.12, end: 0.25, label: 'The machine',       hotspotIndex: null, modelOffsetX: -0.18 },
   { name: 'full_model_reveal',   start: 0.25, end: 0.38, label: 'Surface system',    hotspotIndex: null, modelOffsetX: 0.2 },
   { name: 'part_focus_1',        start: 0.38, end: 0.51, label: 'Vision mast',       hotspotIndex: 0,    modelOffsetX: -0.3 },
