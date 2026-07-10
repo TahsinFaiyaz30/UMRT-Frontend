@@ -82,13 +82,21 @@ export function PremiumNavbar() {
           className="umrt-menu-toggle"
           aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
           aria-expanded={open}
+          aria-controls="umrt-mobile-navigation"
           onClick={() => setOpen((value) => !value)}
         >
           <span />
         </button>
       </div>
 
-      <nav className="umrt-mobile-panel" aria-label="Mobile navigation" data-lenis-prevent>
+      <nav
+        id="umrt-mobile-navigation"
+        className="umrt-mobile-panel"
+        aria-label="Mobile navigation"
+        aria-hidden={!open}
+        inert={!open ? true : undefined}
+        data-lenis-prevent
+      >
         {links.map((link) => (
           <Link key={link.href} href={link.href} onClick={() => setOpen(false)}>{link.label}</Link>
         ))}

@@ -144,9 +144,23 @@ export default function MarsExperience() {
       pointerRef.current.y += (y - pointerRef.current.y) * 0.28;
       rootRef.current?.style.setProperty('--pointer-x', pointerRef.current.x.toFixed(3));
       rootRef.current?.style.setProperty('--pointer-y', pointerRef.current.y.toFixed(3));
+      rootRef.current?.style.setProperty('--cursor-x', `${event.clientX}px`);
+      rootRef.current?.style.setProperty('--cursor-y', `${event.clientY}px`);
+      rootRef.current?.setAttribute('data-cursor-active', 'true');
     };
+    const onPointerLeave = () => rootRef.current?.removeAttribute('data-cursor-active');
+    const onPointerDown = () => rootRef.current?.setAttribute('data-cursor-pressed', 'true');
+    const onPointerUp = () => rootRef.current?.removeAttribute('data-cursor-pressed');
     window.addEventListener('pointermove', onPointerMove, { passive: true });
-    return () => window.removeEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerdown', onPointerDown, { passive: true });
+    window.addEventListener('pointerup', onPointerUp, { passive: true });
+    document.documentElement.addEventListener('pointerleave', onPointerLeave);
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointerup', onPointerUp);
+      document.documentElement.removeEventListener('pointerleave', onPointerLeave);
+    };
   }, []);
 
   const scrubTeardown = useCallback((value: number) => {
@@ -242,6 +256,7 @@ export default function MarsExperience() {
 
   return (
     <div ref={rootRef} className="mission-experience">
+      <div className="mission-custom-cursor" aria-hidden="true"><i /><b /><span>SURFACE / TRACE</span></div>
       {loaderVisible && <MissionLoader ready={sceneReady} onComplete={completeLoader} />}
       <PremiumNavbar />
 

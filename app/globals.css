@@ -87,6 +87,8 @@ button {
 .mission-experience {
   --pointer-x: 0;
   --pointer-y: 0;
+  --cursor-x: 50vw;
+  --cursor-y: 50vh;
   position: relative;
   isolation: isolate;
   width: 100%;
@@ -171,6 +173,128 @@ button {
   top: 28%;
   right: 18%;
   transform: translate(calc(var(--pointer-x) * 16px), calc(var(--pointer-y) * 14px));
+}
+
+.mission-custom-cursor {
+  position: fixed;
+  top: var(--cursor-y);
+  left: var(--cursor-x);
+  z-index: 200;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(216, 255, 79, 0.82);
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(216, 255, 79, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.72);
+  transition: width 160ms ease, height 160ms ease, border-color 160ms ease, opacity 120ms ease, transform 120ms ease;
+  will-change: top, left, transform;
+}
+
+.mission-custom-cursor::before,
+.mission-custom-cursor::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: rgba(216, 255, 79, 0.68);
+  transform: translate(-50%, -50%);
+}
+
+.mission-custom-cursor::before {
+  width: 28px;
+  height: 1px;
+}
+
+.mission-custom-cursor::after {
+  width: 1px;
+  height: 28px;
+}
+
+.mission-custom-cursor i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--solar);
+  box-shadow: 0 0 9px rgba(255, 90, 31, 0.9);
+  transform: translate(-50%, -50%);
+}
+
+.mission-custom-cursor b {
+  position: absolute;
+  inset: -7px;
+  border: 1px dashed rgba(216, 255, 79, 0.28);
+  border-radius: 50%;
+  animation: custom-cursor-orbit 5s linear infinite;
+  transition: border-color 160ms ease, inset 160ms ease;
+}
+
+.mission-custom-cursor b::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 8px rgba(216, 255, 79, 0.78);
+}
+
+.mission-custom-cursor span {
+  position: absolute;
+  top: 50%;
+  left: 30px;
+  padding: 4px 6px;
+  border-left: 1px solid var(--solar);
+  background: rgba(5, 3, 2, 0.72);
+  color: rgba(242, 239, 232, 0.64);
+  font-size: 6px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  opacity: 0;
+  transform: translate(5px, -50%);
+  transition: opacity 140ms ease, transform 180ms ease;
+  white-space: nowrap;
+}
+
+.mission-experience[data-cursor-active='true'] .mission-custom-cursor {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.mission-experience:has(a:hover, button:hover, input:hover) .mission-custom-cursor {
+  width: 34px;
+  height: 34px;
+  border-color: var(--solar);
+}
+
+.mission-experience[data-cursor-surface='true'] .mission-custom-cursor {
+  border-color: var(--solar);
+  box-shadow: 0 0 22px rgba(255, 90, 31, 0.3);
+}
+
+.mission-experience[data-cursor-surface='true'] .mission-custom-cursor b {
+  inset: -10px;
+  border-color: rgba(255, 90, 31, 0.55);
+}
+
+.mission-experience[data-cursor-surface='true'] .mission-custom-cursor span {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+.mission-experience[data-cursor-pressed='true'] .mission-custom-cursor {
+  transform: translate(-50%, -50%) scale(0.72);
+}
+
+@keyframes custom-cursor-orbit {
+  to { transform: rotate(360deg); }
 }
 
 .mission-crosshair-b {
@@ -2081,6 +2205,92 @@ html[data-mission-loading='true'] body {
     font-family: var(--font-display), sans-serif;
     font-size: 18px;
     text-decoration: none;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .mission-custom-cursor {
+    display: none;
+  }
+
+  .umrt-nav-inner {
+    grid-template-columns: 1fr auto;
+  }
+
+  .umrt-nav-links,
+  .umrt-nav-action,
+  .umrt-nav-hover-panel {
+    display: none;
+  }
+
+  .umrt-menu-toggle {
+    display: grid;
+    place-items: center;
+    justify-self: end;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(242, 239, 232, 0.2);
+    border-radius: 50%;
+    background: rgba(7, 6, 4, 0.42);
+    color: var(--paper);
+  }
+
+  .umrt-menu-toggle span,
+  .umrt-menu-toggle::before,
+  .umrt-menu-toggle::after {
+    content: '';
+    display: block;
+    width: 16px;
+    height: 1px;
+    background: currentColor;
+    transition: transform 200ms ease, opacity 200ms ease;
+  }
+
+  .umrt-menu-toggle span { margin: 4px 0; }
+  .umrt-nav[data-open='true'] .umrt-menu-toggle::before { transform: translateY(5px) rotate(45deg); }
+  .umrt-nav[data-open='true'] .umrt-menu-toggle span { opacity: 0; }
+  .umrt-nav[data-open='true'] .umrt-menu-toggle::after { transform: translateY(-5px) rotate(-45deg); }
+
+  .umrt-mobile-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    max-height: 0;
+    padding: 0 clamp(20px, 4vw, 62px);
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: max-height 260ms ease, opacity 200ms ease, padding 260ms ease, visibility 0s linear 260ms;
+  }
+
+  .umrt-nav[data-open='true'] .umrt-mobile-panel {
+    max-height: 360px;
+    padding-top: 18px;
+    padding-bottom: 28px;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+
+  .umrt-mobile-panel a {
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(242, 239, 232, 0.1);
+    color: var(--paper);
+    font-family: var(--font-display), sans-serif;
+    font-size: 18px;
+    text-decoration: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mission-experience,
+  .mission-experience a,
+  .mission-experience button,
+  .mission-experience input,
+  .mission-experience canvas {
+    cursor: none !important;
   }
 }
 
