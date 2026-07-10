@@ -18,10 +18,10 @@ export function detectQuality(): Quality {
   const lowMem = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
   const cores = navigator.hardwareConcurrency || 4;
 
-  if (isMobile) return 'low';
-  if (typeof lowMem === 'number' && lowMem <= 4) return 'low';
+  if (typeof lowMem === 'number' && lowMem <= 2) return 'low';
   if (cores <= 2) return 'low';
-  return 'medium';
+  if (isMobile || (typeof lowMem === 'number' && lowMem <= 4)) return 'medium';
+  return 'high';
 }
 
 export function dprFor(quality: Quality): number {

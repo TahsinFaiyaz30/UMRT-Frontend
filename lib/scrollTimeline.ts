@@ -25,14 +25,14 @@ export type Phase = {
 };
 
 export const phases: Phase[] = [
-  { name: 'hero_intro',          start: 0.00, end: 0.12, label: 'Approach',          hotspotIndex: null, modelOffsetX: 0 },
-  { name: 'zoom_in',             start: 0.12, end: 0.28, label: 'Approach',          hotspotIndex: null, modelOffsetX: 0 },
-  { name: 'full_model_reveal',   start: 0.28, end: 0.42, label: 'Full Reveal',       hotspotIndex: null, modelOffsetX: 0 },
-  { name: 'part_focus_1',        start: 0.42, end: 0.55, label: 'Sensor Head',       hotspotIndex: 0,    modelOffsetX: 0 },
-  { name: 'part_focus_2_left',   start: 0.55, end: 0.68, label: 'Sampling Arm',      hotspotIndex: 1,    modelOffsetX: -1.4 },
-  { name: 'part_focus_3_right',  start: 0.68, end: 0.82, label: 'Comm Array',        hotspotIndex: 2,    modelOffsetX: 1.4 },
-  { name: 'final_recenter',      start: 0.82, end: 0.94, label: 'Recenter',          hotspotIndex: null, modelOffsetX: 0 },
-  { name: 'free_explore_unlock', start: 0.94, end: 1.00, label: 'Free Explore',      hotspotIndex: null, modelOffsetX: 0 },
+  { name: 'hero_intro',          start: 0.00, end: 0.12, label: 'First contact',      hotspotIndex: null, modelOffsetX: 0 },
+  { name: 'zoom_in',             start: 0.12, end: 0.25, label: 'The machine',       hotspotIndex: null, modelOffsetX: -0.18 },
+  { name: 'full_model_reveal',   start: 0.25, end: 0.38, label: 'Surface system',    hotspotIndex: null, modelOffsetX: 0.2 },
+  { name: 'part_focus_1',        start: 0.38, end: 0.51, label: 'Vision mast',       hotspotIndex: 0,    modelOffsetX: -0.3 },
+  { name: 'part_focus_2_left',   start: 0.51, end: 0.64, label: 'Science arm',       hotspotIndex: 1,    modelOffsetX: 0.45 },
+  { name: 'part_focus_3_right',  start: 0.64, end: 0.76, label: 'Mobility',          hotspotIndex: 2,    modelOffsetX: 0 },
+  { name: 'final_recenter',      start: 0.76, end: 0.92, label: 'System teardown',   hotspotIndex: null, modelOffsetX: 0 },
+  { name: 'free_explore_unlock', start: 0.92, end: 1.00, label: 'Manual control',    hotspotIndex: null, modelOffsetX: 0 },
 ];
 
 /** Linear interpolation, clamped. */

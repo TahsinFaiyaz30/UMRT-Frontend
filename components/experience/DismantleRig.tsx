@@ -369,11 +369,14 @@ export function DismantleRig({
     const labelGroups: Record<string, SemanticGroup> = {};
     const semParts: SemanticGroup[] = [];
 
-    const collected: { mesh: THREE.Mesh; label: string }[] = [];
+    cloned.updateMatrixWorld(true);
+    const collected: { mesh: THREE.Mesh; label: string; matrix: THREE.Matrix4 }[] = [];
     cloned.traverse((o) => {
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
       mesh.frustumCulled = false;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
       const label = mesh.name.split('__')[0];
       if (!teardownMotions[label]) return;
       // Boost env map intensity on the rover's own materials so they
@@ -385,10 +388,10 @@ export function DismantleRig({
           mat.needsUpdate = true;
         }
       }
-      collected.push({ mesh, label });
+      collected.push({ mesh, label, matrix: mesh.matrixWorld.clone() });
     });
 
-    for (const { mesh, label } of collected) {
+    for (const { mesh, label, matrix } of collected) {
       let g = labelGroups[label];
       if (!g) {
         const motion = teardownMotions[label];
@@ -406,18 +409,9 @@ export function DismantleRig({
         semParts.push(ng);
         g = ng;
       }
-      // Preserve world transform on re-parent so each part keeps its
-      // rest-pose position inside the rover. We then drive the part's
-      // local position by its `explode` offset.
-      mesh.updateWorldMatrix(true, false);
-      const worldPos = new THREE.Vector3();
-      const worldQuat = new THREE.Quaternion();
-      const worldScale = new THREE.Vector3();
-      mesh.matrixWorld.decompose(worldPos, worldQuat, worldScale);
-      root.worldToLocal(worldPos);
       g.add(mesh);
-      mesh.position.copy(worldPos);
-      // Group stays at origin; offsets applied per-mesh below.
+      matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
+      mesh.updateMatrix();
       g.userData.original.set(0, 0, 0);
     }
     semanticPartsRef.current = semParts;
@@ -462,15 +456,12 @@ export function DismantleRig({
     for (const g of semanticPartsRef.current) {
       const u = g.userData;
       const l = smooth(localT(t, u.start, u.end));
-      for (const child of g.children) {
-        const mesh = child as THREE.Object3D;
-        mesh.position.set(
-          u.original.x + u.explode.x * l,
-          u.original.y + u.explode.y * l,
-          u.original.z + u.explode.z * l,
-        );
-        mesh.rotation.set(u.rot.x * l, u.rot.y * l, u.rot.z * l);
-      }
+      g.position.set(
+        u.original.x + u.explode.x * l,
+        u.original.y + u.explode.y * l,
+        u.original.z + u.explode.z * l,
+      );
+      g.rotation.set(u.rot.x * l, u.rot.y * l, u.rot.z * l);
     }
 
     // -------- Internal modules fade in then explode outward --------

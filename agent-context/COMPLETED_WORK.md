@@ -1,5 +1,48 @@
 # Completed Work
 
+## 2026-07-10 — Mission Archive achievements rebuild
+
+### Rebuilt
+
+- Restored translucent glass hover pills on the desktop navbar.
+- Replaced the rotating-card Achievements spiral with eight fixed square archive records.
+- Added a scroll-driven camera helix that descends around the records and lingers at each milestone before accelerating to the next.
+- Designed a central Mission Archive Core with an illuminated spine, archive nodes, data connectors, gyroscope, scanner rings, and orbiting dust.
+- Added synchronized milestone typography, progress telemetry, camera rail, desktop composition, and mobile framing.
+
+### Verified
+
+- Multiple desktop archive positions show different camera angles around the stationary structure.
+- 390 × 844 mobile view keeps the active record and core in frame with no horizontal overflow.
+- Browser console contains no runtime errors after a clean reload.
+
+## 2026-07-10 — Cinematic landing-page rebuild
+
+### Rebuilt
+
+- New responsive aerospace editorial art direction across the landing page.
+- New scroll chapter system, synchronized progress HUD, camera choreography, pointer parallax, and immediate Lenis boot.
+- New procedural dark-Mars terrain, horizon lighting, signal rings, dust, and distant forms.
+- New responsive navigation, mobile panel, interaction console, and static cinematic footer.
+
+### 3D and motion
+
+- Preserved the authentic Curiosity GLB as the central hero asset.
+- Added automatic semantic explosion/reassembly to the scroll timeline.
+- Preserved the replayable teardown at the manual-control stage.
+- Added a live explosion scrubber plus assembled, cutaway, and fully exploded hold states.
+- Added unrestricted final-stage orbit, right-drag panning, touch gestures, and wheel zoom.
+- Corrected teardown reparenting so meshes keep authored transforms and explode through subsystem groups instead of collapsing to the origin.
+- Added responsive camera path and mobile FOV/distance compensation.
+
+### Verified
+
+- Desktop hero, story chapter, teardown chapter, manual replay, and free-explore UI.
+- 390 × 844 mobile hero, navigation, story chapter, and no horizontal overflow.
+- `npm run typecheck` — clean.
+- `npm run build` — successful static production build.
+- `git diff --check` — clean apart from expected line-ending notices.
+
 ## 2026-07-02 — Initial scaffold + first real-model integration
 
 ### Built

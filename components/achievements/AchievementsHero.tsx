@@ -184,10 +184,10 @@ export default function AchievementsHero() {
               Featured Highlight
             </p>
             <h2 className="font-display text-2xl text-mars-50 md:text-3xl">
-              Top 10 at URC 2025
+              Top 5 at URC 2025
             </h2>
             <p className="mt-3 font-body text-sm leading-relaxed text-mars-100/70 md:text-base">
-              Competing against 100+ international teams, UMRT secured a top-10
+              Competing against 100+ international teams, UMRT secured a top-five
               finish at the University Rover Challenge — the world&apos;s
               premier Mars rover competition.
             </p>

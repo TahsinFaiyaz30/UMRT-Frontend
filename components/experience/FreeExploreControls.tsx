@@ -4,6 +4,7 @@ import { OrbitControls } from '@react-three/drei';
 import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
+import { MOUSE, TOUCH } from 'three';
 import { phases } from '@/lib/scrollTimeline';
 
 /**
@@ -33,13 +34,28 @@ export function FreeExploreControls({
     <OrbitControls
       ref={ref}
       enableDamping
-      dampingFactor={0.08}
+      dampingFactor={0.075}
       enablePan
       enableRotate
       enableZoom
-      minDistance={2}
-      maxDistance={20}
+      screenSpacePanning
+      panSpeed={0.82}
+      rotateSpeed={0.72}
+      zoomSpeed={0.92}
+      minDistance={1.65}
+      maxDistance={16}
+      minPolarAngle={0.12}
+      maxPolarAngle={Math.PI * 0.88}
       target={[0, 1, 0]}
+      mouseButtons={{
+        LEFT: MOUSE.ROTATE,
+        MIDDLE: MOUSE.DOLLY,
+        RIGHT: MOUSE.PAN,
+      }}
+      touches={{
+        ONE: TOUCH.ROTATE,
+        TWO: TOUCH.DOLLY_PAN,
+      }}
       makeDefault
     />
   );

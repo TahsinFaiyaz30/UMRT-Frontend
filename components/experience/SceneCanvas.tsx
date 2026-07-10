@@ -1,9 +1,9 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useMemo, useRef } from 'react';
 import type { RefObject } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { PerformanceMonitor, PerspectiveCamera } from '@react-three/drei';
+import { PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Group } from 'three';
 import { detectQuality, dprFor, type Quality, getReducedMotion } from '@/lib/performance';
@@ -31,12 +31,15 @@ import type { ModelRigHandle } from './ModelRig';
  */
 export function SceneCanvas({
   progressRef,
+  pointerRef,
   reduceMotion,
   dismantleProgressRef,
   dismantleTimelineRef,
   dismantleActive,
+  onReady,
 }: {
   progressRef: RefObject<number>;
+  pointerRef: RefObject<{ x: number; y: number }>;
   reduceMotion: boolean;
   /** 0..1 progress of the 6-second teardown animation. Null = idle. */
   dismantleProgressRef: RefObject<number>;
@@ -44,60 +47,39 @@ export function SceneCanvas({
   dismantleTimelineRef: RefObject<number>;
   /** True while the teardown scene is mounted (during the 6 s window). */
   dismantleActive: boolean;
+  onReady?: () => void;
 }) {
-  const [quality, setQuality] = useState<Quality>(() => detectQuality());
+  const quality = useMemo<Quality>(() => detectQuality(), []);
   const cameraGroupRef = useRef<Group | null>(null);
   const rigRef = useRef<ModelRigHandle | null>(null);
-  const [alwaysRender, setAlwaysRender] = useState(false);
-
-  // Promote to continuous render loop on first real interaction.
-  useEffect(() => {
-    const enable = () => setAlwaysRender(true);
-    window.addEventListener('pointerdown', enable, { once: true, passive: true });
-    window.addEventListener('wheel', enable, { once: true, passive: true });
-    window.addEventListener('scroll', enable, { once: true, passive: true });
-    window.addEventListener('keydown', enable, { once: true });
-    return () => {
-      window.removeEventListener('pointerdown', enable);
-      window.removeEventListener('wheel', enable);
-      window.removeEventListener('scroll', enable);
-      window.removeEventListener('keydown', enable);
-    };
-  }, []);
 
   const dprMax = useMemo(() => dprFor(quality), [quality]);
   const prefersReduced = reduceMotion || getReducedMotion();
 
   return (
     <Canvas
-      shadows={quality !== 'low'}
+      shadows
       dpr={[1, dprMax]}
       gl={{
-        antialias: quality !== 'low',
+        antialias: true,
         powerPreference: 'high-performance',
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1.1,
         outputColorSpace: THREE.SRGBColorSpace,
       }}
-      camera={{ position: [0, 1.6, 14], fov: 38, near: 0.1, far: 200 }}
-      style={{ background: '#4A2818' }}
-      frameloop={alwaysRender ? 'always' : 'demand'}
+      camera={{ position: [5.2, 2.7, 8.4], fov: 34, near: 0.1, far: 200 }}
+      style={{ background: '#080302' }}
+      frameloop="always"
       flat={false}
       onCreated={(state) => {
         const gl = state.gl;
         gl.sortObjects = true;
         gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.1;
-        gl.setClearColor('#4A2818', 1);
+        gl.toneMappingExposure = 1.18;
+        gl.setClearColor('#080302', 1);
       }}
     >
-      <PerformanceMonitor
-        onDecline={() => setQuality((q) => (q === 'high' ? 'medium' : 'low'))}
-        onIncline={() => setQuality((q) => (q === 'low' ? 'medium' : 'high'))}
-        flipflops={3}
-        onFallback={() => setQuality('low')}
-      />
-      <PerspectiveCamera makeDefault position={[0, 1.6, 14]} fov={38} near={0.1} far={200} />
+      <PerspectiveCamera makeDefault position={[5.2, 2.7, 8.4]} fov={34} near={0.1} far={200} />
 
       {/* Live HeroScene is mounted immediately. While the GLB inside
           <HeroScene> is parsing, R3F <Suspense> renders <MinimalPlaceholder>
@@ -113,16 +95,33 @@ export function SceneCanvas({
         />
         <ScrollDirector
           progressRef={progressRef}
+          pointerRef={pointerRef}
           rigRef={rigRef}
           cameraGroupRef={cameraGroupRef}
           reduceMotion={prefersReduced}
         />
         <FreeExploreControls progressRef={progressRef} />
+        <SceneReadySignal onReady={onReady} />
       </Suspense>
 
       <object3D ref={cameraGroupRef} />
     </Canvas>
   );
+}
+
+function SceneReadySignal({ onReady }: { onReady?: () => void }) {
+  const frames = useRef(0);
+  const fired = useRef(false);
+
+  useFrame(() => {
+    if (fired.current) return;
+    frames.current += 1;
+    if (frames.current < 3) return;
+    fired.current = true;
+    onReady?.();
+  });
+
+  return null;
 }
 
 // ---------------------------------------------------------------------
@@ -145,12 +144,12 @@ function MinimalPlaceholder() {
 
   return (
     <group>
-      <ambientLight intensity={0.85} color={'#D0A880'} />
-      <directionalLight position={[5, 8, 4]} intensity={1.2} color={'#FFE0C0'} />
+      <ambientLight intensity={0.5} color={'#ffb16b'} />
+      <directionalLight position={[5, 8, 4]} intensity={2.2} color={'#fff1d2'} />
       <mesh ref={meshRef} position={[0, 0, 0]}>
         <boxGeometry args={[0.7, 0.7, 0.7]} />
         <meshStandardMaterial
-          color={'#b8431b'}
+          color={'#ff5a1f'}
           roughness={0.7}
           emissive={'#3a1408'}
           emissiveIntensity={0.25}

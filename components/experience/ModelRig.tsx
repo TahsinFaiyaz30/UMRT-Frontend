@@ -3,7 +3,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import type { Group, Object3D, AnimationClip } from 'three';
+import type { Group, Object3D, AnimationClip, Mesh, MeshStandardMaterial } from 'three';
 import { AnimationMixer } from 'three';
 import { modelConfig } from '@/lib/modelConfig';
 import { ProxyRover } from './ProxyRover';
@@ -71,6 +71,19 @@ export const ModelRig = forwardRef<ModelRigHandle, { running?: boolean }>(functi
     const scene = main.scene as Object3D;
 
     scene.scale.setScalar(modelConfig.scale);
+    scene.traverse((object) => {
+      const mesh = object as Mesh;
+      if (!mesh.isMesh) return;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.frustumCulled = false;
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      materials.forEach((material) => {
+        const standard = material as MeshStandardMaterial;
+        if (typeof standard.envMapIntensity === 'number') standard.envMapIntensity = 1.45;
+        standard.needsUpdate = true;
+      });
+    });
     hasRealRef.current = true;
 
     if (clip) {

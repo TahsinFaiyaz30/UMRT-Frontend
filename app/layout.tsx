@@ -1,11 +1,8 @@
 import type { Metadata } from 'next';
-import { Inter, Space_Grotesk } from 'next/font/google';
+import { IBM_Plex_Mono, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 
-// Self-hosted, preloaded, font-display: swap. Replaces the previous
-// render-blocking <link rel="stylesheet"> to fonts.googleapis.com which
-// stalled first paint until a third-party CSS file arrived.
-const inter = Inter({
+const plexMono = IBM_Plex_Mono({
   subsets: ['latin'],
   variable: '--font-body',
   display: 'swap',
@@ -20,14 +17,28 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: 'UMRT // Mission Mars',
+  title: 'UMRT // Built Beyond Earth',
   description:
-    'Cinematic, scroll-driven 3D landing page where a user-provided model roams on Mars before being revealed and freely inspected.',
+    'Enter the machine. A cinematic, scroll-driven 3D experience by the UIU Mars Rover Team.',
   metadataBase: new URL('https://umrt.example.com'),
   openGraph: {
-    title: 'UMRT // Mission Mars',
-    description: 'A WebGL landing page for the Mars rover experience.',
+    title: 'UMRT // Built Beyond Earth',
+    description: 'Enter the machine. Explore the rover built for worlds without roads.',
     type: 'website',
+    images: [
+      {
+        url: '/og.png',
+        width: 1732,
+        height: 909,
+        alt: 'Built for worlds without roads — UIU Mars Rover Team',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'UMRT // Built Beyond Earth',
+    description: 'Enter the machine. Explore the rover built for worlds without roads.',
+    images: ['/og.png'],
   },
 };
 
@@ -35,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${spaceGrotesk.variable} bg-mars-900`}
+      className={`${plexMono.variable} ${spaceGrotesk.variable} bg-mars-900`}
     >
       <head>
         {/*
@@ -55,7 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="/models/curiosity_v4_semantic_external.glb"
         />
       </head>
-      <body className="min-h-screen bg-mars-900 font-body text-mars-50 antialiased">
+      <body className="min-h-screen bg-mars-900 font-body text-mars-50 antialiased selection:bg-[#d8ff4f] selection:text-black">
         {children}
       </body>
     </html>
