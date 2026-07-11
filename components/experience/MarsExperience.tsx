@@ -8,6 +8,7 @@ import { Footer } from './Footer';
 import { PremiumNavbar } from '@/components/navbar';
 import { TeardownOverlay } from './TeardownOverlay';
 import { MissionLoader } from './MissionLoader';
+import { SolarCalibrationPanel } from './SolarCalibrationPanel';
 import { getReducedMotion } from '@/lib/performance';
 import { phases } from '@/lib/scrollTimeline';
 
@@ -148,17 +149,24 @@ export default function MarsExperience() {
       rootRef.current?.style.setProperty('--cursor-y', `${event.clientY}px`);
       rootRef.current?.setAttribute('data-cursor-active', 'true');
     };
-    const onPointerLeave = () => rootRef.current?.removeAttribute('data-cursor-active');
+    const onPointerLeave = () => {
+      rootRef.current?.removeAttribute('data-cursor-active');
+      rootRef.current?.removeAttribute('data-cursor-pressed');
+    };
     const onPointerDown = () => rootRef.current?.setAttribute('data-cursor-pressed', 'true');
     const onPointerUp = () => rootRef.current?.removeAttribute('data-cursor-pressed');
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     window.addEventListener('pointerdown', onPointerDown, { passive: true });
     window.addEventListener('pointerup', onPointerUp, { passive: true });
+    window.addEventListener('pointercancel', onPointerLeave, { passive: true });
+    window.addEventListener('blur', onPointerLeave);
     document.documentElement.addEventListener('pointerleave', onPointerLeave);
     return () => {
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerLeave);
+      window.removeEventListener('blur', onPointerLeave);
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);
     };
   }, []);
@@ -259,6 +267,7 @@ export default function MarsExperience() {
       <div className="mission-custom-cursor" aria-hidden="true"><i /><b /><span>SURFACE / TRACE</span></div>
       {loaderVisible && <MissionLoader ready={sceneReady} onComplete={completeLoader} />}
       <PremiumNavbar />
+      {!loaderVisible && <SolarCalibrationPanel />}
 
       <div className={`mission-canvas ${freeExplore ? 'pointer-events-auto' : 'pointer-events-none'}`}>
         <SceneCanvas

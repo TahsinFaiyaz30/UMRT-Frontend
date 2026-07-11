@@ -2,6 +2,7 @@
 
 import type { ComponentPropsWithoutRef, PointerEvent as ReactPointerEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 
 export function Footer(props: ComponentPropsWithoutRef<'footer'>) {
   const { className = '', ...rest } = props;
@@ -55,9 +56,9 @@ export function Footer(props: ComponentPropsWithoutRef<'footer'>) {
 
             <div className="mission-footer-column">
               <strong>EXPLORE UMRT</strong>
-              <a href="/achievements">Achievements</a>
-              <a href="/#part_focus_1">Rover systems</a>
-              <a href="/#final_recenter">Teardown lab</a>
+              <Link href="/achievements">Achievements</Link>
+              <Link href="/#part_focus_1">Rover systems</Link>
+              <Link href="/#final_recenter">Teardown lab</Link>
               <a href="mailto:marsrover@uiu.ac.bd?subject=Joining%20the%20UIU%20Mars%20Rover%20Team">Join the mission</a>
             </div>
 

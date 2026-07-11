@@ -1,51 +1,28 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import AchievementsHero from '@/components/achievements/AchievementsHero';
-import AchievementsStats from '@/components/achievements/AchievementsStats';
 import AchievementsFooter from '@/components/achievements/AchievementsFooter';
+import { ACHIEVEMENT_STATS } from '@/components/achievements/achievementData';
 import { PremiumNavbar } from '@/components/navbar';
 
 /**
  * HelixGallery3D — 3D scroll-driven helix timeline/gallery.
- * Dynamic import with ssr:false because it uses WebGL + GSAP ScrollTrigger.
+ * Dynamic import with ssr:false because it uses WebGL.
  */
 const HelixGallery3D = dynamic(
   () => import('@/components/achievements/HelixGallery3D'),
   {
     ssr: false,
     loading: () => (
-      <div
-        className="flex items-center justify-center"
-        style={{ height: '500vh', background: '#030306' }}
-      >
-        <div className="sticky top-0 flex h-screen w-full items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            {/* Thin line loader */}
-            <div className="h-px w-16 overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-              <div
-                className="h-full w-8"
-                style={{
-                  background: 'rgba(255,138,77,0.5)',
-                  animation: 'shimmerLoad 1.5s ease-in-out infinite',
-                }}
-              />
-            </div>
-            <p
-              className="font-body text-[10px] uppercase tracking-[0.5em]"
-              style={{ color: 'rgba(255,255,255,0.2)' }}
-            >
-              Loading Sequence
-            </p>
-            <style>{`
-              @keyframes shimmerLoad {
-                0%   { transform: translateX(-32px); }
-                100% { transform: translateX(64px); }
-              }
-            `}</style>
+      <section className="achievement-helix-section achievement-helix-loading" aria-label="Loading achievement archive">
+        <div className="achievement-helix-sticky">
+          <div className="achievement-archive-loader" role="status">
+            <span aria-hidden="true" />
+            <strong>Preparing rover archive</strong>
+            <small>Eight milestones / 2020—2025</small>
           </div>
         </div>
-      </div>
+      </section>
     ),
   },
 );
@@ -54,20 +31,35 @@ export default function AchievementsPage() {
   return (
     <>
       <PremiumNavbar />
-      <main className="bg-mars-900">
-        {/* Full-screen hero with particles and glassmorphism card */}
-        <AchievementsHero />
+      <main className="achievement-page bg-mars-900">
+        <section className="achievement-intro" aria-labelledby="achievement-page-title">
+          <div className="achievement-intro-glow" aria-hidden="true" />
+          <div className="achievement-intro-grid">
+            <div className="achievement-intro-copy">
+              <p>UMRT / Mission record / 2020—2025</p>
+              <h1 id="achievement-page-title">Achievements</h1>
+              <span>
+                Every qualification, prototype, and competition run helped build the
+                machine at the centre of this archive.
+              </span>
+              <a href="#helix-gallery">
+                Enter the archive
+                <i aria-hidden="true">↓</i>
+              </a>
+            </div>
 
-        {/* Animated stats counters */}
-        <AchievementsStats />
+            <dl className="achievement-intro-stats" aria-label="Team achievements by the numbers">
+              {ACHIEVEMENT_STATS.map((stat) => (
+                <div key={stat.label}>
+                  <dt>{stat.label}</dt>
+                  <dd>{stat.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </section>
 
-        {/* 
-          The 3D scroll-driven helix completely replaces the old 2D timeline 
-          and acts as the main chronological achievements display.
-        */}
         <HelixGallery3D />
-
-        {/* CTA footer with particles */}
         <AchievementsFooter />
       </main>
     </>

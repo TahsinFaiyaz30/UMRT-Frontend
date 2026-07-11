@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useEffect, useMemo, useRef } from 'react';
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Environment, Lightformer, useTexture } from '@react-three/drei';
@@ -10,6 +10,11 @@ import { particleCountFor } from '@/lib/performance';
 import { ModelRig, type ModelRigHandle } from './ModelRig';
 import { DismantleRig } from './DismantleRig';
 import { SoilInteraction } from './SoilInteraction';
+import {
+  solarLightingFromSettings,
+  useSolarCalibrationSettings,
+  type SolarLightingValues,
+} from '@/lib/solarCalibration';
 
 export const HeroScene = forwardRef<
   ModelRigHandle,
@@ -24,48 +29,79 @@ export const HeroScene = forwardRef<
   ref,
 ) {
   const groundRef = useRef<THREE.Mesh>(null);
+  const solarSettings = useSolarCalibrationSettings();
+  const solar = useMemo(() => solarLightingFromSettings(solarSettings), [solarSettings]);
+  const [environmentSolar, setEnvironmentSolar] = useState(solar);
+  useEffect(() => {
+    const update = window.setTimeout(() => setEnvironmentSolar(solar), 120);
+    return () => window.clearTimeout(update);
+  }, [solar]);
+  const environmentEnergy = environmentSolar.intensity / 3.25;
+  const environmentKey = [
+    environmentSolar.color,
+    environmentEnergy.toFixed(2),
+    ...environmentSolar.position.map((value) => Math.round(value)),
+  ].join('-');
   return (
     <>
       <color attach="background" args={['#050201']} />
       <fog attach="fog" args={['#160604', 18, 58]} />
 
-      <Environment resolution={256} frames={1} background={false}>
-        <Lightformer form="ring" color="#ff5a1f" intensity={4.2} scale={12} position={[-10, 10, -18]} target={[0, 0, 0]} />
-        <Lightformer form="rect" color="#ff6c32" intensity={1.35} scale={[8, 4, 1]} position={[10, 6, 9]} target={[0, 0.8, 0]} />
-        <Lightformer form="rect" color="#602012" intensity={1.2} scale={[10, 5, 1]} position={[-8, 3, 10]} target={[0, 0.5, 0]} />
+      <Environment key={environmentKey} resolution={256} frames={1} background={false}>
+        <Lightformer
+          form="ring"
+          color={environmentSolar.color}
+          intensity={4.2 * environmentEnergy}
+          scale={12}
+          position={environmentSolar.position.map((value) => value * 0.46) as [number, number, number]}
+          target={[0, 0, 0]}
+        />
+        <Lightformer
+          form="rect"
+          color={environmentSolar.color}
+          intensity={1.35 * environmentEnergy}
+          scale={[8, 4, 1]}
+          position={environmentSolar.position.map((value, index) => index === 1
+            ? Math.max(4, value * 0.2)
+            : -value * 0.22) as [number, number, number]}
+          target={[0, 0.8, 0]}
+        />
+        <Lightformer
+          form="rect"
+          color="#602012"
+          intensity={1.2 * Math.sqrt(environmentEnergy)}
+          scale={[10, 5, 1]}
+          position={[-8, 3, 10]}
+          target={[0, 0.5, 0]}
+        />
       </Environment>
 
-      <ambientLight intensity={0.2} color="#9b3420" />
-      <hemisphereLight args={['#ff7540', '#120503', 0.56]} />
-      <directionalLight
-        position={[-9, 8.5, -36]}
-        intensity={3.25}
-        color="#ff692f"
-        castShadow
-        shadow-mapSize-width={quality === 'low' ? 1024 : 2048}
-        shadow-mapSize-height={quality === 'low' ? 1024 : 2048}
-        shadow-camera-left={-14}
-        shadow-camera-right={14}
-        shadow-camera-top={14}
-        shadow-camera-bottom={-14}
-        shadow-camera-near={0.5}
-        shadow-camera-far={52}
-        shadow-bias={-0.00018}
-        shadow-normalBias={0.006}
-      />
+      <ambientLight intensity={solar.intensity * 0.07} color={solar.color} />
+      <hemisphereLight args={[solar.color, '#120503', solar.intensity * 0.2]} />
+      <CalibratedSun solar={solar} quality={quality} />
       <spotLight
-        position={[7, 5.5, 8]}
-        intensity={11.5}
+        position={[-solar.position[0] * 0.24, Math.max(4, solar.position[1] * 0.24), -solar.position[2] * 0.24]}
+        intensity={solar.intensity * 3.35}
         angle={0.64}
         penumbra={0.96}
         distance={18}
-        color="#ff6330"
+        color={solar.color}
         onUpdate={(light) => light.layers.set(1)}
       />
-      <directionalLight position={[7, 5, 9]} intensity={1.7} color="#ff6d32" onUpdate={(light) => light.layers.set(1)} />
+      <directionalLight
+        position={[-solar.position[0] * 0.28, Math.max(4, solar.position[1] * 0.28), -solar.position[2] * 0.28]}
+        intensity={solar.intensity * 0.7}
+        color={solar.color}
+        onUpdate={(light) => light.layers.set(1)}
+      />
 
-      <SolarHorizon />
-      <DustStorm quality={quality} />
+      <DustStorm
+        quality={quality}
+        sunDirection={solar.position}
+        sunColor={solar.color}
+        sunGlow={solar.glow}
+        sunStrength={solar.intensity / 3.25}
+      />
       <CinematicGround quality={quality} groundRef={groundRef} />
       <SoilInteraction groundRef={groundRef} />
       <SignalRings />
@@ -175,6 +211,9 @@ const DUST_FRAGMENT_SHADER = `
   uniform float uTime;
   uniform float uOpacity;
   uniform vec3 uSunDirection;
+  uniform vec3 uSunColor;
+  uniform float uSunGlow;
+  uniform float uSunStrength;
   varying vec3 vDirection;
 
   float hash3(vec3 p) {
@@ -219,21 +258,47 @@ const DUST_FRAGMENT_SHADER = `
     float sunScatter = pow(max(dot(direction, normalize(uSunDirection)), 0.0), 5.0);
     vec3 shadowDust = vec3(0.15, 0.012, 0.004);
     vec3 copperDust = vec3(0.61, 0.058, 0.01);
-    vec3 sunDust = vec3(1.0, 0.29, 0.065);
+    vec3 sunDust = mix(vec3(1.0, 0.18, 0.025), uSunColor, 0.72);
     vec3 color = mix(shadowDust, copperDust, clamp(0.18 + broad * 0.72, 0.0, 1.0));
-    color = mix(color, sunDust, sunScatter * (0.38 + detail * 0.42));
+    float scatterEnergy = sunScatter * (0.24 + detail * 0.38) * (0.48 + uSunGlow * 0.72) * uSunStrength;
+    color = mix(color, sunDust, clamp(scatterEnergy, 0.0, 1.0));
     float alpha = cloud * bottomFade * topFade * (0.16 + horizon * 0.84) * uOpacity;
+    alpha *= 1.0 + sunScatter * uSunGlow * uSunStrength * 0.22;
     gl_FragColor = vec4(color, alpha);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
   }
 `;
 
-function DustStorm({ quality }: { quality: Quality }) {
+function DustStorm({
+  quality,
+  sunDirection,
+  sunColor,
+  sunGlow,
+  sunStrength,
+}: {
+  quality: Quality;
+  sunDirection: readonly [number, number, number];
+  sunColor: string;
+  sunGlow: number;
+  sunStrength: number;
+}) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
     uOpacity: { value: quality === 'high' ? 0.72 : quality === 'medium' ? 0.62 : 0.5 },
-    uSunDirection: { value: new THREE.Vector3(-9, 8.5, -36).normalize() },
+    uSunDirection: { value: new THREE.Vector3(0, 1, 0) },
+    uSunColor: { value: new THREE.Color('#ff5a1f') },
+    uSunGlow: { value: 1 },
+    uSunStrength: { value: 1 },
   }), [quality]);
+
+  useEffect(() => {
+    uniforms.uSunDirection.value.set(...sunDirection).normalize();
+    uniforms.uSunColor.value.set(sunColor);
+    uniforms.uSunGlow.value = sunGlow;
+    uniforms.uSunStrength.value = sunStrength;
+  }, [sunColor, sunDirection, sunGlow, sunStrength, uniforms]);
 
   useFrame((state) => {
     if (materialRef.current) materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
@@ -300,7 +365,8 @@ function CinematicGround({
       const y = position.getY(index);
       const distance = Math.sqrt(x * x + y * y);
       const patchDistance = Math.max(Math.abs(x), Math.abs(y));
-      const patchUnderlay = (1 - THREE.MathUtils.smoothstep(patchDistance, 8.15, 9)) * 0.32;
+      const patchUnderlay = 0.02
+        + (1 - THREE.MathUtils.smoothstep(patchDistance, 16.8, 18)) * 0.34;
       const height = terrainHeight(x, y) - patchUnderlay;
       position.setZ(index, height);
 
@@ -318,8 +384,8 @@ function CinematicGround({
   }, [quality]);
 
   const patchGeometry = useMemo(() => {
-    const size = 18;
-    const segments = quality === 'low' ? 128 : quality === 'medium' ? 192 : 256;
+    const size = 36;
+    const segments = quality === 'low' ? 192 : quality === 'medium' ? 256 : 384;
     const plane = new THREE.PlaneGeometry(size, size, segments, segments);
     const position = plane.attributes.position;
     const uv = plane.attributes.uv;
@@ -403,7 +469,7 @@ function CinematicGround({
   );
 }
 
-function SolarHorizon() {
+function CalibratedSun({ solar, quality }: { solar: SolarLightingValues; quality: Quality }) {
   const glowRef = useRef<THREE.Sprite>(null);
   const glowTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
@@ -412,12 +478,12 @@ function SolarHorizon() {
     const context = canvas.getContext('2d');
     if (!context) return new THREE.CanvasTexture(canvas);
     const gradient = context.createRadialGradient(256, 256, 0, 256, 256, 256);
-    gradient.addColorStop(0, 'rgba(255,178,82,1)');
-    gradient.addColorStop(0.045, 'rgba(255,120,42,1)');
-    gradient.addColorStop(0.105, 'rgba(255,88,22,0.98)');
-    gradient.addColorStop(0.22, 'rgba(255,50,7,0.68)');
-    gradient.addColorStop(0.48, 'rgba(255,55,4,0.18)');
-    gradient.addColorStop(1, 'rgba(255,30,0,0)');
+    gradient.addColorStop(0, 'rgba(255,255,255,1)');
+    gradient.addColorStop(0.045, 'rgba(255,255,255,1)');
+    gradient.addColorStop(0.11, 'rgba(255,255,255,0.94)');
+    gradient.addColorStop(0.24, 'rgba(255,255,255,0.6)');
+    gradient.addColorStop(0.52, 'rgba(255,255,255,0.16)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
     context.fillStyle = gradient;
     context.fillRect(0, 0, 512, 512);
     const texture = new THREE.CanvasTexture(canvas);
@@ -425,20 +491,45 @@ function SolarHorizon() {
     return texture;
   }, []);
 
+  useEffect(() => () => glowTexture.dispose(), [glowTexture]);
+
   useFrame((state) => {
     if (!glowRef.current) return;
     const pulse = 1 + Math.sin(state.clock.elapsedTime * 0.38) * 0.018;
-    glowRef.current.scale.set(6.2 * pulse, 6.2 * pulse, 1);
+    const outerScale = 3.2 + solar.glow * 3;
+    glowRef.current.scale.set(outerScale * pulse, outerScale * pulse, 1);
   });
 
+  const outerScale = 3.2 + solar.glow * 3;
+  const coreScale = 1 + solar.glow * 0.35;
+  const visualStrength = Math.sqrt(THREE.MathUtils.clamp(solar.intensity / 3.25, 0, 2.5));
+  const sunPosition: [number, number, number] = [...solar.position];
+
   return (
-    <group position={[-9, 8.5, -36]}>
-      <sprite ref={glowRef} scale={[6.2, 6.2, 1]} renderOrder={-8}>
+    <>
+      <directionalLight
+        position={sunPosition}
+        intensity={solar.intensity}
+        color={solar.color}
+        castShadow
+        shadow-mapSize-width={quality === 'low' ? 1024 : 2048}
+        shadow-mapSize-height={quality === 'low' ? 1024 : 2048}
+        shadow-camera-left={-14}
+        shadow-camera-right={14}
+        shadow-camera-top={14}
+        shadow-camera-bottom={-14}
+        shadow-camera-near={0.5}
+        shadow-camera-far={72}
+        shadow-bias={-0.00018}
+        shadow-normalBias={0.006}
+      />
+      <group position={sunPosition}>
+      <sprite ref={glowRef} scale={[outerScale, outerScale, 1]} renderOrder={-8}>
         <spriteMaterial
           map={glowTexture}
-          color="#ff5a24"
+          color={solar.color}
           transparent
-          opacity={0.94}
+          opacity={Math.min(1, solar.glow * 0.92 * visualStrength)}
           depthWrite={false}
           depthTest
           blending={THREE.AdditiveBlending}
@@ -446,12 +537,12 @@ function SolarHorizon() {
           fog={false}
         />
       </sprite>
-      <sprite scale={[1.35, 1.35, 1]} renderOrder={-5}>
+      <sprite scale={[coreScale, coreScale, 1]} renderOrder={-5}>
         <spriteMaterial
           map={glowTexture}
-          color="#ffb05c"
+          color={solar.color}
           transparent
-          opacity={1}
+          opacity={Math.min(1, (0.72 + solar.glow * 0.14) * visualStrength)}
           depthWrite={false}
           depthTest
           blending={THREE.AdditiveBlending}
@@ -459,7 +550,8 @@ function SolarHorizon() {
           fog={false}
         />
       </sprite>
-    </group>
+      </group>
+    </>
   );
 }
 

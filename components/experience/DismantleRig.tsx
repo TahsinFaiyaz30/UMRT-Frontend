@@ -305,6 +305,7 @@ function buildInternals(
     g.traverse((o) => {
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
+      mesh.layers.enable(1);
       const src = mesh.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[];
       if (Array.isArray(src)) {
         mesh.material = src.map((m) => {
@@ -377,6 +378,7 @@ export function DismantleRig({
       mesh.frustumCulled = false;
       mesh.castShadow = true;
       mesh.receiveShadow = true;
+      mesh.layers.enable(1);
       const label = mesh.name.split('__')[0];
       if (!teardownMotions[label]) return;
       // Boost env map intensity on the rover's own materials so they
@@ -505,6 +507,11 @@ export function DismantleRig({
       position={modelConfig.basePosition}
       rotation={[0, modelConfig.rotationY, 0]}
       scale={modelConfig.scale}
-    />
+    >
+      <mesh name="rover-soil-occluder" position={[0, 1.05, 0]}>
+        <boxGeometry args={[4.2, 2.5, 3.15]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
+      </mesh>
+    </group>
   );
 }

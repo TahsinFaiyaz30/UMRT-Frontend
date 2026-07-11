@@ -152,22 +152,34 @@ export const ModelRig = forwardRef<ModelRigHandle, { running?: boolean }>(functi
 
   if (!renderScene) {
     return (
-      <group ref={fallbackRef} position={modelConfig.basePosition} rotation={[0, modelConfig.rotationY, 0]}>
+      <group name="rover-model-rig" ref={fallbackRef} position={modelConfig.basePosition} rotation={[0, modelConfig.rotationY, 0]}>
         <ProxyRover running={running} />
+        <RoverSoilOccluder />
       </group>
     );
   }
 
   return (
     <group
+      name="rover-model-rig"
       ref={groupRef}
       position={modelConfig.basePosition}
       rotation={[0, modelConfig.rotationY, 0]}
     >
       <primitive object={renderScene} />
+      <RoverSoilOccluder />
     </group>
   );
 });
+
+function RoverSoilOccluder() {
+  return (
+    <mesh name="rover-soil-occluder" position={[0, 1.05, 0]}>
+      <boxGeometry args={[4.2, 2.5, 3.15]} />
+      <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
+    </mesh>
+  );
+}
 
 // Preload the labelled GLB as soon as this module is parsed.
 // `useGLTF` writes to drei's cache, so once SceneCanvas + HeroScene
