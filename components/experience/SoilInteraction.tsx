@@ -36,6 +36,8 @@ const DUST_FRAGMENT_SHADER = `
   varying float vSeed;
   varying vec3 vColor;
   uniform float uTime;
+  uniform vec3 uSunColor;
+  uniform float uSunStrength;
 
   float hash21(vec2 point) {
     point = fract(point * vec2(123.34, 456.21));
@@ -64,7 +66,11 @@ const DUST_FRAGMENT_SHADER = `
     float softParticle = 1.0 - smoothstep(0.05, edge, radius);
     float granularCore = 1.0 - smoothstep(0.0, 0.14 + billow * 0.05, radius);
     float alpha = vAlpha * (softParticle * (0.5 + billow * 0.46) + granularCore * 0.12);
-    gl_FragColor = vec4(vColor, alpha);
+    float illumination = clamp(uSunStrength, 0.0, 2.5);
+    vec3 lightTint = mix(vec3(1.0, 0.72, 0.55), uSunColor, 0.45);
+    vec3 litColor = vColor * lightTint * illumination;
+    gl_FragColor = vec4(litColor, alpha * clamp(illumination, 0.0, 1.35));
+    #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
 `;
@@ -82,6 +88,15 @@ type SurfaceHit = {
   distance: number;
 };
 
+type PointerSample = {
+  ndcX: number;
+  ndcY: number;
+  timestamp: number;
+  inside: boolean;
+  blocked: boolean;
+  buttons: number;
+};
+
 type DustParticle = {
   life: number;
   maxLife: number;
@@ -96,17 +111,24 @@ type DustParticle = {
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-export function SoilInteraction({ groundRef }: { groundRef: RefObject<THREE.Mesh | null> }) {
+export function SoilInteraction({
+  groundRef,
+  sunColor,
+  sunStrength,
+}: {
+  groundRef: RefObject<THREE.Mesh | null>;
+  sunColor: string;
+  sunStrength: number;
+}) {
   const { camera, gl, raycaster, scene } = useThree();
   const dustRef = useRef<THREE.Points>(null);
   const roverOccluderRef = useRef<THREE.Object3D | null>(null);
+  const roverRigRef = useRef<THREE.Object3D | null>(null);
   const pointer = useRef(new THREE.Vector2(2, 2));
   const pointerInside = useRef(false);
   const pointerBlocked = useRef(false);
   const pointerButtons = useRef(0);
-  const pointerRevision = useRef(0);
-  const processedRevision = useRef(-1);
-  const pointerTimestamp = useRef(0);
+  const pointerSamples = useRef<PointerSample[]>([]);
   const processedTimestamp = useRef(0);
   const lastPoint = useRef<THREE.Vector3 | null>(null);
   const lastNormal = useRef(new THREE.Vector3(0, 1, 0));
@@ -127,6 +149,8 @@ export function SoilInteraction({ groundRef }: { groundRef: RefObject<THREE.Mesh
   const dustUniforms = useMemo(() => ({
     uPixelRatio: { value: Math.min(window.devicePixelRatio || 1, 1.65) },
     uTime: { value: 0 },
+    uSunColor: { value: new THREE.Color('#ff8100') },
+    uSunStrength: { value: 1 },
   }), []);
   const particles = useRef<DustParticle[]>(
     Array.from({ length: MAX_DUST }, (_, index) => ({
@@ -163,25 +187,59 @@ export function SoilInteraction({ groundRef }: { groundRef: RefObject<THREE.Mesh
     const updatePointer = (event: PointerEvent) => {
       if (finePointer && !finePointer.matches) return;
       const bounds = gl.domElement.getBoundingClientRect();
+      const blocked = event.target instanceof Element
+        && Boolean(event.target.closest(
+          'a, button, input, [role="button"], .mission-loader, .teardown-console, [aria-label="Solar calibration"], [data-page-footer]',
+        ));
+      const coalesced = typeof event.getCoalescedEvents === 'function'
+        ? event.getCoalescedEvents()
+        : [];
+      const sourceEvents = coalesced.length > 0 ? [...coalesced, event] : [event];
+
+      // PointerEvent coalescing is common on high-polling mice. Processing
+      // only the final event once per frame creates gaps that feel like the
+      // terrain has stopped seeing the cursor, so preserve the physical path.
+      sourceEvents.forEach((sample, index) => {
+        const previous = index > 0 ? sourceEvents[index - 1] : undefined;
+        if (previous
+          && sample.timeStamp === previous.timeStamp
+          && sample.clientX === previous.clientX
+          && sample.clientY === previous.clientY) return;
+        const inside = sample.clientX >= bounds.left
+          && sample.clientX <= bounds.right
+          && sample.clientY >= bounds.top
+          && sample.clientY <= bounds.bottom;
+        pointerSamples.current.push({
+          ndcX: ((sample.clientX - bounds.left) / Math.max(1, bounds.width)) * 2 - 1,
+          ndcY: -((sample.clientY - bounds.top) / Math.max(1, bounds.height)) * 2 + 1,
+          timestamp: sample.timeStamp,
+          inside,
+          blocked,
+          buttons: sample.buttons,
+        });
+      });
+
+      // This is a safety ceiling rather than a throttle: the retained first
+      // sample is still connected to the previous world point, so even an OS
+      // event burst produces one continuous trace rather than a cut.
+      if (pointerSamples.current.length > 96) {
+        pointerSamples.current.splice(0, pointerSamples.current.length - 96);
+      }
       pointerInside.current = event.clientX >= bounds.left
         && event.clientX <= bounds.right
         && event.clientY >= bounds.top
         && event.clientY <= bounds.bottom;
-      pointerBlocked.current = event.target instanceof Element
-        && Boolean(event.target.closest(
-          'a, button, input, [role="button"], .mission-loader, .teardown-console, [aria-label="Solar calibration"], [data-page-footer]',
-        ));
+      pointerBlocked.current = blocked;
       pointerButtons.current = event.buttons;
       pointer.current.set(
         ((event.clientX - bounds.left) / Math.max(1, bounds.width)) * 2 - 1,
         -((event.clientY - bounds.top) / Math.max(1, bounds.height)) * 2 + 1,
       );
-      pointerTimestamp.current = event.timeStamp;
-      pointerRevision.current += 1;
     };
     const leave = () => {
       pointerInside.current = false;
       pointerButtons.current = 0;
+      pointerSamples.current.length = 0;
       lastPoint.current = null;
       processedTimestamp.current = 0;
       motionEnergy.current = 0;
@@ -191,6 +249,7 @@ export function SoilInteraction({ groundRef }: { groundRef: RefObject<THREE.Mesh
     };
     const release = () => {
       pointerButtons.current = 0;
+      pointerSamples.current.length = 0;
       lastPoint.current = null;
       processedTimestamp.current = 0;
     };
@@ -217,6 +276,11 @@ export function SoilInteraction({ groundRef }: { groundRef: RefObject<THREE.Mesh
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
   }, [dustUniforms]);
+
+  useEffect(() => {
+    dustUniforms.uSunColor.value.set(sunColor);
+    dustUniforms.uSunStrength.value = sunStrength;
+  }, [dustUniforms, sunColor, sunStrength]);
 
   const setSurfaceCursor = (active: boolean) => {
     if (surfaceActive.current === active) return;
@@ -283,9 +347,11 @@ export function SoilInteraction({ groundRef }: { groundRef: RefObject<THREE.Mesh
       exit = Math.min(exit, far);
       return exit >= entry;
     };
+    const minimumSurfaceHeight = (geometry.boundingBox?.min.z ?? -3) - 0.24;
+    const maximumSurfaceHeight = (geometry.boundingBox?.max.z ?? 4.5) + 0.12;
     if (!clipAxis(localOrigin.x, localDirection.x, -half, half)
       || !clipAxis(localOrigin.y, localDirection.y, -half, half)
-      || !clipAxis(localOrigin.z, localDirection.z, -3, 4.5)
+      || !clipAxis(localOrigin.z, localDirection.z, minimumSurfaceHeight, maximumSurfaceHeight)
       || exit < 0) return undefined;
     entry = Math.max(0, entry);
     const marchLength = exit - entry;
@@ -319,7 +385,8 @@ export function SoilInteraction({ groundRef }: { groundRef: RefObject<THREE.Mesh
     const travel = (lower + upper) / 2;
     localPoint.copy(localDirection).multiplyScalar(travel).add(localOrigin);
     localPoint.z = sampleHeight(localPoint.x, localPoint.y);
-    if (Math.max(Math.abs(localPoint.x), Math.abs(localPoint.y)) > meta.size * 0.492) return undefined;
+    const interactionHalf = half - spacing * 0.5;
+    if (Math.max(Math.abs(localPoint.x), Math.abs(localPoint.y)) > interactionHalf) return undefined;
 
     const surfaceSample = sampleTriangle(localPoint.x, localPoint.y);
     const localNormal = new THREE.Vector3();
@@ -343,12 +410,29 @@ export function SoilInteraction({ groundRef }: { groundRef: RefObject<THREE.Mesh
     if (!roverOccluderRef.current?.parent) {
       roverOccluderRef.current = scene.getObjectByName('rover-soil-occluder') ?? null;
     }
+    if (!roverRigRef.current?.parent) {
+      roverRigRef.current = scene.getObjectByName('rover-model-rig') ?? null;
+    }
     const roverOccluder = roverOccluderRef.current;
     if (!roverOccluder) return surfaceHit;
-    const occluderHit = raycaster.intersectObject(roverOccluder, false)[0];
-    return occluderHit && occluderHit.distance < surfaceHit.distance
-      ? undefined
-      : surfaceHit;
+    const broadHit = raycaster.intersectObject(roverOccluder, false)[0];
+    if (!broadHit || broadHit.distance >= surfaceHit.distance) return surfaceHit;
+
+    // The invisible box is only a cheap broad-phase. The old implementation
+    // treated the whole box as solid and rejected valid ground between every
+    // wheel. Inside that region, resolve against the real rendered meshes so
+    // metal blocks the trace while visible gaps remain live soil.
+    const roverRig = roverRigRef.current;
+    if (!roverRig) return surfaceHit;
+    const roverHit = raycaster.intersectObject(roverRig, true).find((intersection) => {
+      if (intersection.object === roverOccluder
+        || intersection.object.name === 'rover-soil-occluder'
+        || !intersection.object.visible) return false;
+      const material = (intersection.object as THREE.Mesh).material;
+      const materials = Array.isArray(material) ? material : material ? [material] : [];
+      return materials.length === 0 || materials.some((entry) => entry.visible && entry.opacity > 0.02);
+    });
+    return roverHit && roverHit.distance < surfaceHit.distance ? undefined : surfaceHit;
   };
 
   const deformSurface = (
@@ -362,17 +446,20 @@ export function SoilInteraction({ groundRef }: { groundRef: RefObject<THREE.Mesh
     const meta = geometry.userData.surfaceMeta as SurfaceMeta | undefined;
     if (!meta) return;
     const localPoint = ground.worldToLocal(worldPoint.clone());
-    if (Math.max(Math.abs(localPoint.x), Math.abs(localPoint.y)) > meta.size * 0.492) return;
+    const surfaceSpacing = meta.size / meta.segments;
+    const interactionHalf = meta.size / 2 - surfaceSpacing * 0.5;
+    if (Math.max(Math.abs(localPoint.x), Math.abs(localPoint.y)) > interactionHalf) return;
+    const contactRadius = Math.max(radius, surfaceSpacing * 1.85);
 
     const localDirectionEnd = ground.worldToLocal(worldPoint.clone().add(worldDirection));
     const localDirection = localDirectionEnd.sub(localPoint).setZ(0);
     const directionalContact = localDirection.lengthSq() > 0.000001;
     if (directionalContact) localDirection.normalize();
     const position = geometry.getAttribute('position') as THREE.BufferAttribute;
-    const spacing = meta.size / meta.segments;
+    const spacing = surfaceSpacing;
     const centerX = Math.round((localPoint.x + meta.size / 2) / spacing);
     const centerY = Math.round((meta.size / 2 - localPoint.y) / spacing);
-    const reach = Math.ceil(radius / spacing) + 1;
+    const reach = Math.ceil(contactRadius / spacing) + 1;
 
     for (let row = Math.max(0, centerY - reach); row <= Math.min(meta.segments, centerY + reach); row += 1) {
       for (let column = Math.max(0, centerX - reach); column <= Math.min(meta.segments, centerX + reach); column += 1) {
@@ -380,10 +467,10 @@ export function SoilInteraction({ groundRef }: { groundRef: RefObject<THREE.Mesh
         const dx = position.getX(index) - localPoint.x;
         const dy = position.getY(index) - localPoint.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance > radius) continue;
-        const ratio = distance / radius;
-        const forward = (dx * localDirection.x + dy * localDirection.y) / radius;
-        const lateral = (-dx * localDirection.y + dy * localDirection.x) / radius;
+        if (distance > contactRadius) continue;
+        const ratio = distance / contactRadius;
+        const forward = (dx * localDirection.x + dy * localDirection.y) / contactRadius;
+        const lateral = (-dx * localDirection.y + dy * localDirection.x) / contactRadius;
         const forwardFalloff = 1 - THREE.MathUtils.smoothstep(Math.abs(forward), 0.62, 1);
         const core = directionalContact
           ? Math.exp(-((lateral / 0.38) ** 2)) * forwardFalloff
@@ -482,8 +569,8 @@ export function SoilInteraction({ groundRef }: { groundRef: RefObject<THREE.Mesh
     // A slow cursor dwells against the surface and compacts it more deeply.
     // Fast motion remains deep, but transfers more of its energy into dust.
     const basePressure = 0.0064 + slowContact * 0.0086 + kinetic * 0.0002;
-    const spacing = 0.05;
-    const steps = Math.max(1, Math.min(96, Math.ceil(distance / spacing)));
+    const spacing = 0.065;
+    const steps = Math.max(1, Math.min(240, Math.ceil(distance / spacing)));
     const effectiveSpacing = distance / steps;
     const pressure = basePressure * clamp(effectiveSpacing / spacing, 1, 2.8);
     const direction = to.clone().sub(from).normalize();
@@ -515,7 +602,8 @@ export function SoilInteraction({ groundRef }: { groundRef: RefObject<THREE.Mesh
 
   useFrame((state, delta) => {
     const ground = groundRef.current;
-    const pointerMoved = processedRevision.current !== pointerRevision.current;
+    const samples = pointerSamples.current.splice(0, pointerSamples.current.length);
+    const pointerMoved = samples.length > 0;
     const cameraMoved = previousCameraPosition.current.distanceToSquared(camera.position) > 0.000004
       || 1 - Math.abs(previousCameraQuaternion.current.dot(camera.quaternion)) > 0.000002;
     previousCameraPosition.current.copy(camera.position);
@@ -536,48 +624,53 @@ export function SoilInteraction({ groundRef }: { groundRef: RefObject<THREE.Mesh
     }
 
     if (pointerMoved) {
-      processedRevision.current = pointerRevision.current;
-      const elapsedMs = processedTimestamp.current > 0
-        ? clamp(pointerTimestamp.current - processedTimestamp.current, 8, 80)
-        : 16;
-      processedTimestamp.current = pointerTimestamp.current;
-      const canHit = Boolean(
-        ground
-        && pointerInside.current
-        && !pointerBlocked.current
-        && pointerButtons.current === 0,
-      );
-      const hit = canHit && ground ? visibleSurfaceHit(ground) : undefined;
-      setSurfaceCursor(Boolean(hit));
+      let latestHit: SurfaceHit | undefined;
+      samples.forEach((sample) => {
+        pointer.current.set(sample.ndcX, sample.ndcY);
+        const elapsedMs = processedTimestamp.current > 0
+          ? clamp(sample.timestamp - processedTimestamp.current, 2, 80)
+          : 16;
+        processedTimestamp.current = sample.timestamp;
+        const canHit = Boolean(
+          ground
+          && sample.inside
+          && !sample.blocked
+          && sample.buttons === 0,
+        );
+        const hit = canHit && ground ? visibleSurfaceHit(ground) : undefined;
+        latestHit = hit;
 
-      if (hit && ground) {
-        lastNormal.current.lerp(hit.normal, 0.42).normalize();
-        if (lastPoint.current) {
-          const distance = lastPoint.current.distanceTo(hit.point);
-          const speed = distance / (elapsedMs / 1000);
-          const kinetic = clamp(speed / 3.2, 0, 2.7);
-          motionEnergy.current = clamp(
-            motionEnergy.current + (elapsedMs / 1000) * (0.18 + kinetic * 1.3),
-            0,
-            2,
-          );
-          disturbPath(
-            ground,
-            lastPoint.current,
-            hit.point,
-            lastNormal.current,
-            speed,
-            elapsedMs / 1000,
-          );
+        if (hit && ground) {
+          lastNormal.current.lerp(hit.normal, 0.42).normalize();
+          if (lastPoint.current) {
+            const distance = lastPoint.current.distanceTo(hit.point);
+            const speed = distance / (elapsedMs / 1000);
+            const kinetic = clamp(speed / 3.2, 0, 2.7);
+            motionEnergy.current = clamp(
+              motionEnergy.current + (elapsedMs / 1000) * (0.18 + kinetic * 1.3),
+              0,
+              2,
+            );
+            disturbPath(
+              ground,
+              lastPoint.current,
+              hit.point,
+              lastNormal.current,
+              speed,
+              elapsedMs / 1000,
+            );
+          } else {
+            // A valid hover registers immediately. This first contact is deep
+            // enough to read in grazing light while still remaining smaller
+            // than a slow, sustained trace.
+            deformSurface(ground, hit.point, new THREE.Vector3(), 0.18, 0.0075);
+          }
+          lastPoint.current = hit.point.clone();
         } else {
-          // The first surface sample leaves a small physical contact instead
-          // of requiring a second pointer event before anything registers.
-          deformSurface(ground, hit.point, new THREE.Vector3(), 0.16, 0.0035);
+          lastPoint.current = null;
         }
-        lastPoint.current = hit.point.clone();
-      } else {
-        lastPoint.current = null;
-      }
+      });
+      setSurfaceCursor(Boolean(latestHit));
     }
 
     if (surfaceDirty.current && ground && state.clock.elapsedTime - lastNormalUpdate.current > 0.055) {
@@ -672,7 +765,6 @@ export function SoilInteraction({ groundRef }: { groundRef: RefObject<THREE.Mesh
         transparent
         depthWrite={false}
         blending={THREE.NormalBlending}
-        toneMapped={false}
       />
     </points>
   );

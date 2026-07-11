@@ -74,14 +74,21 @@ function RangeControl({
 
 const stopPropagation = (event: SyntheticEvent) => event.stopPropagation();
 
-const temperatureSpectrum = `linear-gradient(90deg, ${[
+const temperatureStops = [
   900,
   1800,
   2800,
   4000,
   5200,
   6500,
-].map((temperature) => solarTemperatureToColor(temperature)).join(', ')})`;
+];
+const temperatureSpectrum = `linear-gradient(90deg, ${temperatureStops
+  .map((temperature) => {
+    const position = (temperature - SOLAR_CALIBRATION_LIMITS.temperature.min)
+      / (SOLAR_CALIBRATION_LIMITS.temperature.max - SOLAR_CALIBRATION_LIMITS.temperature.min) * 100;
+    return `${solarTemperatureToColor(temperature)} ${position.toFixed(2)}%`;
+  })
+  .join(', ')})`;
 
 const wrapAzimuth = (value: number) => {
   if (value > 180) return value - 360;
@@ -243,8 +250,8 @@ export function SolarCalibrationPanel({
             <span aria-hidden="true" />
           </div>
           <div>
-            <small>ACTIVE SPECTRUM</small>
-            <strong>{settings.temperature.toLocaleString()} K</strong>
+            <small>FILTERED ILLUMINANT</small>
+            <strong>{settings.temperature.toLocaleString('en-US')} K</strong>
           </div>
           <code>{temperatureColor.toUpperCase()}</code>
         </div>
@@ -269,12 +276,12 @@ export function SolarCalibrationPanel({
             onChange={(glow) => setSolarCalibrationSettings({ glow })}
           />
           <RangeControl
-            label="Color temperature"
+            label="Atmospheric illuminant CCT"
             value={settings.temperature}
             min={SOLAR_CALIBRATION_LIMITS.temperature.min}
             max={SOLAR_CALIBRATION_LIMITS.temperature.max}
             step={SOLAR_CALIBRATION_LIMITS.temperature.step}
-            displayValue={`${settings.temperature.toLocaleString()} K`}
+            displayValue={`${settings.temperature.toLocaleString('en-US')} K`}
             tone="temperature"
             onChange={(temperature) => setSolarCalibrationSettings({ temperature })}
           />

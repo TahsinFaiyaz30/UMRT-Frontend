@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useMemo, useRef } from 'react';
 import type { RefObject } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Environment, Lightformer, useTexture } from '@react-three/drei';
@@ -31,16 +31,12 @@ export const HeroScene = forwardRef<
   const groundRef = useRef<THREE.Mesh>(null);
   const solarSettings = useSolarCalibrationSettings();
   const solar = useMemo(() => solarLightingFromSettings(solarSettings), [solarSettings]);
-  const [environmentSolar, setEnvironmentSolar] = useState(solar);
-  useEffect(() => {
-    const update = window.setTimeout(() => setEnvironmentSolar(solar), 120);
-    return () => window.clearTimeout(update);
-  }, [solar]);
-  const environmentEnergy = environmentSolar.intensity / 3.25;
+  const environmentEnergy = solar.intensity / 3.25;
   const environmentKey = [
-    environmentSolar.color,
+    solarSettings.temperature,
     environmentEnergy.toFixed(2),
-    ...environmentSolar.position.map((value) => Math.round(value)),
+    solarSettings.azimuth,
+    solarSettings.elevation,
   ].join('-');
   return (
     <>
@@ -50,18 +46,18 @@ export const HeroScene = forwardRef<
       <Environment key={environmentKey} resolution={256} frames={1} background={false}>
         <Lightformer
           form="ring"
-          color={environmentSolar.color}
+          color={solar.color}
           intensity={4.2 * environmentEnergy}
           scale={12}
-          position={environmentSolar.position.map((value) => value * 0.46) as [number, number, number]}
+          position={solar.position.map((value) => value * 0.46) as [number, number, number]}
           target={[0, 0, 0]}
         />
         <Lightformer
           form="rect"
-          color={environmentSolar.color}
+          color={solar.color}
           intensity={1.35 * environmentEnergy}
           scale={[8, 4, 1]}
-          position={environmentSolar.position.map((value, index) => index === 1
+          position={solar.position.map((value, index) => index === 1
             ? Math.max(4, value * 0.2)
             : -value * 0.22) as [number, number, number]}
           target={[0, 0.8, 0]}
@@ -79,21 +75,6 @@ export const HeroScene = forwardRef<
       <ambientLight intensity={solar.intensity * 0.07} color={solar.color} />
       <hemisphereLight args={[solar.color, '#120503', solar.intensity * 0.2]} />
       <CalibratedSun solar={solar} quality={quality} />
-      <spotLight
-        position={[-solar.position[0] * 0.24, Math.max(4, solar.position[1] * 0.24), -solar.position[2] * 0.24]}
-        intensity={solar.intensity * 3.35}
-        angle={0.64}
-        penumbra={0.96}
-        distance={18}
-        color={solar.color}
-        onUpdate={(light) => light.layers.set(1)}
-      />
-      <directionalLight
-        position={[-solar.position[0] * 0.28, Math.max(4, solar.position[1] * 0.28), -solar.position[2] * 0.28]}
-        intensity={solar.intensity * 0.7}
-        color={solar.color}
-        onUpdate={(light) => light.layers.set(1)}
-      />
 
       <DustStorm
         quality={quality}
@@ -103,9 +84,17 @@ export const HeroScene = forwardRef<
         sunStrength={solar.intensity / 3.25}
       />
       <CinematicGround quality={quality} groundRef={groundRef} />
-      <SoilInteraction groundRef={groundRef} />
+      <SoilInteraction
+        groundRef={groundRef}
+        sunColor={solar.color}
+        sunStrength={solar.intensity / 3.25}
+      />
       <SignalRings />
-      <DustField count={particleCountFor(quality)} />
+      <DustField
+        count={particleCountFor(quality)}
+        sunColor={solar.color}
+        sunStrength={solar.intensity / 3.25}
+      />
 
       {dismantleActive && dismantleProgressRef ? (
         <DismantleRig progressRef={dismantleProgressRef} timelineRef={dismantleTimelineRef} />
@@ -262,9 +251,12 @@ const DUST_FRAGMENT_SHADER = `
     vec3 color = mix(shadowDust, copperDust, clamp(0.18 + broad * 0.72, 0.0, 1.0));
     float scatterEnergy = sunScatter * (0.24 + detail * 0.38) * (0.48 + uSunGlow * 0.72) * uSunStrength;
     color = mix(color, sunDust, clamp(scatterEnergy, 0.0, 1.0));
+    float illumination = clamp(uSunStrength, 0.0, 2.5);
+    color *= illumination;
     float alpha = cloud * bottomFade * topFade * (0.16 + horizon * 0.84) * uOpacity;
     alpha *= 1.0 + sunScatter * uSunGlow * uSunStrength * 0.22;
-    gl_FragColor = vec4(color, alpha);
+    alpha *= clamp(illumination, 0.0, 1.35);
+    gl_FragColor = vec4(color, clamp(alpha, 0.0, 0.96));
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
@@ -351,44 +343,15 @@ function CinematicGround({
     normal.colorSpace = THREE.NoColorSpace;
   }, [albedo, gl, normal]);
 
-  const baseGeometry = useMemo(() => {
-    const segments = quality === 'low' ? 96 : quality === 'medium' ? 144 : 192;
-    const plane = new THREE.PlaneGeometry(86, 86, segments, segments);
-    const position = plane.attributes.position;
-    const colors = new Float32Array(position.count * 3);
-    const low = new THREE.Color('#571a0f');
-    const high = new THREE.Color('#a9472c');
-    const shade = new THREE.Color();
-
-    for (let index = 0; index < position.count; index += 1) {
-      const x = position.getX(index);
-      const y = position.getY(index);
-      const distance = Math.sqrt(x * x + y * y);
-      const patchDistance = Math.max(Math.abs(x), Math.abs(y));
-      const patchUnderlay = 0.02
-        + (1 - THREE.MathUtils.smoothstep(patchDistance, 16.8, 18)) * 0.34;
-      const height = terrainHeight(x, y) - patchUnderlay;
-      position.setZ(index, height);
-
-      const microVariation = (Math.sin(x * 2.9) + Math.cos(y * 3.3)) * 0.035;
-      const colorMix = THREE.MathUtils.clamp(0.2 + height * 0.58 + distance / 82 + microVariation, 0, 1);
-      shade.lerpColors(low, high, colorMix);
-      colors[index * 3] = shade.r;
-      colors[index * 3 + 1] = shade.g;
-      colors[index * 3 + 2] = shade.b;
-    }
-
-    plane.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    plane.computeVertexNormals();
-    return plane;
-  }, [quality]);
-
-  const patchGeometry = useMemo(() => {
-    const size = 36;
-    const segments = quality === 'low' ? 192 : quality === 'medium' ? 256 : 384;
+  const surfaceGeometry = useMemo(() => {
+    // The rendered ground and the interactive ground must be the same mesh.
+    // The former 36 m patch sat over an 86 m visual-only base, which created
+    // large dead zones after orbiting or panning. A single adaptive surface
+    // keeps every visible soil pixel deformable without a seam or proxy hit.
+    const size = 86;
+    const segments = quality === 'low' ? 320 : quality === 'medium' ? 448 : 560;
     const plane = new THREE.PlaneGeometry(size, size, segments, segments);
     const position = plane.attributes.position;
-    const uv = plane.attributes.uv;
     const colors = new Float32Array(position.count * 3);
     const baseHeights = new Float32Array(position.count);
     const deformations = new Float32Array(position.count);
@@ -404,9 +367,6 @@ function CinematicGround({
       position.setZ(index, height);
       baseHeights[index] = height;
 
-      // Match the world-space UV projection of the 86 m base terrain so the
-      // high-resolution patch is visually continuous at its boundary.
-      uv.setXY(index, (x + 43) / 86, (y + 43) / 86);
       const microVariation = (Math.sin(x * 2.9) + Math.cos(y * 3.3)) * 0.035;
       const colorMix = THREE.MathUtils.clamp(0.2 + height * 0.58 + distance / 82 + microVariation, 0, 1);
       shade.lerpColors(low, high, colorMix);
@@ -420,52 +380,32 @@ function CinematicGround({
     plane.computeVertexNormals();
     (plane.getAttribute('position') as THREE.BufferAttribute).setUsage(THREE.DynamicDrawUsage);
     (plane.getAttribute('normal') as THREE.BufferAttribute).setUsage(THREE.DynamicDrawUsage);
+    plane.computeBoundingBox();
     plane.computeBoundingSphere();
     return plane;
   }, [quality]);
 
   return (
-    <group>
-      <mesh
-        name="mars-ground-base"
-        geometry={baseGeometry}
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.08, 0]}
-        castShadow
-        receiveShadow
-      >
-        <meshStandardMaterial
-          map={albedo}
-          normalMap={normal}
-          normalScale={new THREE.Vector2(1.08, 1.08)}
-          vertexColors
-          roughness={1}
-          metalness={0}
-          envMapIntensity={0.06}
-        />
-      </mesh>
-
-      <mesh
-        ref={groundRef}
-        name="mars-ground-surface"
-        geometry={patchGeometry}
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.079, 0]}
-        castShadow
-        receiveShadow
-        frustumCulled={false}
-      >
-        <meshStandardMaterial
-          map={albedo}
-          normalMap={normal}
-          normalScale={new THREE.Vector2(1.08, 1.08)}
-          vertexColors
-          roughness={1}
-          metalness={0}
-          envMapIntensity={0.06}
-        />
-      </mesh>
-    </group>
+    <mesh
+      ref={groundRef}
+      name="mars-ground-surface"
+      geometry={surfaceGeometry}
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0, -0.079, 0]}
+      castShadow
+      receiveShadow
+      frustumCulled={false}
+    >
+      <meshStandardMaterial
+        map={albedo}
+        normalMap={normal}
+        normalScale={new THREE.Vector2(1.08, 1.08)}
+        vertexColors
+        roughness={1}
+        metalness={0}
+        envMapIntensity={0.06}
+      />
+    </mesh>
   );
 }
 
@@ -614,8 +554,20 @@ function HorizonForms() {
   );
 }
 
-function DustField({ count }: { count: number }) {
+function DustField({
+  count,
+  sunColor,
+  sunStrength,
+}: {
+  count: number;
+  sunColor: string;
+  sunStrength: number;
+}) {
   const pointsRef = useRef<THREE.Points>(null);
+  const litDustColor = useMemo(() => new THREE.Color('#5a1d12').lerp(
+    new THREE.Color(sunColor),
+    0.54,
+  ), [sunColor]);
   const dustTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 64;
@@ -659,16 +611,16 @@ function DustField({ count }: { count: number }) {
   return (
     <points ref={pointsRef} geometry={geometry}>
       <pointsMaterial
-        color="#ffb06b"
+        color={litDustColor}
         map={dustTexture}
         alphaMap={dustTexture}
         alphaTest={0.01}
         size={0.052}
         sizeAttenuation
         transparent
-        opacity={0.48}
+        opacity={0.42 * THREE.MathUtils.clamp(sunStrength, 0, 1.5)}
         depthWrite={false}
-        blending={THREE.AdditiveBlending}
+        blending={THREE.NormalBlending}
       />
     </points>
   );

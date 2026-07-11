@@ -175,6 +175,8 @@ export const ModelRig = forwardRef<ModelRigHandle, { running?: boolean }>(functi
 function RoverSoilOccluder() {
   return (
     <mesh name="rover-soil-occluder" position={[0, 1.05, 0]}>
+      {/* Broad-phase only. SoilInteraction resolves any hit inside this box
+          against the actual rover meshes before rejecting the ground. */}
       <boxGeometry args={[4.2, 2.5, 3.15]} />
       <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
     </mesh>
