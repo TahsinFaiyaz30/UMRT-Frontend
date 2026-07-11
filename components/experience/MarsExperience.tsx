@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Lenis from 'lenis';
 import { SceneCanvas } from './SceneCanvas';
 import { HeroOverlay } from './HeroOverlay';
-import { Footer } from './Footer';
+import { SiteFooter } from '@/components/layout/SiteFooter';
 import { PremiumNavbar } from '@/components/navbar';
 import { TeardownOverlay } from './TeardownOverlay';
 import { MissionLoader } from './MissionLoader';
@@ -291,7 +291,7 @@ export default function MarsExperience() {
         onTrigger={triggerDismantle}
       />
 
-      <Footer data-page-footer />
+      <SiteFooter data-page-footer />
     </div>
   );
 }

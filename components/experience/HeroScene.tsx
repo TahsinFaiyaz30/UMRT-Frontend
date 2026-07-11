@@ -86,6 +86,7 @@ export const HeroScene = forwardRef<
       <CinematicGround quality={quality} groundRef={groundRef} />
       <SoilInteraction
         groundRef={groundRef}
+        sunDirection={solar.position}
         sunColor={solar.color}
         sunStrength={solar.intensity / 3.25}
       />
@@ -348,8 +349,12 @@ function CinematicGround({
     // The former 36 m patch sat over an 86 m visual-only base, which created
     // large dead zones after orbiting or panning. A single adaptive surface
     // keeps every visible soil pixel deformable without a seam or proxy hit.
-    const size = 86;
-    const segments = quality === 'low' ? 320 : quality === 'medium' ? 448 : 560;
+    // Overscan beyond the largest supported camera frustum so orbiting and
+    // panning never reveal a visual-only strip at the terrain boundary.
+    const size = 112;
+    // Scale tessellation with the 112 m overscan so the deformation grid
+    // retains approximately the original 86 m surface's spatial resolution.
+    const segments = quality === 'low' ? 400 : quality === 'medium' ? 560 : 704;
     const plane = new THREE.PlaneGeometry(size, size, segments, segments);
     const position = plane.attributes.position;
     const colors = new Float32Array(position.count * 3);

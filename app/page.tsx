@@ -22,5 +22,17 @@ const MarsExperience = dynamic(
 );
 
 export default function Page() {
-  return <MarsExperience />;
+  return (
+    <>
+      {/* Keep the large rover asset route-local: the achievements journey is
+          now entirely model-free and should never pay this network cost. */}
+      <link
+        rel="preload"
+        as="fetch"
+        crossOrigin="anonymous"
+        href="/models/curiosity_v4_semantic_external.glb"
+      />
+      <MarsExperience />
+    </>
+  );
 }

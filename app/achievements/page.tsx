@@ -1,30 +1,31 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import AchievementsFooter from '@/components/achievements/AchievementsFooter';
 import { ACHIEVEMENT_STATS } from '@/components/achievements/achievementData';
+import { SiteFooter } from '@/components/layout/SiteFooter';
 import { PremiumNavbar } from '@/components/navbar';
 
-/**
- * HelixGallery3D — 3D scroll-driven helix timeline/gallery.
- * Dynamic import with ssr:false because it uses WebGL.
- */
 const HelixGallery3D = dynamic(
   () => import('@/components/achievements/HelixGallery3D'),
   {
     ssr: false,
     loading: () => (
-      <section className="achievement-helix-section achievement-helix-loading" aria-label="Loading achievement archive">
-        <div className="achievement-helix-sticky">
+      <section className="achievement-cosmic-section achievement-cosmic-loading" aria-label="Loading celestial achievement archive">
+        <div className="achievement-cosmic-sticky">
           <div className="achievement-archive-loader" role="status">
             <span aria-hidden="true" />
-            <strong>Preparing rover archive</strong>
-            <small>Eight milestones / 2020—2025</small>
+            <strong>Synchronizing the constellation</strong>
+            <small>Eight signals / 2020—2025</small>
           </div>
         </div>
       </section>
     ),
   },
+);
+
+const CosmicIntroUniverse = dynamic(
+  () => import('@/components/achievements/CosmicIntroUniverse'),
+  { ssr: false },
 );
 
 export default function AchievementsPage() {
@@ -33,17 +34,21 @@ export default function AchievementsPage() {
       <PremiumNavbar />
       <main className="achievement-page bg-mars-900">
         <section className="achievement-intro" aria-labelledby="achievement-page-title">
+          <CosmicIntroUniverse />
           <div className="achievement-intro-glow" aria-hidden="true" />
           <div className="achievement-intro-grid">
             <div className="achievement-intro-copy">
-              <p>UMRT / Mission record / 2020—2025</p>
-              <h1 id="achievement-page-title">Achievements</h1>
+              <p>UMRT / Celestial record / 2020—2025</p>
+              <h1 id="achievement-page-title">
+                <span>Achievements</span>
+                <b>In orbit</b>
+              </h1>
               <span>
-                Every qualification, prototype, and competition run helped build the
-                machine at the centre of this archive.
+                Not a trophy shelf. A living constellation of every prototype,
+                qualification, breakthrough, and world-stage result that moved UMRT forward.
               </span>
-              <a href="#helix-gallery">
-                Enter the archive
+              <a href="#cosmic-archive">
+                Enter the constellation
                 <i aria-hidden="true">↓</i>
               </a>
             </div>
@@ -60,7 +65,7 @@ export default function AchievementsPage() {
         </section>
 
         <HelixGallery3D />
-        <AchievementsFooter />
+        <SiteFooter />
       </main>
     </>
   );

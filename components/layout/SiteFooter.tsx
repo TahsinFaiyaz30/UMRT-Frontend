@@ -4,7 +4,7 @@ import type { ComponentPropsWithoutRef, PointerEvent as ReactPointerEvent } from
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
-export function Footer(props: ComponentPropsWithoutRef<'footer'>) {
+export function SiteFooter(props: ComponentPropsWithoutRef<'footer'>) {
   const { className = '', ...rest } = props;
   const footerRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
