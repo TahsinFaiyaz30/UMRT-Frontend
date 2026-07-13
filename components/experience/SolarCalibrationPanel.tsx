@@ -13,11 +13,14 @@ import {
 } from 'react';
 import {
   DEFAULT_SOLAR_CALIBRATION,
+  MARS_AUTO_SOL_DURATION_SECONDS,
   SOLAR_CALIBRATION_LIMITS,
+  automaticMarsSunCoordinatesAt,
   resetSolarCalibrationSettings,
   setSolarCalibrationSettings,
   solarTemperatureToColor,
   useSolarCalibrationSettings,
+  type MarsSunCoordinates,
 } from '@/lib/solarCalibration';
 import styles from './SolarCalibrationPanel.module.css';
 
@@ -102,13 +105,20 @@ export function SolarCalibrationPanel({
 }: SolarCalibrationPanelProps) {
   const settings = useSolarCalibrationSettings();
   const [open, setOpen] = useState(defaultOpen);
+  const [automaticPosition, setAutomaticPosition] = useState<MarsSunCoordinates>({
+    azimuth: DEFAULT_SOLAR_CALIBRATION.azimuth,
+    elevation: DEFAULT_SOLAR_CALIBRATION.elevation,
+    localSolarTimeHours: 6,
+  });
   const activePointer = useRef<number | null>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const panelId = useId();
   const instructionId = useId();
 
-  const radial = 1 - settings.elevation / 90;
-  const azimuthRadians = settings.azimuth * Math.PI / 180;
+  const displayedPosition = settings.autoSunCycle ? automaticPosition : settings;
+  const displayedElevation = Math.max(0, displayedPosition.elevation);
+  const radial = 1 - displayedElevation / 90;
+  const azimuthRadians = displayedPosition.azimuth * Math.PI / 180;
   const joystickX = Math.sin(azimuthRadians) * radial;
   const joystickY = -Math.cos(azimuthRadians) * radial;
   const temperatureColor = solarTemperatureToColor(settings.temperature);
@@ -130,6 +140,32 @@ export function SolarCalibrationPanel({
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [open]);
+
+  // The 3D scene updates the sun through a mutable ref every frame. The panel
+  // samples that same clock at 10 Hz and lets CSS interpolate the indicator,
+  // avoiding a full React render on every animation frame.
+  useEffect(() => {
+    if (!open || !settings.autoSunCycle) return undefined;
+    const samplePosition = () => {
+      setAutomaticPosition(automaticMarsSunCoordinatesAt(performance.now()));
+    };
+    samplePosition();
+    const interval = window.setInterval(samplePosition, 100);
+    return () => window.clearInterval(interval);
+  }, [open, settings.autoSunCycle]);
+
+  const toggleAutomaticSun = useCallback(() => {
+    if (settings.autoSunCycle) {
+      const current = automaticMarsSunCoordinatesAt(performance.now());
+      setSolarCalibrationSettings({
+        autoSunCycle: false,
+        azimuth: current.azimuth,
+        elevation: current.elevation,
+      });
+      return;
+    }
+    setSolarCalibrationSettings({ autoSunCycle: true });
+  }, [settings.autoSunCycle]);
 
   const updatePositionFromPointer = useCallback((event: PointerEvent<HTMLButtonElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -291,14 +327,36 @@ export function SolarCalibrationPanel({
           </div>
         </div>
 
+        <div className={styles.autoCycleRow}>
+          <div>
+            <span>AUTO SUN CYCLE</span>
+            <small>{MARS_AUTO_SOL_DURATION_SECONDS / 60} MIN / MARTIAN SOL</small>
+          </div>
+          <button
+            className={styles.autoCycleSwitch}
+            type="button"
+            role="switch"
+            aria-checked={settings.autoSunCycle}
+            aria-label="Automatic Martian sunrise and sunset"
+            onClick={toggleAutomaticSun}
+          >
+            <span>{settings.autoSunCycle ? 'AUTO' : 'MANUAL'}</span>
+            <i aria-hidden="true" />
+          </button>
+        </div>
+
         <div className={styles.positionHeading}>
           <div>
             <span>SUN POSITION</span>
-            <small>DRAG TO ORIENT</small>
+            <small>
+              {settings.autoSunCycle
+                ? `AUTO / MST ${String(Math.floor(automaticPosition.localSolarTimeHours)).padStart(2, '0')}H`
+                : 'DRAG TO ORIENT'}
+            </small>
           </div>
           <div className={styles.coordinates}>
-            <span><small>AZ</small>{Math.round(settings.azimuth)}°</span>
-            <span><small>EL</small>{Math.round(settings.elevation)}°</span>
+            <span><small>AZ</small>{Math.round(displayedPosition.azimuth)}°</span>
+            <span><small>EL</small>{Math.round(displayedPosition.elevation)}°</span>
           </div>
         </div>
 
@@ -311,7 +369,10 @@ export function SolarCalibrationPanel({
             className={styles.joystick}
             style={joystickStyle}
             type="button"
-            aria-label={`Sun position: azimuth ${Math.round(settings.azimuth)} degrees, elevation ${Math.round(settings.elevation)} degrees`}
+            disabled={settings.autoSunCycle}
+            aria-label={settings.autoSunCycle
+              ? `Automatic sun position: azimuth ${Math.round(displayedPosition.azimuth)} degrees, elevation ${Math.round(displayedPosition.elevation)} degrees`
+              : `Sun position: azimuth ${Math.round(settings.azimuth)} degrees, elevation ${Math.round(settings.elevation)} degrees`}
             aria-describedby={instructionId}
             aria-roledescription="circular sun position control"
             onPointerDown={handlePointerDown}
@@ -326,7 +387,9 @@ export function SolarCalibrationPanel({
           </button>
         </div>
         <p id={instructionId} className={styles.instructions}>
-          Drag around the compass to set azimuth; move toward the center to raise the sun. Arrow keys adjust, Shift makes fine adjustments, and Home restores its position.
+          {settings.autoSunCycle
+            ? 'Automatic Martian sun tracking is active. Switch to manual mode to adjust the position.'
+            : 'Drag around the compass to set azimuth; move toward the center to raise the sun. Arrow keys adjust, Shift makes fine adjustments, and Home restores its position.'}
         </p>
 
         <footer className={styles.footer}>

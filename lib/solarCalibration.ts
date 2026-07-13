@@ -3,6 +3,8 @@
 import { useSyncExternalStore } from 'react';
 
 export type SolarCalibrationSettings = Readonly<{
+  /** Let the scene advance through a compressed Martian solar day. */
+  autoSunCycle: boolean;
   /** Multiplier applied to the scene's primary solar light. */
   intensity: number;
   /** Multiplier applied to the visible sun disc / bloom treatment. */
@@ -30,6 +32,7 @@ export const SOLAR_CALIBRATION_LIMITS = Object.freeze({
 
 /** Matches the current hero key light closely, so integration is non-destructive. */
 export const DEFAULT_SOLAR_CALIBRATION: SolarCalibrationSettings = Object.freeze({
+  autoSunCycle: true,
   intensity: 1,
   glow: 1,
   temperature: 1800,
@@ -57,6 +60,9 @@ function sanitizeSettings(
   patch: SolarCalibrationPatch,
 ): SolarCalibrationSettings {
   return Object.freeze({
+    autoSunCycle: typeof patch.autoSunCycle === 'boolean'
+      ? patch.autoSunCycle
+      : current.autoSunCycle,
     intensity: clamp(
       patch.intensity ?? current.intensity,
       SOLAR_CALIBRATION_LIMITS.intensity.min,
@@ -86,7 +92,8 @@ function sanitizeSettings(
 }
 
 function settingsAreEqual(a: SolarCalibrationSettings, b: SolarCalibrationSettings) {
-  return a.intensity === b.intensity
+  return a.autoSunCycle === b.autoSunCycle
+    && a.intensity === b.intensity
     && a.glow === b.glow
     && a.temperature === b.temperature
     && a.azimuth === b.azimuth
@@ -210,6 +217,112 @@ export function solarPositionFromSettings(
     Math.sin(elevation) * distance,
     Math.cos(azimuth) * horizontalDistance,
   ];
+}
+
+/** Mean length of a Martian solar day (sol), in terrestrial seconds. */
+export const MARS_SOL_DURATION_SECONDS = 88_775.244;
+
+/** Website playback speed: one complete Martian sol every two minutes. */
+export const MARS_AUTO_SOL_DURATION_SECONDS = 120;
+
+export type MarsSunCoordinates = {
+  azimuth: number;
+  elevation: number;
+  localSolarTimeHours: number;
+};
+
+type MutableMarsSunCoordinates = {
+  azimuth: number;
+  elevation: number;
+  localSolarTimeHours: number;
+};
+
+const MARS_AXIAL_TILT_RADIANS = 25.19 * Math.PI / 180;
+const MARS_REFERENCE_LATITUDE_RADIANS = 0;
+const MARS_REFERENCE_SOLAR_LONGITUDE_RADIANS = 90 * Math.PI / 180;
+const MARS_SOLAR_DECLINATION_RADIANS = Math.asin(
+  Math.sin(MARS_AXIAL_TILT_RADIANS) * Math.sin(MARS_REFERENCE_SOLAR_LONGITUDE_RADIANS),
+);
+const MARS_REFERENCE_LATITUDE_SIN = Math.sin(MARS_REFERENCE_LATITUDE_RADIANS);
+const MARS_REFERENCE_LATITUDE_COS = Math.cos(MARS_REFERENCE_LATITUDE_RADIANS);
+const MARS_SOLAR_DECLINATION_SIN = Math.sin(MARS_SOLAR_DECLINATION_RADIANS);
+const MARS_SOLAR_DECLINATION_COS = Math.cos(MARS_SOLAR_DECLINATION_RADIANS);
+const MARS_SUNRISE_HOUR_ANGLE = -Math.acos(clamp(
+  -Math.tan(MARS_REFERENCE_LATITUDE_RADIANS) * Math.tan(MARS_SOLAR_DECLINATION_RADIANS),
+  -1,
+  1,
+));
+const MARS_SUNRISE_PHASE = 0.5 + MARS_SUNRISE_HOUR_ANGLE / (Math.PI * 2);
+const MARS_AUTO_INITIAL_PHASE = MARS_SUNRISE_PHASE + 0.006;
+const MARS_TWILIGHT_START_SINE = Math.sin(-6 * Math.PI / 180);
+const MARS_FULL_DAYLIGHT_SINE = Math.sin(2 * Math.PI / 180);
+let marsAutoCycleEpochMilliseconds: number | undefined;
+
+const positiveModulo = (value: number, divisor: number) => ((value % divisor) + divisor) % divisor;
+
+/**
+ * Calculate a seasonal Martian sun path without allocating when an output
+ * object is supplied. Mars local solar time still has 24 clock hours; the
+ * website only compresses how quickly those hours pass.
+ */
+export function automaticMarsSunCoordinatesAt(
+  timestampMilliseconds: number,
+  out: MutableMarsSunCoordinates = { azimuth: 0, elevation: 0, localSolarTimeHours: 0 },
+): MarsSunCoordinates {
+  if (marsAutoCycleEpochMilliseconds === undefined) {
+    marsAutoCycleEpochMilliseconds = timestampMilliseconds;
+  }
+
+  const elapsedSeconds = Math.max(0, timestampMilliseconds - marsAutoCycleEpochMilliseconds) / 1_000;
+  const phase = positiveModulo(
+    MARS_AUTO_INITIAL_PHASE + elapsedSeconds / MARS_AUTO_SOL_DURATION_SECONDS,
+    1,
+  );
+  const hourAngle = (phase - 0.5) * Math.PI * 2;
+  const hourAngleCos = Math.cos(hourAngle);
+  const east = -MARS_SOLAR_DECLINATION_COS * Math.sin(hourAngle);
+  const north = MARS_SOLAR_DECLINATION_SIN * MARS_REFERENCE_LATITUDE_COS
+    - MARS_SOLAR_DECLINATION_COS * hourAngleCos * MARS_REFERENCE_LATITUDE_SIN;
+  const up = MARS_REFERENCE_LATITUDE_SIN * MARS_SOLAR_DECLINATION_SIN
+    + MARS_REFERENCE_LATITUDE_COS * MARS_SOLAR_DECLINATION_COS * hourAngleCos;
+
+  out.azimuth = Math.atan2(east, north) * 180 / Math.PI;
+  out.elevation = Math.asin(clamp(up, -1, 1)) * 180 / Math.PI;
+  out.localSolarTimeHours = phase * 24;
+  return out;
+}
+
+/** Write the live automatic sun position into an existing tuple. */
+export function writeAutomaticMarsSunPosition(
+  timestampMilliseconds: number,
+  target: [number, number, number],
+  scratch: MutableMarsSunCoordinates,
+  distance = 38,
+) {
+  const coordinates = automaticMarsSunCoordinatesAt(timestampMilliseconds, scratch);
+  const azimuth = coordinates.azimuth * Math.PI / 180;
+  const elevation = coordinates.elevation * Math.PI / 180;
+  const horizontalDistance = Math.cos(elevation) * distance;
+  target[0] = Math.sin(azimuth) * horizontalDistance;
+  target[1] = Math.sin(elevation) * distance;
+  target[2] = Math.cos(azimuth) * horizontalDistance;
+  return target;
+}
+
+/** Smoothly remove direct sunlight as the disc crosses the Martian horizon. */
+export function solarDaylightFactorFromPosition(
+  position: readonly [number, number, number],
+) {
+  const length = Math.hypot(position[0], position[1], position[2]);
+  if (length <= 0.0001) return 0;
+  const sineElevation = position[1] / length;
+  const progress = clamp(
+    (sineElevation - MARS_TWILIGHT_START_SINE)
+      / (MARS_FULL_DAYLIGHT_SINE - MARS_TWILIGHT_START_SINE),
+    0,
+    1,
+  );
+  return progress * progress * (3 - 2 * progress);
 }
 
 /** Single helper for declaratively binding the settings to scene lights. */

@@ -12,8 +12,10 @@ import { DismantleRig } from './DismantleRig';
 import { SoilInteraction } from './SoilInteraction';
 import { CelestialBackdrop } from './CelestialBackdrop';
 import {
+  solarDaylightFactorFromPosition,
   solarLightingFromSettings,
   useSolarCalibrationSettings,
+  writeAutomaticMarsSunPosition,
   type SolarLightingValues,
 } from '@/lib/solarCalibration';
 import { disposeTexture } from '@/lib/threeDisposal';
@@ -35,9 +37,19 @@ export const HeroScene = forwardRef<
   { quality, dismantleProgressRef, dismantleTimelineRef, dismantleActive },
   ref,
 ) {
+  const { scene } = useThree();
   const groundRef = useRef<THREE.Mesh>(null);
+  const ambientLightRef = useRef<THREE.AmbientLight>(null);
+  const hemisphereLightRef = useRef<THREE.HemisphereLight>(null);
   const solarSettings = useSolarCalibrationSettings();
   const solar = useMemo(() => solarLightingFromSettings(solarSettings), [solarSettings]);
+  const liveSunPositionRef = useRef<[number, number, number]>([...solar.position]);
+  const liveSunDaylightRef = useRef(1);
+  const autoSunScratchRef = useRef({
+    azimuth: solarSettings.azimuth,
+    elevation: solarSettings.elevation,
+    localSolarTimeHours: 0,
+  });
   const [environmentSettings, setEnvironmentSettings] = useState(solarSettings);
   const [dismantleMounted, setDismantleMounted] = useState(Boolean(dismantleActive));
   const environmentSolar = useMemo(
@@ -45,6 +57,44 @@ export const HeroScene = forwardRef<
     [environmentSettings],
   );
   const environmentEnergy = environmentSolar.intensity / 3.25;
+
+  useEffect(() => {
+    if (solarSettings.autoSunCycle) return;
+    const livePosition = liveSunPositionRef.current;
+    livePosition[0] = solar.position[0];
+    livePosition[1] = solar.position[1];
+    livePosition[2] = solar.position[2];
+  }, [solar.position, solarSettings.autoSunCycle]);
+
+  useEffect(() => () => {
+    scene.environmentIntensity = 1;
+  }, [scene]);
+
+  useFrame(() => {
+    const livePosition = liveSunPositionRef.current;
+    if (solarSettings.autoSunCycle) {
+      writeAutomaticMarsSunPosition(
+        performance.now(),
+        livePosition,
+        autoSunScratchRef.current,
+      );
+    }
+
+    // Direct light, shader direction, and environment exposure all follow one
+    // allocation-free position. The expensive environment cube map remains
+    // cached instead of being regenerated throughout the automatic cycle.
+    const daylight = solarSettings.autoSunCycle
+      ? solarDaylightFactorFromPosition(livePosition)
+      : 1;
+    liveSunDaylightRef.current = daylight;
+    if (ambientLightRef.current) {
+      ambientLightRef.current.intensity = solar.intensity * 0.07 * (0.18 + daylight * 0.82);
+    }
+    if (hemisphereLightRef.current) {
+      hemisphereLightRef.current.intensity = solar.intensity * 0.2 * (0.14 + daylight * 0.86);
+    }
+    scene.environmentIntensity = 0.2 + daylight * 0.8;
+  });
 
   // Rebuilding a cube-map environment for every pointer sample from the solar
   // joystick creates a rapid stream of half-float render targets and shader
@@ -109,18 +159,24 @@ export const HeroScene = forwardRef<
         />
       </Environment>
 
-      <ambientLight intensity={solar.intensity * 0.07} color={solar.color} />
-      <hemisphereLight args={[solar.color, '#120503', solar.intensity * 0.2]} />
-      <CalibratedSun solar={solar} quality={quality} />
+      <ambientLight ref={ambientLightRef} intensity={solar.intensity * 0.07} color={solar.color} />
+      <hemisphereLight ref={hemisphereLightRef} args={[solar.color, '#120503', solar.intensity * 0.2]} />
+      <CalibratedSun
+        solar={solar}
+        quality={quality}
+        sunPositionRef={liveSunPositionRef}
+        sunDaylightRef={liveSunDaylightRef}
+      />
       <CelestialBackdrop
         quality={quality}
-        sunDirection={solar.position}
+        sunDirectionRef={liveSunPositionRef}
         sunColor={solar.color}
       />
 
       <DustStorm
         quality={quality}
-        sunDirection={solar.position}
+        sunDirectionRef={liveSunPositionRef}
+        sunDaylightRef={liveSunDaylightRef}
         sunColor={solar.color}
         sunGlow={solar.glow}
         sunStrength={solar.intensity / 3.25}
@@ -129,14 +185,16 @@ export const HeroScene = forwardRef<
       <SoilInteraction
         groundRef={groundRef}
         quality={quality}
-        sunDirection={solar.position}
+        sunDirectionRef={liveSunPositionRef}
+        sunDaylightRef={liveSunDaylightRef}
         sunColor={solar.color}
         sunStrength={solar.intensity / 3.25}
       />
       <SignalRings />
       <DustField
         count={particleCountFor(quality)}
-        sunDirection={solar.position}
+        sunDirectionRef={liveSunPositionRef}
+        sunDaylightRef={liveSunDaylightRef}
         sunColor={solar.color}
         sunGlow={solar.glow}
         sunStrength={solar.intensity / 3.25}
@@ -455,13 +513,15 @@ function updateDustSolarUniforms(
 
 function DustStorm({
   quality,
-  sunDirection,
+  sunDirectionRef,
+  sunDaylightRef,
   sunColor,
   sunGlow,
   sunStrength,
 }: {
   quality: Quality;
-  sunDirection: readonly [number, number, number];
+  sunDirectionRef: RefObject<readonly [number, number, number]>;
+  sunDaylightRef: RefObject<number>;
   sunColor: string;
   sunGlow: number;
   sunStrength: number;
@@ -481,10 +541,10 @@ function DustStorm({
   useEffect(() => {
     updateDustSolarUniforms(
       materialRef.current,
-      sunDirection,
+      sunDirectionRef.current,
       sunColor,
       sunGlow,
-      sunStrength,
+      sunStrength * sunDaylightRef.current,
     );
     if (materialRef.current) {
       materialRef.current.uniforms.uOpacity.value = quality === 'high'
@@ -493,10 +553,15 @@ function DustStorm({
           ? 0.66
           : 0.56;
     }
-  }, [quality, sunColor, sunDirection, sunGlow, sunStrength]);
+  }, [quality, sunColor, sunDaylightRef, sunDirectionRef, sunGlow, sunStrength]);
 
   useFrame((state) => {
-    if (materialRef.current) materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+    if (!materialRef.current) return;
+    const materialUniforms = materialRef.current.uniforms;
+    const sunDirection = sunDirectionRef.current;
+    materialUniforms.uTime.value = state.clock.elapsedTime;
+    (materialUniforms.uSunDirection.value as THREE.Vector3).set(...sunDirection).normalize();
+    materialUniforms.uSunStrength.value = sunStrength * sunDaylightRef.current;
   });
 
   return (
@@ -630,8 +695,22 @@ function CinematicGround({
   );
 }
 
-function CalibratedSun({ solar, quality }: { solar: SolarLightingValues; quality: Quality }) {
+function CalibratedSun({
+  solar,
+  quality,
+  sunPositionRef,
+  sunDaylightRef,
+}: {
+  solar: SolarLightingValues;
+  quality: Quality;
+  sunPositionRef: RefObject<readonly [number, number, number]>;
+  sunDaylightRef: RefObject<number>;
+}) {
+  const lightRef = useRef<THREE.DirectionalLight>(null);
+  const sunGroupRef = useRef<THREE.Group>(null);
   const glowRef = useRef<THREE.Sprite>(null);
+  const glowMaterialRef = useRef<THREE.SpriteMaterial>(null);
+  const coreMaterialRef = useRef<THREE.SpriteMaterial>(null);
   const glowTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
@@ -655,6 +734,20 @@ function CalibratedSun({ solar, quality }: { solar: SolarLightingValues; quality
   useEffect(() => () => glowTexture.dispose(), [glowTexture]);
 
   useFrame((state) => {
+    const sunPosition = sunPositionRef.current;
+    const daylight = sunDaylightRef.current;
+    lightRef.current?.position.set(...sunPosition);
+    sunGroupRef.current?.position.set(...sunPosition);
+    if (lightRef.current) lightRef.current.intensity = solar.intensity * daylight;
+    if (glowMaterialRef.current) {
+      glowMaterialRef.current.opacity = Math.min(1, solar.glow * 0.92 * visualStrength) * daylight;
+    }
+    if (coreMaterialRef.current) {
+      coreMaterialRef.current.opacity = Math.min(
+        1,
+        (0.72 + solar.glow * 0.14) * visualStrength,
+      ) * daylight;
+    }
     if (!glowRef.current) return;
     const pulse = 1 + Math.sin(state.clock.elapsedTime * 0.38) * 0.018;
     const outerScale = 3.2 + solar.glow * 3;
@@ -669,6 +762,7 @@ function CalibratedSun({ solar, quality }: { solar: SolarLightingValues; quality
   return (
     <>
       <directionalLight
+        ref={lightRef}
         position={sunPosition}
         intensity={solar.intensity}
         color={solar.color}
@@ -684,9 +778,10 @@ function CalibratedSun({ solar, quality }: { solar: SolarLightingValues; quality
         shadow-bias={-0.00018}
         shadow-normalBias={0.006}
       />
-      <group position={sunPosition}>
+      <group ref={sunGroupRef} position={sunPosition}>
       <sprite ref={glowRef} scale={[outerScale, outerScale, 1]} renderOrder={-8}>
         <spriteMaterial
+          ref={glowMaterialRef}
           map={glowTexture}
           color={solar.color}
           transparent
@@ -700,6 +795,7 @@ function CalibratedSun({ solar, quality }: { solar: SolarLightingValues; quality
       </sprite>
       <sprite scale={[coreScale, coreScale, 1]} renderOrder={-5}>
         <spriteMaterial
+          ref={coreMaterialRef}
           map={glowTexture}
           color={solar.color}
           transparent
@@ -901,13 +997,15 @@ const DUST_FIELD_FRAGMENT_SHADER = `
 
 function DustField({
   count,
-  sunDirection,
+  sunDirectionRef,
+  sunDaylightRef,
   sunColor,
   sunGlow,
   sunStrength,
 }: {
   count: number;
-  sunDirection: readonly [number, number, number];
+  sunDirectionRef: RefObject<readonly [number, number, number]>;
+  sunDaylightRef: RefObject<number>;
   sunColor: string;
   sunGlow: number;
   sunStrength: number;
@@ -959,16 +1057,20 @@ function DustField({
   useEffect(() => {
     updateDustSolarUniforms(
       materialRef.current,
-      sunDirection,
+      sunDirectionRef.current,
       sunColor,
       sunGlow,
-      sunStrength,
+      sunStrength * sunDaylightRef.current,
     );
-  }, [sunColor, sunDirection, sunGlow, sunStrength]);
+  }, [sunColor, sunDaylightRef, sunDirectionRef, sunGlow, sunStrength]);
 
   useFrame((state) => {
     if (materialRef.current) {
-      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+      const materialUniforms = materialRef.current.uniforms;
+      const sunDirection = sunDirectionRef.current;
+      materialUniforms.uTime.value = state.clock.elapsedTime;
+      (materialUniforms.uSunDirection.value as THREE.Vector3).set(...sunDirection).normalize();
+      materialUniforms.uSunStrength.value = sunStrength * sunDaylightRef.current;
     }
   });
 

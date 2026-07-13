@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { Quality } from '@/lib/performance';
 
 type CelestialBackdropProps = {
   quality: Quality;
-  sunDirection: readonly [number, number, number];
+  sunDirectionRef: RefObject<readonly [number, number, number]>;
   sunColor: string;
   reduceMotion?: boolean;
 };
@@ -301,7 +301,7 @@ const ATMOSPHERE_FRAGMENT_SHADER = `
 
 function DistantPlanet({
   quality,
-  sunDirection,
+  sunDirectionRef,
   sunColor,
   reduceMotion,
 }: CelestialBackdropProps) {
@@ -313,11 +313,12 @@ function DistantPlanet({
   }), []);
 
   useEffect(() => {
-    uniforms.uSunDirection.value.set(...sunDirection).normalize();
+    uniforms.uSunDirection.value.set(...sunDirectionRef.current).normalize();
     uniforms.uSunColor.value.set(sunColor);
-  }, [sunColor, sunDirection, uniforms]);
+  }, [sunColor, sunDirectionRef, uniforms]);
 
   useFrame((state, delta) => {
+    uniforms.uSunDirection.value.set(...sunDirectionRef.current).normalize();
     uniforms.uTime.value = reduceMotion ? 0 : state.clock.elapsedTime;
     if (groupRef.current && !reduceMotion) {
       groupRef.current.rotation.y += Math.min(delta, 0.05) * 0.0026;

@@ -564,13 +564,15 @@ function projectDeformedSurfaceContact(
 export function SoilInteraction({
   groundRef,
   quality,
-  sunDirection,
+  sunDirectionRef,
+  sunDaylightRef,
   sunColor,
   sunStrength,
 }: {
   groundRef: RefObject<THREE.Mesh | null>;
   quality: Quality;
-  sunDirection: readonly [number, number, number];
+  sunDirectionRef: RefObject<readonly [number, number, number]>;
+  sunDaylightRef: RefObject<number>;
   sunColor: string;
   sunStrength: number;
 }) {
@@ -979,9 +981,11 @@ export function SoilInteraction({
   }, [dustUniforms]);
 
   useEffect(() => {
+    const sunDirection = sunDirectionRef.current;
+    const liveSunStrength = sunStrength * sunDaylightRef.current;
     dustUniforms.uSunColor.value.set(sunColor);
     dustUniforms.uSunDirection.value.set(...sunDirection).normalize();
-    dustUniforms.uSunStrength.value = sunStrength;
+    dustUniforms.uSunStrength.value = liveSunStrength;
     // R3F clones the uniforms wrapper while applying JSX props. Update the
     // actual live ShaderMaterial as well as the source memo so primitive
     // values (notably intensity) cannot become stuck at their mount value.
@@ -990,8 +994,8 @@ export function SoilInteraction({
     if (materialUniforms?.uSunDirection) {
       materialUniforms.uSunDirection.value.set(...sunDirection).normalize();
     }
-    if (materialUniforms?.uSunStrength) materialUniforms.uSunStrength.value = sunStrength;
-  }, [dustUniforms, sunColor, sunDirection, sunStrength]);
+    if (materialUniforms?.uSunStrength) materialUniforms.uSunStrength.value = liveSunStrength;
+  }, [dustUniforms, sunColor, sunDaylightRef, sunDirectionRef, sunStrength]);
 
   const setSurfaceCursor = (active: boolean) => {
     if (surfaceActive.current === active) return;
@@ -1859,6 +1863,18 @@ export function SoilInteraction({
   };
 
   useFrame((state, delta) => {
+    const liveSunDirection = sunDirectionRef.current;
+    const liveSunStrength = sunStrength * sunDaylightRef.current;
+    dustUniforms.uSunDirection.value.set(...liveSunDirection).normalize();
+    dustUniforms.uSunStrength.value = liveSunStrength;
+    const liveSolarUniforms = dustMaterialRef.current?.uniforms;
+    if (liveSolarUniforms?.uSunDirection) {
+      liveSolarUniforms.uSunDirection.value.set(...liveSunDirection).normalize();
+    }
+    if (liveSolarUniforms?.uSunStrength) {
+      liveSolarUniforms.uSunStrength.value = liveSunStrength;
+    }
+
     const ground = groundRef.current;
     const queuedSamples = pointerSamples.current;
     // The deformation path is interpolated between these expensive ray/height
