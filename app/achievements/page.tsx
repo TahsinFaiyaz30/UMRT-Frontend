@@ -1,71 +1,74 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { ACHIEVEMENT_STATS } from '@/components/achievements/achievementData';
-import { SiteFooter } from '@/components/layout/SiteFooter';
+import AchievementsHero from '@/components/achievements/AchievementsHero';
+import AchievementsStats from '@/components/achievements/AchievementsStats';
+import AchievementsFooter from '@/components/achievements/AchievementsFooter';
 import { PremiumNavbar } from '@/components/navbar';
 
+/**
+ * HelixGallery3D — 3D scroll-driven helix timeline/gallery.
+ * Dynamic import with ssr:false because it uses WebGL + GSAP ScrollTrigger.
+ */
 const HelixGallery3D = dynamic(
   () => import('@/components/achievements/HelixGallery3D'),
   {
     ssr: false,
     loading: () => (
-      <section className="achievement-cosmic-section achievement-cosmic-loading" aria-label="Loading celestial achievement archive">
-        <div className="achievement-cosmic-sticky">
-          <div className="achievement-archive-loader" role="status">
-            <span aria-hidden="true" />
-            <strong>Synchronizing the constellation</strong>
-            <small>Eight signals / 2020—2025</small>
+      <div
+        className="flex items-center justify-center"
+        style={{ height: '500vh', background: '#030306' }}
+      >
+        <div className="sticky top-0 flex h-screen w-full items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            {/* Thin line loader */}
+            <div className="h-px w-16 overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <div
+                className="h-full w-8"
+                style={{
+                  background: 'rgba(255,138,77,0.5)',
+                  animation: 'shimmerLoad 1.5s ease-in-out infinite',
+                }}
+              />
+            </div>
+            <p
+              className="font-body text-[10px] uppercase tracking-[0.5em]"
+              style={{ color: 'rgba(255,255,255,0.2)' }}
+            >
+              Loading Sequence
+            </p>
+            <style>{`
+              @keyframes shimmerLoad {
+                0%   { transform: translateX(-32px); }
+                100% { transform: translateX(64px); }
+              }
+            `}</style>
           </div>
         </div>
-      </section>
+      </div>
     ),
   },
-);
-
-const CosmicIntroUniverse = dynamic(
-  () => import('@/components/achievements/CosmicIntroUniverse'),
-  { ssr: false },
 );
 
 export default function AchievementsPage() {
   return (
     <>
       <PremiumNavbar />
-      <main className="achievement-page bg-mars-900">
-        <section className="achievement-intro" aria-labelledby="achievement-page-title">
-          <CosmicIntroUniverse />
-          <div className="achievement-intro-glow" aria-hidden="true" />
-          <div className="achievement-intro-grid">
-            <div className="achievement-intro-copy">
-              <p>UMRT / Celestial record / 2020—2025</p>
-              <h1 id="achievement-page-title">
-                <span>Achievements</span>
-                <b>In orbit</b>
-              </h1>
-              <span>
-                Not a trophy shelf. A living constellation of every prototype,
-                qualification, breakthrough, and world-stage result that moved UMRT forward.
-              </span>
-              <a href="#cosmic-archive">
-                Enter the constellation
-                <i aria-hidden="true">↓</i>
-              </a>
-            </div>
+      <main className="bg-mars-900">
+        {/* Full-screen hero with particles and glassmorphism card */}
+        <AchievementsHero />
 
-            <dl className="achievement-intro-stats" aria-label="Team achievements by the numbers">
-              {ACHIEVEMENT_STATS.map((stat) => (
-                <div key={stat.label}>
-                  <dt>{stat.label}</dt>
-                  <dd>{stat.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </section>
+        {/* Animated stats counters */}
+        <AchievementsStats />
 
+        {/* 
+          The 3D scroll-driven helix completely replaces the old 2D timeline 
+          and acts as the main chronological achievements display.
+        */}
         <HelixGallery3D />
-        <SiteFooter />
+
+        {/* CTA footer with particles */}
+        <AchievementsFooter />
       </main>
     </>
   );

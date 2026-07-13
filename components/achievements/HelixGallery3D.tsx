@@ -1,559 +1,609 @@
 'use client';
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useRef, useMemo, useEffect, useState, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Edges } from '@react-three/drei';
+import { Edges, Html, Stars, useTexture } from '@react-three/drei';
+import { EffectComposer, Bloom, BrightnessContrast, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
-import helvetikerFont from 'three/examples/fonts/helvetiker_regular.typeface.json';
-import {
-  ACHIEVEMENT_MILESTONES,
-  type AchievementMilestone,
-} from '@/components/achievements/achievementData';
-import { COSMIC_SYSTEMS } from '@/components/achievements/cosmicArchiveConfig';
-import {
-  SystemCorridor,
-  type CosmicJourney,
-  type CosmicJourneyRef,
-} from '@/components/achievements/CosmicUniverse';
-import {
-  detectQuality,
-  dprFor,
-  getReducedMotion,
-  type Quality,
-} from '@/lib/performance';
-import { hasWebGLSupport } from '@/lib/webglSupport';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-const MILESTONES = ACHIEVEMENT_MILESTONES;
-const COUNT = MILESTONES.length;
-const ARCHIVE_FONT = new FontLoader().parse(helvetikerFont);
-
-const clamp = (value: number) => Math.min(1, Math.max(0, value));
-const smoother = (value: number) => {
-  const next = clamp(value);
-  return next * next * next * (next * (next * 6 - 15) + 10);
-};
-
-function useReducedMotionPreference() {
-  const [reducedMotion, setReducedMotion] = useState(() => getReducedMotion());
-  useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setReducedMotion(media.matches);
-    update();
-    media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
-  }, []);
-  return reducedMotion;
+/* ================================================================== *
+ *  GSAP ScrollTrigger                                                 *
+ * ================================================================== */
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
 }
 
-function wrapTitle(title: string) {
-  const words = title.toUpperCase().split(' ');
-  const lines: string[] = [];
-  let current = '';
-  for (const word of words) {
-    const candidate = current ? `${current} ${word}` : word;
-    if (candidate.length > 19 && current) {
-      lines.push(current);
-      current = word;
-    } else current = candidate;
-  }
-  if (current) lines.push(current);
-  return lines.slice(0, 2);
+/* ================================================================== *
+ *  Gallery Data                                                       *
+ * ================================================================== */
+interface GalleryItem {
+  year: string;
+  title: string;
+  description: string;
+  image: string | null;
 }
 
-function GeometryLabel({
-  text,
-  size,
-  position,
-  color,
-  align = 'left',
-  depth = 0.006,
-}: {
-  text: string;
-  size: number;
-  position: readonly [number, number, number];
-  color: string;
-  align?: 'left' | 'center' | 'right';
-  depth?: number;
-}) {
-  const luminousColor = useMemo(() => new THREE.Color(color).multiplyScalar(6), [color]);
-  const geometry = useMemo(() => {
-    const next = new TextGeometry(text, {
-      font: ARCHIVE_FONT,
-      size,
-      depth,
-      curveSegments: 3,
-      bevelEnabled: false,
-    });
-    next.computeBoundingBox();
-    const width = next.boundingBox ? next.boundingBox.max.x - next.boundingBox.min.x : 0;
-    if (align === 'center') next.translate(-width * 0.5, 0, 0);
-    if (align === 'right') next.translate(-width, 0, 0);
-    return next;
-  }, [align, depth, size, text]);
+// Expanded Dummy Data
+const BASE_ITEMS: GalleryItem[] = [
+  { year: '2025', title: 'URC TOP 5', description: 'After rigorous testing in harsh desert environments, the rover showcased unparalleled autonomous capabilities, securing a top 5 finish.', image: null },
+  { year: '2024', title: 'INNOVATION', description: 'Awarded for groundbreaking real-time SLAM and obstacle avoidance algorithms, vastly improving spatial awareness.', image: null },
+  { year: '2024', title: 'URC TOP 10', description: 'A breakthrough year where mechanical reliability and advanced robotic arm dexterity catapulted us into the top 10.', image: null },
+  { year: '2023', title: 'ERC POLAND', description: 'Competed internationally at the European Rover Challenge, mastering the complex maintenance task under extreme time pressure.', image: null },
+  { year: '2022', title: 'BEST ROOKIE', description: 'Debuted at the University Rover Challenge with a robust suspension system that stunned the judges, earning the Rookie Award.', image: null },
+  { year: '2022', title: 'URC QUAL', description: 'The historic moment our team officially qualified for URC, validating thousands of hours of design and manufacturing.', image: null },
+  { year: '2021', title: 'PROTOTYPE', description: 'The foundation was laid with our first 6-wheel rocker-bogie prototype, proving our drive systems in local rough terrain.', image: null },
+  { year: '2020', title: 'FOUNDED', description: 'UMRT was born from a shared vision to push the boundaries of student engineering and space exploration technology.', image: null },
+];
 
-  useEffect(() => () => geometry.dispose(), [geometry]);
+// To create the dense, continuous ribbon effect seen in the reference image,
+// we duplicate the items to form a long continuous spiral.
+const RIBBON_COUNT = 8; 
+const ITEMS: GalleryItem[] = Array.from({ length: RIBBON_COUNT }).map((_, i) => {
+  return BASE_ITEMS[i % BASE_ITEMS.length];
+});
+
+/* ================================================================== *
+ *  Helix Layout Constants                                             *
+ * ================================================================== */
+const N            = ITEMS.length;
+const HELIX_R      = 7.5;           // larger orbit radius for large cards
+const HELIX_TURNS  = 1;             // number of full helical turns
+const HELIX_ANGLE  = Math.PI * 2 * HELIX_TURNS;
+const TOTAL_Y_DROP = 16;            // total height of the spiral
+const Y_STEP       = TOTAL_Y_DROP / N;
+
+const CARD_W       = 4.0;           // much larger width for picture holder
+const CARD_H       = 2.5;           // proportional height
+
+/* ================================================================== *
+ *  Scroll Animation Constants                                         *
+ * ================================================================== */
+const SCROLL_ROT       = ((N - 1) / N) * HELIX_ANGLE;  // Positive = right-to-left rotation
+const INITIAL_Y_OFFSET = -8.0;                         // Lowered to center panels below navbar
+const TOTAL_LIFT       = 14.0;                         // Exact lift to center last item at y=2
+const LERP_SPEED       = 0.08;
+
+/* ================================================================== *
+ *  Shared scroll state                                                *
+ * ================================================================== */
+const scroll = { target: 0, current: 0 };
+
+/* ================================================================== *
+ *  Environment — Dark, cinematic background                           *
+ * ================================================================== */
+function Environment() {
+  const { scene } = useThree();
+
+  useMemo(() => {
+    // Transparent background to allow HTML CSS gradient to show through
+    scene.fog = null;
+    scene.background = null;
+  }, [scene]);
 
   return (
-    <mesh geometry={geometry} position={position} renderOrder={100} frustumCulled={false}>
-      <shaderMaterial
-        uniforms={{ uColor: { value: luminousColor } }}
-        depthTest={false}
-        depthWrite={false}
-        side={THREE.DoubleSide}
-        vertexShader={`
-          void main() {
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `}
-        fragmentShader={`
-          uniform vec3 uColor;
-          void main() {
-            gl_FragColor = vec4(uColor, 1.0);
-          }
-        `}
-      />
+    <>
+      <ambientLight intensity={0.05} color="#ffffff" />
+    </>
+  );
+}
+
+/* ================================================================== *
+ *  Skydome (replaces HTML background to prevent scroll bugs)          *
+ * ================================================================== */
+function Skydome() {
+  const texture = useTexture('/textures/starfield.png');
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(4, 4); // Tile the stars to make them look tiny and distant
+
+  return (
+    <mesh>
+      <sphereGeometry args={[150, 64, 64]} />
+      <meshBasicMaterial map={texture} side={THREE.BackSide} transparent opacity={0.15} />
     </mesh>
   );
 }
 
-function SignalMonument({
-  item,
-  index,
-  journey,
-  active,
-}: {
-  item: AchievementMilestone;
-  index: number;
-  journey: CosmicJourneyRef;
-  active: boolean;
-}) {
-  const groupRef = useRef<THREE.Group>(null);
-  const faceMaterialRef = useRef<THREE.MeshPhysicalMaterial>(null);
-  const backingMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
-  const { camera, size } = useThree();
-  const systemPosition = COSMIC_SYSTEMS[index].position;
-  const targetPosition = useMemo(() => new THREE.Vector3(), []);
-  const targetScale = useMemo(() => new THREE.Vector3(), []);
-  const systemCenter = useMemo(() => new THREE.Vector3(...systemPosition), [systemPosition]);
-  const rightAxis = useMemo(() => new THREE.Vector3(), []);
-  const upAxis = useMemo(() => new THREE.Vector3(), []);
-  const depthAxis = useMemo(() => new THREE.Vector3(), []);
-  const lookTarget = useMemo(() => new THREE.Object3D(), []);
-  const tiltQuaternion = useMemo(() => new THREE.Quaternion(), []);
-  const desiredQuaternion = useMemo(() => new THREE.Quaternion(), []);
-  const tilt = useMemo(() => new THREE.Euler(), []);
-  const titleLines = useMemo(() => wrapTitle(item.title), [item.title]);
+/* ================================================================== *
+ *  Image Plane — Tangent to the cylinder surface                      *
+ *                                                                     *
+ *  In the reference image, the planes form a continuous ribbon.       *
+ *  rotation.y = Math.atan2(x, z) makes them face directly outward.    *
+ * ================================================================== */
+function ImagePlane({ item, index }: { item: GalleryItem; index: number }) {
+  const [hovered, setHovered] = useState(false);
 
-  useFrame((_, delta) => {
-    if (!active || !groupRef.current || !faceMaterialRef.current || !backingMaterialRef.current) return;
-    const archivePosition = journey.current.current * (COUNT - 1);
-    const local = archivePosition - index;
-    const portrait = size.height > size.width * 1.08;
-    const focus = 1 - THREE.MathUtils.smoothstep(Math.abs(local), 0.08, 0.88);
-    const lane = ((index * 17) % 7 - 3) * 0.11;
-    camera.matrixWorld.extractBasis(rightAxis, upAxis, depthAxis);
-    targetPosition.copy(systemCenter)
-      .addScaledVector(rightAxis, portrait ? 0 : 2.25)
-      .addScaledVector(upAxis, portrait ? 1.35 : 0.52)
-      .addScaledVector(depthAxis, portrait ? 0.75 : 0.42);
-
-    if (local < 0) {
-      const approach = smoother((local + 1.35) / 1.35);
-      targetPosition
-        .addScaledVector(rightAxis, (1 - approach) * (portrait ? 1.65 : 5.4 + lane))
-        .addScaledVector(upAxis, (1 - approach) * (portrait ? 1.25 : 3.1 - lane))
-        .addScaledVector(depthAxis, -(1 - approach) * (portrait ? 4.5 : 5.8));
-      tilt.set(
-        THREE.MathUtils.lerp(-0.42, 0, approach),
-        THREE.MathUtils.lerp(-1.0, 0, approach),
-        THREE.MathUtils.lerp(0.32, 0, approach),
-      );
-    } else {
-      const departure = smoother((local - 0.28) / 0.92);
-      targetPosition
-        .addScaledVector(rightAxis, -departure * (portrait ? 1.8 : 5.8 - lane))
-        .addScaledVector(upAxis, -departure * (portrait ? 1.3 : 3.2 + lane))
-        .addScaledVector(depthAxis, -departure * (portrait ? 4.8 : 6.6));
-      tilt.set(departure * 0.44, departure * 1.08, -departure * 0.38);
-    }
-
-    const smoothing = 1 - Math.exp(-delta * 8.2);
-    groupRef.current.visible = Math.abs(local) < 1.48;
-    groupRef.current.position.lerp(targetPosition, smoothing);
-    targetScale.setScalar((portrait ? 0.84 : 1) * (0.6 + focus * 0.4));
-    groupRef.current.scale.lerp(targetScale, smoothing);
-
-    lookTarget.position.copy(groupRef.current.position);
-    lookTarget.lookAt(camera.position);
-    desiredQuaternion.copy(lookTarget.quaternion);
-    tiltQuaternion.setFromEuler(tilt);
-    desiredQuaternion.multiply(tiltQuaternion);
-    groupRef.current.quaternion.slerp(desiredQuaternion, smoothing);
-
-    faceMaterialRef.current.emissiveIntensity = 0.015 + focus * 0.055;
-    backingMaterialRef.current.emissiveIntensity = 0.025 + focus * 0.08;
-  });
-
-  const accent = index % 3 === 1 ? '#d8ff4f' : '#ff5a1f';
-  const corners = [
-    [-1.91, 1.1, 0.13], [1.91, 1.1, 0.13],
-    [-1.91, -1.1, 0.13], [1.91, -1.1, 0.13],
-  ] as const;
+  // 1. Calculate the angle around the Y axis
+  // Add Math.PI / 2 so the first item (index 0) starts perfectly facing the camera (z = R, x = 0)
+  const angle = (index / N) * HELIX_ANGLE + Math.PI / 2;
+  
+  // 2. Calculate X and Z for circular placement
+  const x = Math.cos(angle) * HELIX_R;
+  const z = Math.sin(angle) * HELIX_R;
+  
+  // 3. Calculate descending Y position
+  const y = (TOTAL_Y_DROP / 2) - (index * Y_STEP);
+  
+  // 4. Calculate rotation so the plane's normal points radially outward
+  const faceAngle = Math.atan2(x, z);
 
   return (
-    <group ref={groupRef} visible={index === 0}>
+    <group position={[x, y, z]} rotation={[0, faceAngle, 0]}>
+      {/* ── Main Image Box (Greyish Glass Theme) ── */}
       <mesh castShadow receiveShadow>
-        <boxGeometry args={[4.1, 2.48, 0.16]} />
-        <meshPhysicalMaterial
-          ref={faceMaterialRef}
-          color="#080706"
-          emissive={accent}
-          emissiveIntensity={0.15}
-          metalness={0.8}
-          roughness={0.24}
-          clearcoat={0.42}
-          clearcoatRoughness={0.2}
+        <planeGeometry args={[CARD_W, CARD_H]} />
+        <meshPhysicalMaterial 
+          color="#999999"
+          roughness={0.2}
+          metalness={0.3}
+          clearcoat={1.0}
+          transparent
+          opacity={hovered ? 0.4 : 0.15}
+          side={THREE.DoubleSide}
         />
-        <Edges color={accent} threshold={18} />
-      </mesh>
-      <mesh position={[0, 0, -0.14]}>
-        <boxGeometry args={[4.24, 2.6, 0.16]} />
-        <meshStandardMaterial ref={backingMaterialRef} color="#110805" emissive="#441307" emissiveIntensity={0.1} metalness={0.86} roughness={0.3} />
+        <Edges scale={1} color={hovered ? '#ffffff' : 'rgba(255,255,255,0.1)'} />
       </mesh>
 
-      {corners.map((position, corner) => (
-        <mesh key={corner} position={position}>
-          <boxGeometry args={[0.18, 0.18, 0.2]} />
-          <meshStandardMaterial color="#1c100a" emissive={corner % 2 ? '#d8ff4f' : '#ff5a1f'} emissiveIntensity={0.85} metalness={0.9} roughness={0.22} />
+      {/* ── Interactive DOM Content ── */}
+      <Html
+        transform
+        position={[0, 0, 0.02]}
+        center
+        scale={0.01}
+        occlude="blending"
+        className="flex flex-col justify-end"
+        style={{ width: '400px', height: '250px', pointerEvents: 'auto' }}
+      >
+        <div
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          style={{
+            width: '100%',
+            height: '100%',
+            position: 'relative',
+            cursor: 'pointer',
+            transition: 'transform 0.5s cubic-bezier(0.16,1,0.3,1), box-shadow 0.5s ease',
+            transform: hovered ? 'scale(1.1) translateY(-10px)' : 'scale(1)',
+            boxShadow: hovered
+              ? '0 20px 50px rgba(255,255,255,0.15), inset 0 0 30px rgba(255,255,255,0.5)'
+              : '0 4px 20px rgba(0,0,0,0.5)',
+            borderRadius: '16px',
+            overflow: 'hidden',
+            zIndex: hovered ? 50 : 1,
+          }}
+        >
+          {/* Greyish Blurry Glass Background */}
+          <div className="absolute inset-0 rounded-2xl border border-white/10 bg-gray-500/10 backdrop-blur-xl transition-all duration-300 group-hover:bg-gray-400/20" />
+
+          {/* Always-visible: Year + Title */}
+          <div className="relative z-10 flex h-full flex-col justify-end px-6 pb-5 text-left">
+            <span className="font-display text-5xl font-extrabold tracking-widest text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+              {item.year}
+            </span>
+            <p className="mt-1 font-body text-xl font-bold tracking-wider text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+              {item.title}
+            </p>
+          </div>
+
+          {/* Hover overlay — slides up with dummy description data */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'flex-end',
+              padding: '24px',
+              background: 'linear-gradient(to top, rgba(200,200,200,0.95) 0%, rgba(200,200,200,0.7) 50%, rgba(200,200,200,0.2) 100%)',
+              backdropFilter: 'blur(12px)',
+              opacity: hovered ? 1 : 0,
+              transform: hovered ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'opacity 0.35s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1)',
+              borderRadius: '12px',
+              zIndex: 20,
+            }}
+          >
+            <span
+              style={{
+                fontSize: '11px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.2em',
+                color: '#333333',
+                fontWeight: 800,
+                marginBottom: '8px',
+              }}
+            >
+              {item.year} — {item.title}
+            </span>
+            <p
+              style={{
+                fontSize: '14px',
+                lineHeight: 1.6,
+                color: '#111111',
+                fontWeight: 600,
+                margin: 0,
+              }}
+            >
+              {item.description}
+            </p>
+          </div>
+        </div>
+      </Html>
+    </group>
+  );
+}
+
+/* ================================================================== *
+ *  Vertical Solar System Centerpiece                                  *
+ * ================================================================== */
+const SOLAR_DATA = [
+  { name: 'SUN',     textureMap: '/textures/sunmap.jpg', size: 3.5, hasGlow: true, moons: [] },
+  { name: 'MERCURY', textureMap: '/textures/mercurymap.jpg', size: 0.25, moons: [] },
+  { name: 'VENUS',   textureMap: '/textures/venusmap.jpg', size: 0.45, moons: [] },
+  { name: 'EARTH',   textureMap: '/textures/earthmap1k.jpg', size: 0.55, moons: [{ name: 'MOON', dist: 1.0, size: 0.08, speed: 2 }] },
+  { name: 'MARS',    textureMap: '/textures/marsmap1k.jpg', size: 0.35, moons: [{ name: 'PHOBOS', dist: 0.7, size: 0.05, speed: 2.5 }, { name: 'DEIMOS', dist: 0.9, size: 0.04, speed: 1.8 }] },
+  { name: 'JUPITER', textureMap: '/textures/jupitermap.jpg', size: 1.5, moons: [
+      { name: 'IO', dist: 2.1, size: 0.08, speed: 3.0 },
+      { name: 'EUROPA', dist: 2.5, size: 0.06, speed: 2.4 },
+      { name: 'GANYMEDE', dist: 3.0, size: 0.09, speed: 1.8 },
+      { name: 'CALLISTO', dist: 3.6, size: 0.07, speed: 1.2 },
+  ] },
+  { name: 'SATURN',  textureMap: '/textures/saturnmap.jpg', size: 1.2, ring: { inner: 1.5, outer: 2.6, color: '#c9b897' }, moons: [
+      { name: 'TITAN', dist: 3.2, size: 0.09, speed: 1.5 },
+      { name: 'RHEA', dist: 3.8, size: 0.06, speed: 1.1 },
+      { name: 'IAPETUS', dist: 4.4, size: 0.05, speed: 0.8 },
+  ] },
+  { name: 'URANUS',  textureMap: '/textures/uranusmap.jpg', size: 0.8, ring: { inner: 1.1, outer: 1.5, color: '#a3c2ce' }, moons: [
+      { name: 'MIRANDA', dist: 1.8, size: 0.05, speed: 1.7 },
+      { name: 'ARIEL', dist: 2.2, size: 0.06, speed: 1.3 },
+      { name: 'UMBRIEL', dist: 2.6, size: 0.06, speed: 1.0 },
+  ] },
+  { name: 'NEPTUNE', textureMap: '/textures/neptunemap.jpg', size: 0.8, moons: [ { name: 'TRITON', dist: 1.6, size: 0.08, speed: 1.9 }] },
+  { name: 'PLUTO',   textureMap: '/textures/plutomap1k.jpg', size: 0.15, moons: [{ name: 'CHARON', dist: 0.5, size: 0.05, speed: 1.5 }] },
+];
+
+function Moon({ moon }: { moon: any }) {
+  const orbitRef = useRef<THREE.Group>(null);
+  const timeOffset = useMemo(() => Math.random() * 100, []);
+  
+  // All moons share the moon texture
+  const texture = useTexture('/textures/moonmap1k.jpg');
+
+  useFrame(({ clock }) => {
+    if (orbitRef.current) {
+      orbitRef.current.rotation.y = (clock.getElapsedTime() + timeOffset) * moon.speed;
+    }
+  });
+
+  return (
+    <group>
+      {/* Orbit Line */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[moon.dist, moon.dist + 0.005, 64]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.15} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Moon Body */}
+      <group ref={orbitRef}>
+        <mesh position={[moon.dist, 0, 0]}>
+          <sphereGeometry args={[moon.size, 32, 32]} />
+          <meshStandardMaterial map={texture} roughness={0.8} />
         </mesh>
-      ))}
-
-      <mesh position={[0, 0.93, 0.098]}>
-        <boxGeometry args={[3.42, 0.014, 0.018]} />
-        <meshBasicMaterial color={accent} toneMapped={false} />
-      </mesh>
-      <mesh position={[1.62, -0.84, 0.1]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.24, 0.011, 5, 44]} />
-        <meshBasicMaterial color="#d8ff4f" transparent opacity={0.62} toneMapped={false} depthWrite={false} />
-      </mesh>
-
-      <group position={[0, 0, 0.22]}>
-        <GeometryLabel text={`${item.code} / CELESTIAL RECORD`} size={0.074} position={[-1.7, 0.72, 0]} color="#a49e94" />
-        <GeometryLabel text={item.category.toUpperCase()} size={0.07} position={[1.7, 0.72, 0]} color={accent} align="right" />
-        <GeometryLabel text={item.year} size={0.49} position={[-1.7, 0.08, 0]} color="#d8ff4f" depth={0.012} />
-        {titleLines.map((line, lineIndex) => (
-          <GeometryLabel key={line} text={line} size={0.205} position={[-1.68, -0.39 - lineIndex * 0.29, 0]} color="#f2efe8" depth={0.008} />
-        ))}
-        <GeometryLabel text="SIGNAL AUTHENTICATED" size={0.064} position={[-1.7, -0.96, 0]} color="#9b958b" />
-        <GeometryLabel text={`${String(index + 1).padStart(2, '0')} / ${String(COUNT).padStart(2, '0')}`} size={0.064} position={[1.7, -0.96, 0]} color="#9b958b" align="right" />
+        <Html position={[moon.dist + 0.1, 0, 0]} center className="pointer-events-none">
+          <span className="whitespace-nowrap font-display text-[7px] font-bold tracking-widest text-white/50">
+            {moon.name}
+          </span>
+        </Html>
       </group>
     </group>
   );
 }
 
-function CameraJourney({
-  journey,
-  active,
-  onUpdate,
-}: {
-  journey: CosmicJourneyRef;
-  active: boolean;
-  onUpdate: (index: number, percent: number) => void;
-}) {
-  const { camera, size, gl } = useThree();
-  const desired = useMemo(() => new THREE.Vector3(), []);
-  const target = useMemo(() => new THREE.Vector3(), []);
-  const fromSystem = useMemo(() => new THREE.Vector3(), []);
-  const toSystem = useMemo(() => new THREE.Vector3(), []);
-  const lastIndex = useRef(-1);
-  const lastPercent = useRef(-1);
+function PlanetBody({ data, yPos }: { data: any, yPos: number }) {
+  const planetRef = useRef<THREE.Group>(null);
+  const timeOffset = useMemo(() => Math.random() * 100, []);
+  
+  const texture = useTexture(data.textureMap);
 
-  useFrame((_, delta) => {
-    if (!active) return;
-    journey.current.current = THREE.MathUtils.damp(journey.current.current, journey.current.target, 5.2, delta);
-    const archivePosition = journey.current.current * (COUNT - 1);
-    const segment = Math.min(COUNT - 2, Math.floor(archivePosition));
-    const segmentProgress = archivePosition - segment;
-    // Hold each system long enough to inspect it, then compress the interstellar
-    // leap into a decisive portal crossing around the middle of each chapter.
-    const eased = smoother((segmentProgress - 0.38) / 0.24);
-    const from = COSMIC_SYSTEMS[segment].position;
-    const to = COSMIC_SYSTEMS[segment + 1].position;
-    fromSystem.set(from[0], from[1], from[2]);
-    toSystem.set(to[0], to[1], to[2]);
-    const portrait = size.height > size.width * 1.08;
-    const cameraDistance = portrait ? 11.7 : 9.6;
-    const transitionDive = Math.sin(eased * Math.PI);
-
-    desired.copy(fromSystem).lerp(toSystem, eased);
-    desired.z += cameraDistance - transitionDive * 0.55;
-    desired.x += Math.sin(eased * Math.PI * 2) * (portrait ? 0.3 : 0.72);
-    desired.y += Math.sin(eased * Math.PI) * (portrait ? 0.24 : 0.52);
-    camera.position.lerp(desired, 1 - Math.exp(-delta * 5.4));
-
-    target.copy(fromSystem).lerp(toSystem, eased);
-    target.x += portrait ? 0 : 0.35;
-    target.y += portrait ? 0.42 : 0.08;
-    target.z -= transitionDive * 0.85;
-    camera.lookAt(target);
-
-    const perspective = camera as THREE.PerspectiveCamera;
-    const desiredFov = portrait ? 54 : size.width < 700 ? 51 : 42;
-    if (Math.abs(perspective.fov - desiredFov) > 0.01) {
-      perspective.fov = desiredFov;
-      perspective.updateProjectionMatrix();
-    }
-    gl.toneMappingExposure = 1.02;
-
-    const nextIndex = Math.min(COUNT - 1, Math.max(0, Math.round(archivePosition)));
-    const nextPercent = Math.round(journey.current.current * 100);
-    if (nextIndex !== lastIndex.current || nextPercent !== lastPercent.current) {
-      lastIndex.current = nextIndex;
-      lastPercent.current = nextPercent;
-      onUpdate(nextIndex, nextPercent);
+  useFrame(({ clock }) => {
+    if (planetRef.current) {
+      planetRef.current.rotation.y = (clock.getElapsedTime() + timeOffset) * 0.2;
     }
   });
-  return null;
-}
 
-function CosmicScene({
-  journey,
-  quality,
-  active,
-  onUpdate,
-}: {
-  journey: CosmicJourneyRef;
-  quality: Quality;
-  active: boolean;
-  onUpdate: (index: number, percent: number) => void;
-}) {
   return (
-    <>
-      <color attach="background" args={['#010102']} />
-      <fogExp2 attach="fog" args={['#020103', 0.012]} />
-      <ambientLight color="#28100a" intensity={0.32} />
-      <SystemCorridor quality={quality} journey={journey} active={active} />
-      {MILESTONES.map((item, index) => (
-        <SignalMonument key={item.code} item={item} index={index} journey={journey} active={active} />
-      ))}
-      <CameraJourney journey={journey} active={active} onUpdate={onUpdate} />
-    </>
+    <group position={[0, yPos, 0]}>
+      {/* Planet Label */}
+      <Html position={[data.size + 0.5, 0, 0]} center className="pointer-events-none">
+        <span className="whitespace-nowrap font-display text-[9px] font-bold tracking-widest text-white/70 drop-shadow-md">
+          {data.name}
+        </span>
+      </Html>
+
+      {/* Tilt the planet system slightly to match the reference image's perspective */}
+      <group rotation={[0.15, 0, 0]} ref={planetRef}>
+        <mesh castShadow receiveShadow>
+          <sphereGeometry args={[data.size, 64, 64]} />
+          {data.hasGlow ? (
+            <meshStandardMaterial 
+              map={texture} 
+              emissiveMap={texture}
+              emissive="#ff5500"
+              emissiveIntensity={10.0}
+              roughness={1.0}
+            />
+          ) : (
+            <meshStandardMaterial 
+              map={texture} 
+              roughness={0.3} 
+              metalness={0.2}
+              bumpMap={texture}
+              bumpScale={0.6}
+            />
+          )}
+        </mesh>
+
+        {/* Sun atmospheric glow overlay & Solar Flares */}
+        {data.hasGlow && (
+          <group>
+            {/* Multiple volumetric glowing halos for photorealistic soft corona */}
+            <mesh>
+              <sphereGeometry args={[data.size * 1.1, 32, 32]} />
+              <meshBasicMaterial color="#ffddaa" transparent opacity={0.15} blending={THREE.AdditiveBlending} depthWrite={false} />
+            </mesh>
+            <mesh>
+              <sphereGeometry args={[data.size * 1.3, 32, 32]} />
+              <meshBasicMaterial color="#ff8800" transparent opacity={0.1} blending={THREE.AdditiveBlending} depthWrite={false} />
+            </mesh>
+            <mesh>
+              <sphereGeometry args={[data.size * 1.6, 32, 32]} />
+              <meshBasicMaterial color="#ff3300" transparent opacity={0.05} blending={THREE.AdditiveBlending} depthWrite={false} />
+            </mesh>
+            <mesh>
+              <sphereGeometry args={[data.size * 2.0, 32, 32]} />
+              <meshBasicMaterial color="#aa0000" transparent opacity={0.02} blending={THREE.AdditiveBlending} depthWrite={false} />
+            </mesh>
+            {/* Solar flares simulation (toroidal arcs sticking out randomly) */}
+            {[...Array(6)].map((_, i) => (
+              <mesh key={`flare-${i}`} rotation={[Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, 0]} position={[0, 0, 0]}>
+                <torusGeometry args={[data.size * 1.02, Math.random() * 0.05 + 0.02, 16, 50, Math.PI / (Math.random() * 2 + 1.5)]} />
+                <meshBasicMaterial color="#ffcc00" transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} />
+              </mesh>
+            ))}
+          </group>
+        )}
+
+        {/* Planet Rings */}
+        {data.ring && (
+          <mesh rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
+            <ringGeometry args={[data.ring.inner, data.ring.outer, 128]} />
+            <meshStandardMaterial color={data.ring.color} side={THREE.DoubleSide} transparent opacity={0.65} />
+          </mesh>
+        )}
+
+        {/* Moons */}
+        {data.moons.map((moon: any, idx: number) => (
+          <Moon key={idx} moon={moon} />
+        ))}
+      </group>
+    </group>
   );
 }
 
-function MilestoneNavigation({ activeIndex, onSelect }: { activeIndex: number; onSelect: (index: number) => void }) {
-  const refs = useRef<Array<HTMLButtonElement | null>>([]);
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
-    let next = index;
-    const compactGrid = window.matchMedia('(max-width: 700px)').matches;
-    if (event.key === 'ArrowDown') next = Math.min(COUNT - 1, index + (compactGrid ? 4 : 1));
-    else if (event.key === 'ArrowUp') next = Math.max(0, index - (compactGrid ? 4 : 1));
-    else if (event.key === 'ArrowRight') next = Math.min(COUNT - 1, index + 1);
-    else if (event.key === 'ArrowLeft') next = Math.max(0, index - 1);
-    else if (event.key === 'Home') next = 0;
-    else if (event.key === 'End') next = COUNT - 1;
-    else return;
-    event.preventDefault();
-    onSelect(next);
-    refs.current[next]?.focus({ preventScroll: true });
-  };
+function SolarSystem() {
+  const N_BODIES = SOLAR_DATA.length;
+  // Space them out vertically matching the helix height
+  const SPACING = (TOTAL_Y_DROP + 12) / (N_BODIES - 1);
+  const START_Y = (TOTAL_Y_DROP / 2) + 6;
+  const END_Y = START_Y - ((N_BODIES - 1) * SPACING);
 
   return (
-    <nav className="achievement-cosmic-nav" aria-label="Achievement systems">
-      {MILESTONES.map((item, index) => (
-        <button
-          key={item.code}
-          ref={(node) => { refs.current[index] = node; }}
-          type="button"
-          aria-label={`${item.year}: ${item.title}`}
-          aria-current={index === activeIndex ? 'step' : undefined}
-          data-active={index === activeIndex}
-          tabIndex={index === activeIndex ? 0 : -1}
-          onClick={() => onSelect(index)}
-          onKeyDown={(event) => handleKeyDown(event, index)}
-        >
-          <i aria-hidden="true" />
-          <span>{item.year}</span>
-        </button>
-      ))}
-    </nav>
+    <group>
+      {/* 
+        Lighting: Pouring light from the Sun downwards.
+        - directionalLight is offset slightly to cast beautiful angular shadows across the cratored surfaces.
+      */}
+      <ambientLight intensity={0.25} color="#ffffff" />
+      <directionalLight 
+        position={[5, START_Y + 10, 5]} 
+        intensity={4.0} 
+        color="#ffeadd" 
+        castShadow 
+        target-position={[0, -100, 0]}
+      />
+      
+      {/* Sun Core Light (gives an extra kick to the inner planets) */}
+      <pointLight 
+        position={[0, START_Y, 0]} 
+        intensity={150.0} 
+        color="#ff7733" 
+        distance={40} 
+        decay={2.0} 
+      />
+
+      {/* Milky Way cluster at the bottom right near the footer */}
+      <group position={[20, END_Y - 5, -30]}>
+        <mesh>
+          <sphereGeometry args={[10, 32, 32]} />
+          <meshBasicMaterial color="#4466ff" transparent opacity={0.06} blending={THREE.AdditiveBlending} depthWrite={false} />
+        </mesh>
+        <pointLight intensity={10.0} color="#6688ff" distance={30} decay={2} />
+      </group>
+      
+      {/* Central Alignment Axis Line (Faint glowing core string) */}
+      <mesh position={[0, (START_Y + END_Y) / 2, 0]}>
+        <cylinderGeometry args={[0.015, 0.015, Math.abs(START_Y - END_Y) + 4, 8]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.15} />
+      </mesh>
+
+      <Suspense fallback={null}>
+        {SOLAR_DATA.map((planet, i) => (
+          <PlanetBody key={planet.name} data={planet} yPos={START_Y - (i * SPACING)} />
+        ))}
+      </Suspense>
+    </group>
   );
 }
 
-function CosmicOverlay({
-  progress,
-  activeIndex,
-  onSelect,
-}: {
-  progress: number;
-  activeIndex: number;
-  onSelect: (index: number) => void;
-}) {
-  const active = MILESTONES[activeIndex];
-  const system = COSMIC_SYSTEMS[activeIndex];
+/* ================================================================== *
+ *  Scroll-Driven Helix Group                                          *
+ * ================================================================== */
+function HelixGroup() {
+  const groupRef = useRef<THREE.Group>(null);
+
+  useFrame(() => {
+    if (!groupRef.current) return;
+
+    scroll.current = THREE.MathUtils.lerp(
+      scroll.current,
+      scroll.target,
+      LERP_SPEED
+    );
+
+    const p = scroll.current;
+
+    // Spin the helix as user scrolls
+    groupRef.current.rotation.y = p * SCROLL_ROT;
+    // Lift the helix to bring lower elements up, starting from the offset
+    groupRef.current.position.y = INITIAL_Y_OFFSET + p * TOTAL_LIFT;
+  });
+
   return (
-    <div className="achievement-cosmic-overlay">
-      <header className="achievement-cosmic-topline">
-        <div><span>UMRT / Multiverse archive</span><strong>{system.name}</strong></div>
-        <div className="achievement-cosmic-progress" aria-hidden="true">
-          <span>{String(progress).padStart(3, '0')}%</span>
-          <i><b style={{ width: `${progress}%` }} /></i>
+    <group ref={groupRef}>
+      <SolarSystem />
+      {ITEMS.map((item, i) => (
+        <ImagePlane key={`ribbon-${i}`} item={item} index={i} />
+      ))}
+    </group>
+  );
+}
+
+/* ================================================================== *
+ *  HTML Overlay                                                       *
+ * ================================================================== */
+function Overlay() {
+  const [scrollPct, setScrollPct] = useState(0);
+
+  useEffect(() => {
+    let raf: number;
+    const update = () => {
+      setScrollPct(Math.round(scroll.current * 100));
+      raf = requestAnimationFrame(update);
+    };
+    raf = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-6 sm:p-10">
+      <div className="flex justify-between">
+        <div className="flex flex-col gap-1">
+          <span className="font-body text-[10px] uppercase tracking-[0.4em] text-white/30">
+            Achievements
+          </span>
+          <span className="font-display text-sm tracking-[0.2em] text-white/80">
+            PHOTO GALLERY
+          </span>
         </div>
-      </header>
-      <aside className="achievement-cosmic-readout" aria-live="polite">
-        <span>System {String(activeIndex + 1).padStart(2, '0')} / Closest approach</span>
-        <strong>{active.year}</strong>
-        <p>{active.code} / {active.category}</p>
-        <small>{active.title}</small>
-        <em>{active.description}</em>
-      </aside>
-      <MilestoneNavigation activeIndex={activeIndex} onSelect={onSelect} />
-      <footer className="achievement-cosmic-caption" aria-hidden="true">
-        <span>Scroll to cross the next planetary system</span>
-        <span>Seven transition gates / eight verified signals</span>
-      </footer>
+        <div className="flex items-center gap-4">
+          <div className="h-px w-24 bg-white/10">
+            <div 
+              className="h-full bg-blue-400/70" 
+              style={{ width: `${scrollPct}%` }} 
+            />
+          </div>
+          <span className="font-body text-xs tabular-nums tracking-widest text-white/40">
+            {String(scrollPct).padStart(3, '0')}%
+          </span>
+        </div>
+      </div>
+
+      <div className="flex justify-center pb-4 opacity-50">
+        <span className="font-body text-[10px] uppercase tracking-[0.5em] text-white/30 animate-pulse">
+          Scroll Down
+        </span>
+      </div>
     </div>
   );
 }
 
-function SemanticMilestoneList() {
-  return (
-    <ol className="sr-only">
-      {MILESTONES.map((item) => (
-        <li key={item.code}><article><p>{item.year} / {item.category}</p><h3>{item.title}</h3><p>{item.description}</p></article></li>
-      ))}
-    </ol>
-  );
-}
-
-export function StaticAchievementArchive() {
-  return (
-    <section id="cosmic-archive" className="achievement-static-archive" aria-labelledby="static-archive-title">
-      <header>
-        <p>Motion-free multiverse record / 2020—2025</p>
-        <h2 id="static-archive-title">Eight systems. One trajectory.</h2>
-        <span>The complete UMRT achievement record, presented chronologically without WebGL or animated movement.</span>
-      </header>
-      <div className="achievement-static-constellation" aria-hidden="true">
-        {MILESTONES.map((item) => <i key={item.code} />)}
-      </div>
-      <ol className="achievement-static-list">
-        {MILESTONES.map((item, index) => (
-          <li key={item.code}>
-            <article>
-              <div><span>{item.code}</span><b>{item.category}</b></div>
-              <strong>{item.year}</strong><h3>{item.title}</h3><p>{item.description}</p>
-              <small>{String(index + 1).padStart(2, '0')} / {String(COUNT).padStart(2, '0')}</small>
-            </article>
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
-}
-
-function CapabilityCheck() {
-  return (
-    <section className="achievement-cosmic-section achievement-cosmic-loading" aria-label="Checking 3D archive support">
-      <div className="achievement-cosmic-sticky"><div className="achievement-archive-loader" role="status"><span aria-hidden="true" /><strong>Mapping deep-space corridor</strong><small>Eight systems / seven gates</small></div></div>
-    </section>
-  );
-}
-
+/* ================================================================== *
+ *  Main Component                                                     *
+ * ================================================================== */
 export default function HelixGallery3D() {
-  const containerRef = useRef<HTMLElement>(null);
-  const journey = useRef<CosmicJourney>({ target: 0, current: 0 });
-  const reducedMotion = useReducedMotionPreference();
-  const [webgl, setWebgl] = useState<boolean | null>(null);
-  const [quality, setQuality] = useState<Quality>('medium');
-  const [dpr, setDpr] = useState(1);
-  const [sectionActive, setSectionActive] = useState(true);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [progress, setProgress] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setWebgl(hasWebGLSupport());
-    const nextQuality = detectQuality();
-    setQuality(nextQuality);
-    setDpr(dprFor(nextQuality));
+    scroll.target = 0;
+    scroll.current = 0;
+
+    const trigger = ScrollTrigger.create({
+      trigger: containerRef.current,
+      start: 'top top',
+      end: 'bottom bottom',
+      onUpdate: (self) => {
+        scroll.target = self.progress;
+      },
+    });
+
+    return () => trigger.kill();
   }, []);
-
-  useEffect(() => {
-    if (reducedMotion || webgl !== true) return;
-    const section = containerRef.current;
-    if (!section) return;
-    const observer = new IntersectionObserver(([entry]) => setSectionActive(entry.isIntersecting), { rootMargin: '28% 0px' });
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, [reducedMotion, webgl]);
-
-  useEffect(() => {
-    if (reducedMotion || webgl !== true) return;
-    journey.current.target = 0;
-    journey.current.current = 0;
-    let frame = 0;
-    const sync = () => {
-      frame = 0;
-      const section = containerRef.current;
-      if (!section) return;
-      const rect = section.getBoundingClientRect();
-      const travel = Math.max(1, section.offsetHeight - window.innerHeight);
-      journey.current.target = clamp(-rect.top / travel);
-    };
-    const schedule = () => { if (!frame) frame = window.requestAnimationFrame(sync); };
-    sync();
-    window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
-    return () => {
-      window.removeEventListener('scroll', schedule);
-      window.removeEventListener('resize', schedule);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
-  }, [reducedMotion, webgl]);
-
-  const updateHud = useCallback((nextIndex: number, nextPercent: number) => {
-    setActiveIndex((current) => current === nextIndex ? current : nextIndex);
-    setProgress((current) => current === nextPercent ? current : nextPercent);
-  }, []);
-
-  const selectMilestone = useCallback((index: number) => {
-    const section = containerRef.current;
-    if (!section) return;
-    const travel = Math.max(1, section.offsetHeight - window.innerHeight);
-    const sectionTop = window.scrollY + section.getBoundingClientRect().top;
-    // Leave a full reading viewport before the sticky scene yields to the
-    // footer; 0.94 still resolves to milestone 08 and the final system.
-    const milestoneProgress = index === COUNT - 1 ? 0.94 : index / (COUNT - 1);
-    window.scrollTo({ top: sectionTop + travel * milestoneProgress, behavior: reducedMotion ? 'auto' : 'smooth' });
-  }, [reducedMotion]);
-
-  if (reducedMotion || webgl === false) return <StaticAchievementArchive />;
-  if (webgl === null) return <CapabilityCheck />;
 
   return (
-    <section ref={containerRef} id="cosmic-archive" className="achievement-cosmic-section" aria-label="Scroll-driven multiverse achievement archive">
-      <SemanticMilestoneList />
-      <div className="achievement-cosmic-sticky">
-        <CosmicOverlay progress={progress} activeIndex={activeIndex} onSelect={selectMilestone} />
+    <section
+      ref={containerRef}
+      id="helix-gallery"
+      className="relative bg-black"
+      style={{ height: '500vh' }}
+    >
+      <div
+        className="sticky top-0 h-screen w-full overflow-hidden"
+        style={{ background: 'black', zIndex: 10 }}
+      >
+        <Overlay />
+
         <Canvas
-          shadows={quality !== 'low'}
-          frameloop={sectionActive ? 'always' : 'demand'}
-          dpr={dpr}
-          camera={{ position: [0, 0, 9.6], fov: 42, near: 0.08, far: 230 }}
-          gl={{ antialias: quality === 'high', alpha: false, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.02 }}
-          performance={{ min: 0.55 }}
+          shadows
+          camera={{
+            position: [0, 2, 16],
+            fov: 40,
+            near: 0.1,
+            far: 300,
+          }}
+          gl={{
+            antialias: true,
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 1.0,
+            alpha: false,
+          }}
+          style={{ position: 'absolute', inset: 0 }}
         >
-          <CosmicScene journey={journey} quality={quality} active={sectionActive} onUpdate={updateHud} />
+          <Suspense fallback={null}>
+            <Environment />
+            <Skydome />
+            <HelixGroup />
+
+            {/* Cinematic Post-Processing Pipeline */}
+            <EffectComposer disableNormalPass>
+              <Bloom luminanceThreshold={1.2} mipmapBlur intensity={1.5} />
+              <BrightnessContrast brightness={0.05} contrast={0.3} />
+              <Vignette eskil={false} offset={0.1} darkness={1.1} />
+            </EffectComposer>
+          </Suspense>
         </Canvas>
       </div>
+
+      {/* Scrolling Gradient Overlay (Brown -> Transparent -> Brown) */}
+      {/* Placed AFTER the sticky container with higher zIndex so planets fade into the fog naturally! */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'linear-gradient(to bottom, #2a0d06 0%, transparent 8%, transparent 92%, #2a0d06 100%)',
+          zIndex: 20
+        }}
+      />
     </section>
   );
 }
