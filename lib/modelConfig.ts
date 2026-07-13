@@ -58,8 +58,10 @@ export const modelConfig: ModelConfig = {
   lowPolyPath: null,
   // Authored bounds (~2.22 m tall) — keep scale at 1, no auto-normalisation.
   scale: 1,
-  basePosition: [0, 0, 0],
-  rotationY: 0,
+  // The authored wheel contact plane is ~0.007 m above the model origin.
+  // The displaced terrain settles at ~-0.15 m in the central landing zone.
+  basePosition: [0, -0.2, 0],
+  rotationY: -0.32,
   runningAnimationNames: ['run', 'Run', 'running', 'Running', 'walk', 'Walk'],
   hotspots: [
     {
@@ -90,14 +92,14 @@ export const modelConfig: ModelConfig = {
 };
 
 export const cameraConfig: CameraConfig = {
-  fov: 38,
+  fov: 34,
   near: 0.1,
   far: 200,
-  start: [0, 1.6, 14],
-  reveal: [0, 1.4, 5.5],
-  closeup: [0, 1.4, 2.8],
-  targetStart: [0, 1.0, 0],
-  targetReveal: [0, 1.0, 0],
+  start: [5.45, 1.55, 7.0],
+  reveal: [-3.6, 2.15, 5.2],
+  closeup: [2.25, 1.85, 3.35],
+  targetStart: [0.3, 0.72, 0],
+  targetReveal: [0, 1.05, 0],
 };
 
 /** Type alias for the group of the loaded model. */

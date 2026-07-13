@@ -1,71 +1,50 @@
-# Mars Scroll Parallax 3D Landing Website - Main Plan
+# UMRT Landing Experience — Creative System
 
-## Vision
-Create a cinematic React/Next.js landing page where a user-provided 3D model runs on Mars during loading, then appears in a scroll-driven Mars rover environment. Scrolling zooms the camera and text, reveals the model, focuses on different parts, moves the model left/right, and finally unlocks free pan/zoom controls.
+## Core Idea
 
-## Chosen Stack
-- Next.js App Router
-- TypeScript
-- React Three Fiber
-- Drei
-- Three.js
-- GSAP + ScrollTrigger + @gsap/react
-- Lenis smooth scroll
-- Tailwind CSS
+The landing page behaves like a live mission instrument rather than a conventional marketing page. The authentic rover model is always the visual center; typography, telemetry, camera position, and semantic subsystem separation respond to the same normalized scroll timeline.
 
-## Core UX Timeline
-1. Lightweight loading scene: Mars ground, warm dusty atmosphere, user model running/looping.
-2. Landing hero: huge text in foreground, Mars rover environment behind it, model far away.
-3. Scroll phase A: camera/model/text zoom inward; hero text scales and fades out.
-4. Scroll phase B: full model reveal.
-5. Scroll phase C: closeup sequence of important model parts.
-6. Scroll phase D: model shifts left, then right, with text/content panels.
-7. Final phase: scroll animation completes and OrbitControls/free pan/zoom unlocks.
+## Experience Timeline
 
-## Asset Plan
-- User main model: `/public/models/main-model.glb` (configurable)
-- Optional low-poly/loading model: `/public/models/main-model-low.glb`
-- Fallback: procedurally generated rover-style proxy if models are absent (no blank page).
+1. **First contact** — rover and oversized statement share the first viewport.
+2. **The machine** — camera moves into the complete field-laboratory platform.
+3. **Surface system** — full architecture reveal.
+4. **Vision mast** — close focus on perception hardware.
+5. **Science arm** — close focus on manipulation and sample work.
+6. **Mobility** — low camera move across the rocker-bogie system.
+7. **System teardown** — model explodes by semantic subsystem, holds, then reassembles.
+8. **Manual control** — OrbitControls unlock and the teardown can be replayed.
 
-## Architecture
-- `app/page.tsx`: landing route
-- `components/experience/MarsExperience.tsx`: client-only 3D root + scroll director
-- `components/experience/SceneCanvas.tsx`: R3F Canvas (dynamic, SSR off)
-- `components/experience/LoadingScene.tsx`: lightweight loading animation
-- `components/experience/HeroScene.tsx`: full scene after load
-- `components/experience/ModelRig.tsx`: GLB loader + hotspot anchors + refs
-- `components/experience/ScrollDirector.tsx`: scroll progress → camera/model states
-- `components/experience/FreeExploreControls.tsx`: OrbitControls gated on last phase
-- `components/experience/HeroOverlay.tsx`: DOM hero text + section content + hint
-- `components/experience/ProxyRover.tsx`: simple procedural fallback mesh
-- `lib/modelConfig.ts`: paths, scale, rotation, hotspots, camera framing
-- `lib/scrollTimeline.ts`: phase ranges, easing, helpers
-- `lib/performance.ts`: DPR caps, reduced-motion, quality helpers
+## Achievements Timeline
 
-## Scene Phases (normalized 0..1)
-- `hero_intro`        0.00–0.12  hero text big, model far
-- `zoom_in`           0.12–0.28  camera dolly in, text fades out
-- `full_model_reveal` 0.28–0.42  camera frames complete model
-- `part_focus_1`      0.42–0.55  closeup on hotspot 1
-- `part_focus_2_left` 0.55–0.68  model on left side, content panel right
-- `part_focus_3_right`0.68–0.82  model on right side, content panel left
-- `final_recenter`    0.82–0.94  model recenters
-- `free_explore_unlock` 0.94–1.00 OrbitControls enabled
+- Eight square archive records remain physically fixed on a helix around a central Mission Archive Core.
+- Scroll drives the camera down and around the structure, with eased dwell time at each record and fast cinematic transitions between them.
+- The core carries an illuminated data spine, archive nodes, connectors, a gyroscope, and a moving scanner so the spiral visibly wraps a meaningful object.
+- The active record, progress telemetry, and milestone rail stay synchronized with the 3D camera.
+
+## Visual Language
+
+- Obsidian black, oxblood terrain, solar orange, and chartreuse signal accents.
+- Heavy geometric display typography paired with compact technical mono copy.
+- Editorial compositions instead of cards, with restrained grid, grain, and targeting marks.
+- 3D terrain, light, dust, signal rings, and camera movement remain performant without post-processing.
+
+## Responsive Rules
+
+- Desktop chapters alternate left and right around the rover.
+- Mobile keeps the rover visible in the upper field and anchors chapter copy near the bottom.
+- Camera distance and FOV expand automatically below 720px.
+- Navigation becomes a full-width two-column/one-column panel with tested keyboard and touch behavior.
+- Desktop navigation links retain translucent glass hover backgrounds.
+- The archive camera radius, field of view, card scale, and overlay placement adapt below 700px.
+- Reduced-motion users retain the visual narrative with damped camera movement and disabled smooth scrolling.
 
 ## Acceptance Criteria
-- No blank page while models load (proxy + loading scene is immediate).
-- Loading scene is lightweight (low DPR, basic lighting, simple proxy motion).
-- Hero text scales up and fades on scroll zoom.
-- Model closeups use configurable hotspots.
-- Model shifts left and right during scroll sections.
-- After final phase, OrbitControls allow free rotate / pan / zoom.
-- `prefers-reduced-motion` swaps to a static hero with limited camera motion.
-- Mobile fallback lowers DPR, particle counts, fog density, and disables post-processing.
-- WebGL unsupported → static hero fallback.
-- agent-context/ files are always present and updated.
 
-## Model Optimization Pipeline
-- Recommended: `gltf-transform` or `gltfpack` to compress the user GLB.
-- Save optimized to `/public/models/main-model.optimized.glb`.
-- Keep original untouched at `/public/models/main-model.glb`.
-- If `gltf-transform` is installed: `npx gltf-transform optimize input.glb output.glb`.
+- Real GLB is visible and strongly framed from first paint.
+- Scroll timeline and DOM chapters remain synchronized.
+- Automatic and manual teardown both preserve correct model assembly.
+- Free orbit/zoom activates only in the final phase.
+- No horizontal overflow at desktop or 390px mobile width.
+- Achievement cards stay fixed while the camera visibly spirals around the archive core.
+- Production build and typecheck pass.

@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import solarPanelStyles from '@/components/experience/SolarCalibrationPanel.module.css';
 
 // MarsExperience must run client-only because it boots WebGL + Lenis +
 // ScrollTrigger. The dynamic() import is required for ssr:false.
@@ -22,5 +23,21 @@ const MarsExperience = dynamic(
 );
 
 export default function Page() {
-  return <MarsExperience />;
+  return (
+    <>
+      {/* Keep the large rover asset route-local: the achievements journey is
+          now entirely model-free and should never pay this network cost. */}
+      <link
+        rel="preload"
+        as="fetch"
+        crossOrigin="anonymous"
+        href="/models/curiosity_v4_semantic_external.glb"
+      />
+      {/* The experience is client-only, but its CSS module must belong to the
+          route bundle. Otherwise Next can detach it when leaving Home and
+          return the cached WebGL chunk without restoring the panel styles. */}
+      <span className={solarPanelStyles.routeStyleAnchor} aria-hidden="true" />
+      <MarsExperience />
+    </>
+  );
 }

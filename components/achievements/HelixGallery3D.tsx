@@ -238,7 +238,27 @@ function ImagePlane({ item, index }: { item: GalleryItem; index: number }) {
 /* ================================================================== *
  *  Vertical Solar System Centerpiece                                  *
  * ================================================================== */
-const SOLAR_DATA = [
+interface MoonData {
+  name: string;
+  dist: number;
+  size: number;
+  speed: number;
+}
+
+interface PlanetData {
+  name: string;
+  textureMap: string;
+  size: number;
+  hasGlow?: boolean;
+  ring?: {
+    inner: number;
+    outer: number;
+    color: string;
+  };
+  moons: MoonData[];
+}
+
+const SOLAR_DATA: PlanetData[] = [
   { name: 'SUN',     textureMap: '/textures/sunmap.jpg', size: 3.5, hasGlow: true, moons: [] },
   { name: 'MERCURY', textureMap: '/textures/mercurymap.jpg', size: 0.25, moons: [] },
   { name: 'VENUS',   textureMap: '/textures/venusmap.jpg', size: 0.45, moons: [] },
@@ -264,7 +284,7 @@ const SOLAR_DATA = [
   { name: 'PLUTO',   textureMap: '/textures/plutomap1k.jpg', size: 0.15, moons: [{ name: 'CHARON', dist: 0.5, size: 0.05, speed: 1.5 }] },
 ];
 
-function Moon({ moon }: { moon: any }) {
+function Moon({ moon }: { moon: MoonData }) {
   const orbitRef = useRef<THREE.Group>(null);
   const timeOffset = useMemo(() => Math.random() * 100, []);
   
@@ -301,7 +321,7 @@ function Moon({ moon }: { moon: any }) {
   );
 }
 
-function PlanetBody({ data, yPos }: { data: any, yPos: number }) {
+function PlanetBody({ data, yPos }: { data: PlanetData; yPos: number }) {
   const planetRef = useRef<THREE.Group>(null);
   const timeOffset = useMemo(() => Math.random() * 100, []);
   
@@ -384,7 +404,7 @@ function PlanetBody({ data, yPos }: { data: any, yPos: number }) {
         )}
 
         {/* Moons */}
-        {data.moons.map((moon: any, idx: number) => (
+        {data.moons.map((moon, idx) => (
           <Moon key={idx} moon={moon} />
         ))}
       </group>
@@ -586,7 +606,7 @@ export default function HelixGallery3D() {
             <HelixGroup />
 
             {/* Cinematic Post-Processing Pipeline */}
-            <EffectComposer disableNormalPass>
+            <EffectComposer>
               <Bloom luminanceThreshold={1.2} mipmapBlur intensity={1.5} />
               <BrightnessContrast brightness={0.05} contrast={0.3} />
               <Vignette eskil={false} offset={0.1} darkness={1.1} />

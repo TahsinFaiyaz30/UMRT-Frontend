@@ -1,9 +1,9 @@
 'use client';
 
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import type { Group, Object3D, AnimationClip } from 'three';
+import type { Group, Object3D, AnimationClip, Mesh, MeshStandardMaterial } from 'three';
 import { AnimationMixer } from 'three';
 import { modelConfig } from '@/lib/modelConfig';
 import { ProxyRover } from './ProxyRover';
@@ -51,6 +51,18 @@ export const ModelRig = forwardRef<ModelRigHandle, { running?: boolean }>(functi
   const hasRealRef = useRef(false);
 
   const main = useGLTF(modelConfig.mainPath) as { scene: Group; animations: AnimationClip[] };
+  const renderScene = useMemo(() => {
+    if (!main?.scene) return null;
+    const clone = main.scene.clone(true);
+    clone.traverse((object) => {
+      const mesh = object as Mesh;
+      if (!mesh.isMesh) return;
+      mesh.material = Array.isArray(mesh.material)
+        ? mesh.material.map((material) => material.clone())
+        : mesh.material.clone();
+    });
+    return clone;
+  }, [main?.scene]);
 
   // Find a "running" clip, fall back to the first available animation.
   // For the labeled rover GLB `main.animations.length === 0` so this
@@ -67,10 +79,24 @@ export const ModelRig = forwardRef<ModelRigHandle, { running?: boolean }>(functi
   // Apply scale and set up the AnimationMixer (only if there are
   // clips). For the labeled GLB this is just one scene.scale assignment.
   useEffect(() => {
-    if (!main?.scene) return undefined;
-    const scene = main.scene as Object3D;
+    if (!renderScene) return undefined;
+    const scene = renderScene as Object3D;
 
     scene.scale.setScalar(modelConfig.scale);
+    scene.traverse((object) => {
+      const mesh = object as Mesh;
+      if (!mesh.isMesh) return;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.frustumCulled = true;
+      mesh.layers.enable(1);
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      materials.forEach((material) => {
+        const standard = material as MeshStandardMaterial;
+        if (typeof standard.envMapIntensity === 'number') standard.envMapIntensity = 1.35;
+        standard.needsUpdate = true;
+      });
+    });
     hasRealRef.current = true;
 
     if (clip) {
@@ -86,8 +112,14 @@ export const ModelRig = forwardRef<ModelRigHandle, { running?: boolean }>(functi
         mixerRef.current.uncacheRoot(scene);
         mixerRef.current = null;
       }
+      scene.traverse((object) => {
+        const mesh = object as Mesh;
+        if (!mesh.isMesh) return;
+        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        materials.forEach((material) => material.dispose());
+      });
     };
-  }, [main?.scene, clip]);
+  }, [renderScene, clip]);
 
   // Drive any authored mixer animation from R3F's own frame loop instead of a
   // parallel requestAnimationFrame loop. This eliminates a third rAF
@@ -118,24 +150,38 @@ export const ModelRig = forwardRef<ModelRigHandle, { running?: boolean }>(functi
     },
   }));
 
-  if (!main?.scene) {
+  if (!renderScene) {
     return (
-      <group ref={fallbackRef} position={modelConfig.basePosition} rotation={[0, modelConfig.rotationY, 0]}>
+      <group name="rover-model-rig" ref={fallbackRef} position={modelConfig.basePosition} rotation={[0, modelConfig.rotationY, 0]}>
         <ProxyRover running={running} />
+        <RoverSoilOccluder />
       </group>
     );
   }
 
   return (
     <group
+      name="rover-model-rig"
       ref={groupRef}
       position={modelConfig.basePosition}
       rotation={[0, modelConfig.rotationY, 0]}
     >
-      <primitive object={main.scene} />
+      <primitive object={renderScene} />
+      <RoverSoilOccluder />
     </group>
   );
 });
+
+function RoverSoilOccluder() {
+  return (
+    <mesh name="rover-soil-occluder" position={[0, 1.05, 0]}>
+      {/* Broad-phase only. SoilInteraction resolves any hit inside this box
+          against the actual rover meshes before rejecting the ground. */}
+      <boxGeometry args={[4.2, 2.5, 3.15]} />
+      <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
+    </mesh>
+  );
+}
 
 // Preload the labelled GLB as soon as this module is parsed.
 // `useGLTF` writes to drei's cache, so once SceneCanvas + HeroScene

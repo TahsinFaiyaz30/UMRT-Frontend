@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import AchievementsHero from '@/components/achievements/AchievementsHero';
 import AchievementsStats from '@/components/achievements/AchievementsStats';
-import AchievementsFooter from '@/components/achievements/AchievementsFooter';
+import { SiteFooter } from '@/components/layout/SiteFooter';
 import { PremiumNavbar } from '@/components/navbar';
 
 /**
@@ -67,8 +67,7 @@ export default function AchievementsPage() {
         */}
         <HelixGallery3D />
 
-        {/* CTA footer with particles */}
-        <AchievementsFooter />
+        <SiteFooter />
       </main>
     </>
   );

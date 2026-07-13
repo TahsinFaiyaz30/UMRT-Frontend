@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import type { CSSProperties } from 'react';
+import { phaseAt, phases } from '@/lib/scrollTimeline';
 
 export type SectionId =
   | 'hero_intro'
@@ -12,125 +13,242 @@ export type SectionId =
   | 'final_recenter'
   | 'free_explore_unlock';
 
-export const sectionMeta: { id: SectionId; label: string; title: string; body: string; side: 'left' | 'right' }[] = [
-  { id: 'hero_intro', label: 'Approach', title: 'SURFACE ENCOUNTER', body: 'A low rumble of dust. The horizon glows red-orange. Somewhere ahead, the mission begins.', side: 'right' },
-  { id: 'zoom_in', label: 'Descent', title: 'CLOSING IN', body: 'Telemetry locks. The rover emerges from the haze as we descend toward the surface.', side: 'left' },
-  { id: 'full_model_reveal', label: 'Full Reveal', title: 'THE PAYLOAD', body: 'Solar arrays, instruments, and sampling arms — every system engineered for Mars.', side: 'right' },
-  { id: 'part_focus_1', label: 'Sensor Head', title: 'PERCEPTION', body: 'Stereo cameras and LIDAR map the terrain in real time.', side: 'right' },
-  { id: 'part_focus_2_left', label: 'Sampling Arm', title: 'SAMPLING', body: 'A 2-metre reach, six degrees of freedom, and a coring drill for subsurface geology.', side: 'right' },
-  { id: 'part_focus_3_right', label: 'Comm Array', title: 'COMMUNICATIONS', body: 'High-gain antenna uplinks to orbiters; UHF radios talk to nearby landers.', side: 'left' },
-  { id: 'final_recenter', label: 'Recenter', title: 'MISSION READY', body: 'All systems nominal. Ready for hands-on exploration.', side: 'right' },
-  { id: 'free_explore_unlock', label: 'Free Explore', title: 'YOUR TURN', body: 'Drag to rotate. Scroll or pinch to zoom. Inspect the rover from any angle.', side: 'right' },
+type Chapter = {
+  id: SectionId;
+  index: string;
+  eyebrow: string;
+  title: string[];
+  body: string;
+  stat: string;
+  statLabel: string;
+  align: 'left' | 'right';
+};
+
+export const sectionMeta: Chapter[] = [
+  {
+    id: 'hero_intro',
+    index: '00',
+    eyebrow: 'UIU Mars Rover Team / Dhaka',
+    title: ['BUILT FOR', 'WORLDS', 'WITHOUT ROADS'],
+    body: 'A student-built exploration system engineered to see, reach, and survive where human footsteps cannot.',
+    stat: '23.8103° N',
+    statLabel: 'EARTH ORIGIN',
+    align: 'left',
+  },
+  {
+    id: 'zoom_in',
+    index: '01',
+    eyebrow: 'Object acquired / UMRT Rover',
+    title: ['NOT A VEHICLE.', 'A FIELD', 'LABORATORY.'],
+    body: 'Every surface is deliberate. Every gram negotiates between mobility, science, power, and a planet that forgives nothing.',
+    stat: '01',
+    statLabel: 'INTEGRATED SYSTEM',
+    align: 'left',
+  },
+  {
+    id: 'full_model_reveal',
+    index: '02',
+    eyebrow: 'Complete platform / visual lock',
+    title: ['ONE MACHINE.', 'SIX DISCIPLINES.'],
+    body: 'Mechanical, electrical, autonomy, communication, science, and software converge into a single surface-ready architecture.',
+    stat: '360°',
+    statLabel: 'SYSTEM VIEW',
+    align: 'right',
+  },
+  {
+    id: 'part_focus_1',
+    index: '03',
+    eyebrow: 'Perception stack / mast',
+    title: ['SEE BEFORE', 'YOU MOVE.'],
+    body: 'Stereo vision and terrain intelligence turn raw distance into a traversable world — one decision at a time.',
+    stat: '2×',
+    statLabel: 'STEREO VISION',
+    align: 'left',
+  },
+  {
+    id: 'part_focus_2_left',
+    index: '04',
+    eyebrow: 'Manipulator / science payload',
+    title: ['TOUCH THE', 'UNKNOWN.'],
+    body: 'The science arm transforms remote terrain into physical evidence: reach, inspect, collect, return data.',
+    stat: '6 DOF',
+    statLabel: 'MANIPULATION',
+    align: 'right',
+  },
+  {
+    id: 'part_focus_3_right',
+    index: '05',
+    eyebrow: 'Rocker-bogie / mobility',
+    title: ['MOVE WHERE', 'MAPS END.'],
+    body: 'Independent articulation keeps the chassis composed while every wheel negotiates a different version of the ground.',
+    stat: '6×6',
+    statLabel: 'ALL-TERRAIN DRIVE',
+    align: 'left',
+  },
+  {
+    id: 'final_recenter',
+    index: '06',
+    eyebrow: 'Semantic teardown / live',
+    title: ['NOW, OPEN', 'THE MACHINE.'],
+    body: 'Scroll through the architecture. The rover separates by subsystem, exposes its internal science stack, then returns home.',
+    stat: '14+',
+    statLabel: 'SEPARATE SYSTEMS',
+    align: 'right',
+  },
+  {
+    id: 'free_explore_unlock',
+    index: '07',
+    eyebrow: 'Manual control / unlocked',
+    title: ['THE ROVER', 'IS YOURS.'],
+    body: 'Drag to orbit. Pinch or scroll to zoom. Trigger the teardown again and inspect the machine from any angle.',
+    stat: 'LIVE',
+    statLabel: 'INTERACTIVE MODEL',
+    align: 'left',
+  },
 ];
 
-const cinematicSections = sectionMeta.filter(
-  (s) => s.id !== 'hero_intro' && s.id !== 'free_explore_unlock',
-);
+const chapterSections = sectionMeta.slice(1, -1);
 
-/**
- * DOM overlay: hero text, scroll-driven section panels, the loading UI
- * (percent) and the final explore hint.
- *
- * IMPORTANT: The sections must be in normal document flow (relative, not
- * fixed) so they create actual scroll height for the scroll-driven
- * parallax to work. Only decorative elements like the loading bar and
- * progress indicator are fixed/absolute.
- */
-export function HeroOverlay({
-  loading,
-  progress,
-  onPhaseAnchor,
-}: {
-  loading: boolean;
-  progress: number;
-  onPhaseAnchor?: (id: SectionId) => void;
-}) {
-  const sectionsRef = useRef<HTMLDivElement>(null);
+function clamp(value: number, min = 0, max = 1) {
+  return Math.min(max, Math.max(min, value));
+}
 
-  // Notify parent of which section is currently most-visible.
-  useEffect(() => {
-    if (!onPhaseAnchor) return;
-    onPhaseAnchor(sectionMeta[0].id);
-  }, [onPhaseAnchor]);
+function chapterStyle(id: SectionId, progress: number): CSSProperties {
+  const phase = phases.find((item) => item.name === id) ?? phases[0];
+  const local = clamp((progress - phase.start) / Math.max(0.001, phase.end - phase.start));
+  const envelope = Math.sin(local * Math.PI);
+  const visibility = clamp(envelope * 1.75);
+  return {
+    '--chapter-progress': local.toFixed(4),
+    '--chapter-visibility': visibility.toFixed(4),
+    '--chapter-depth': (local - 0.5).toFixed(4),
+    '--chapter-zoom': (0.72 + visibility * 0.28).toFixed(4),
+  } as CSSProperties;
+}
+
+export function HeroOverlay({ progress }: { loading?: boolean; progress: number }) {
+  const phase = phaseAt(progress);
+  const phaseIndex = Math.max(0, phases.findIndex((item) => item.name === phase.name));
+  const heroFade = clamp(1 - progress / 0.145);
+  const heroExit = clamp(progress / 0.145);
+  const heroScale = 1 + heroExit * 0.34;
+  const heroStyle = {
+    '--hero-fade': heroFade.toFixed(4),
+    '--hero-scale': heroScale.toFixed(4),
+    '--hero-exit': heroExit.toFixed(4),
+  } as CSSProperties;
 
   return (
-    <>
-      {/* Fixed decorative elements (loading bar, progress) */}
-      <div className="pointer-events-none fixed inset-x-0 top-20 z-10">
-        {/* Top loading bar — visible while assets warm up. */}
-        <div
-          className={`transition-opacity duration-500 ${
-            loading ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          <div className="mx-auto mt-3 flex w-full max-w-md items-center gap-3 rounded-full bg-black/40 px-4 py-2 text-xs text-mars-50 backdrop-blur">
-            <span className="font-display tracking-widest">PREPARING MISSION</span>
-            <div className="relative h-1 flex-1 overflow-hidden rounded bg-mars-700/60">
-              <div
-                className="absolute inset-y-0 left-0 rounded bg-mars-300"
-                style={{ width: `${Math.round(progress * 100)}%` }}
-              />
-            </div>
-            <span className="tabular-nums text-mars-100">{Math.round(progress * 100)}%</span>
+    <div className="mission-overlay" style={{ '--mission-progress': progress } as CSSProperties}>
+      <div className="mission-atmosphere" aria-hidden="true">
+        <div className="mission-grain" />
+        <div className="mission-vignette" />
+        <div className="mission-crosshair mission-crosshair-a" />
+        <div className="mission-crosshair mission-crosshair-b" />
+      </div>
+
+      <aside className="mission-telemetry mission-telemetry-left" aria-hidden="true">
+        <span>UMRT / SURFACE UNIT</span>
+        <span>SYS 07.10</span>
+      </aside>
+      <aside className="mission-telemetry mission-telemetry-right" aria-hidden="true">
+        <span>23.8103 N</span>
+        <span>90.4125 E</span>
+      </aside>
+
+      <section id="hero_intro" data-phase="hero_intro" className="mission-hero" style={heroStyle}>
+        <div className="mission-hero-inner">
+          <p className="mission-kicker">
+            <span className="signal-dot" />
+            {sectionMeta[0].eyebrow}
+          </p>
+          <h1 className="mission-title" aria-label="Built for worlds without roads">
+            <span className="mission-title-line">BUILT FOR</span>
+            <span className="mission-title-line mission-title-outline">WORLDS</span>
+            <span className="mission-title-line mission-title-indent">WITHOUT ROADS</span>
+          </h1>
+          <div className="mission-hero-footer">
+            <p>{sectionMeta[0].body}</p>
+            <a href="#zoom_in" className="mission-scroll-cue">
+              <span>ENTER THE MISSION</span>
+              <i aria-hidden="true" />
+            </a>
           </div>
         </div>
-      </div>
-
-      {/* Scroll sections — IN DOCUMENT FLOW to create scroll height */}
-      <div ref={sectionsRef} className="pointer-events-none relative z-10">
-        {/* Hero block */}
-        <div
-          id="hero_intro"
-          data-phase="hero_intro"
-          className="relative flex h-screen items-center justify-center"
-        >
-          <div className="pointer-events-none select-none px-6 text-center">
-            <p className="mb-6 text-xs uppercase tracking-[0.5em] text-mars-200/80">UMRT // Mars Rover</p>
-            <h1 className="font-display text-[14vw] leading-[0.95] tracking-tight text-mars-50 drop-shadow-[0_4px_24px_rgba(0,0,0,0.6)] md:text-[10vw]">
-              MISSION<br />MARS
-            </h1>
-            <p className="mt-8 font-body text-base text-mars-100/80 md:text-lg">Scroll to begin the surface encounter</p>
-            <div className="mt-12 inline-flex items-center gap-2 rounded-full border border-mars-200/30 px-4 py-2 text-xs uppercase tracking-widest text-mars-100/70">
-              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-mars-300" />
-              Scroll down
-            </div>
-          </div>
+        <div className="mission-orbit-label" aria-hidden="true">
+          <span>OBJECT / ROVER 01</span>
+          <span>TRACKING LOCKED</span>
         </div>
+      </section>
 
-        {/* Section panels. Each panel sits next to a "phase" id used by the scroll director. */}
-        {cinematicSections.map((s) => (
-          <div
-            key={s.id}
-            id={s.id}
-            data-phase={s.id}
-            className="pointer-events-none relative flex h-screen items-center px-6 md:px-24"
-          >
-            <div
-              className={`pointer-events-auto max-w-xl rounded-3xl bg-black/40 p-8 text-mars-50 backdrop-blur-md ${
-                s.side === 'right' ? 'ml-auto' : 'mr-auto'
-              }`}
-            >
-              <p className="mb-3 text-xs uppercase tracking-[0.4em] text-mars-200/80">{s.label}</p>
-              <h2 className="font-display text-4xl leading-tight md:text-6xl">{s.title}</h2>
-              <p className="mt-4 text-base text-mars-100/85 md:text-lg">{s.body}</p>
+      {chapterSections.map((chapter) => (
+        <section
+          key={chapter.id}
+          id={chapter.id}
+          data-phase={chapter.id}
+          className={`mission-chapter mission-chapter-${chapter.align} mission-chapter-${chapter.id}`}
+          style={chapterStyle(chapter.id, progress)}
+        >
+          <div className="mission-chapter-sticky">
+            <div className="mission-chapter-echo" aria-hidden="true">
+              {chapter.title.join(' ')}
+            </div>
+            <article className="mission-chapter-copy">
+              <div className="mission-chapter-index">/{chapter.index}</div>
+              <p className="mission-chapter-eyebrow">{chapter.eyebrow}</p>
+              <h2>
+                {chapter.title.map((line) => (
+                  <span key={line}>{line}</span>
+                ))}
+              </h2>
+              <p className="mission-chapter-body">{chapter.body}</p>
+              <div className="mission-stat">
+                <strong>{chapter.stat}</strong>
+                <span>{chapter.statLabel}</span>
+              </div>
+            </article>
+            <div className="mission-measure" aria-hidden="true">
+              <span />
+              <small>{chapter.index} / 07</small>
+              <span />
             </div>
           </div>
-        ))}
+        </section>
+      ))}
 
-        {/* Final phase: free explore. This intentionally renders no
-            text/card so the canvas can receive drag gestures directly. */}
-        <div
-          id="free_explore_unlock"
-          data-phase="free_explore_unlock"
-          className="pointer-events-none relative min-h-[220vh]"
-          aria-hidden="true"
-        />
-      </div>
+      <section
+        id="free_explore_unlock"
+        data-phase="free_explore_unlock"
+        className="mission-chapter mission-chapter-free"
+        style={chapterStyle('free_explore_unlock', progress)}
+      >
+        <div className="mission-chapter-sticky">
+          <article className="mission-free-copy">
+            <p className="mission-chapter-eyebrow">{sectionMeta[7].eyebrow}</p>
+            <h2>
+              <span>THE ROVER</span>
+              <span>IS YOURS.</span>
+            </h2>
+            <p>{sectionMeta[7].body}</p>
+            <div className="mission-control-legend" aria-label="3D model controls">
+              <span><b>01</b> LEFT DRAG / ORBIT</span>
+              <span><b>02</b> RIGHT DRAG / PAN</span>
+              <span><b>03</b> WHEEL / ZOOM</span>
+              <span><b>04</b> SLIDER / EXPLODE</span>
+            </div>
+            <a className="mission-exit-lab" href="#mission-footer">EXIT LAB / CONTACT ↓</a>
+          </article>
+        </div>
+      </section>
 
-      {/* Bottom progress bar (fixed) */}
-      <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-10 h-[2px] bg-mars-700/30">
-        <div className="h-full bg-mars-300 transition-[width] duration-100" style={{ width: `${Math.round(progress * 100)}%` }} />
+      <div className="mission-progress" aria-label={`Mission progress ${Math.round(progress * 100)} percent`}>
+        <div className="mission-progress-meta">
+          <span>{String(phaseIndex + 1).padStart(2, '0')}</span>
+          <span>{phase.label}</span>
+          <span>{Math.round(progress * 100).toString().padStart(2, '0')}%</span>
+        </div>
+        <div className="mission-progress-track"><i /></div>
       </div>
-    </>
+    </div>
   );
 }

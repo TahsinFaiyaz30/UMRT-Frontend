@@ -305,6 +305,7 @@ function buildInternals(
     g.traverse((o) => {
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
+      mesh.layers.enable(1);
       const src = mesh.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[];
       if (Array.isArray(src)) {
         mesh.material = src.map((m) => {
@@ -342,6 +343,7 @@ export function DismantleRig({
 }) {
   const gltf = useGLTF(modelConfig.mainPath);
   const rootRef = useRef<THREE.Group>(null);
+  const occluderRef = useRef<THREE.Mesh>(null);
   const semanticPartsRef = useRef<SemanticGroup[]>([]);
   const internalsRef = useRef<InternalGroup[]>([]);
   const initializedRef = useRef(false);
@@ -369,11 +371,15 @@ export function DismantleRig({
     const labelGroups: Record<string, SemanticGroup> = {};
     const semParts: SemanticGroup[] = [];
 
-    const collected: { mesh: THREE.Mesh; label: string }[] = [];
+    cloned.updateMatrixWorld(true);
+    const collected: { mesh: THREE.Mesh; label: string; matrix: THREE.Matrix4 }[] = [];
     cloned.traverse((o) => {
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
       mesh.frustumCulled = false;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.layers.enable(1);
       const label = mesh.name.split('__')[0];
       if (!teardownMotions[label]) return;
       // Boost env map intensity on the rover's own materials so they
@@ -385,10 +391,10 @@ export function DismantleRig({
           mat.needsUpdate = true;
         }
       }
-      collected.push({ mesh, label });
+      collected.push({ mesh, label, matrix: mesh.matrixWorld.clone() });
     });
 
-    for (const { mesh, label } of collected) {
+    for (const { mesh, label, matrix } of collected) {
       let g = labelGroups[label];
       if (!g) {
         const motion = teardownMotions[label];
@@ -406,18 +412,9 @@ export function DismantleRig({
         semParts.push(ng);
         g = ng;
       }
-      // Preserve world transform on re-parent so each part keeps its
-      // rest-pose position inside the rover. We then drive the part's
-      // local position by its `explode` offset.
-      mesh.updateWorldMatrix(true, false);
-      const worldPos = new THREE.Vector3();
-      const worldQuat = new THREE.Quaternion();
-      const worldScale = new THREE.Vector3();
-      mesh.matrixWorld.decompose(worldPos, worldQuat, worldScale);
-      root.worldToLocal(worldPos);
       g.add(mesh);
-      mesh.position.copy(worldPos);
-      // Group stays at origin; offsets applied per-mesh below.
+      matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
+      mesh.updateMatrix();
       g.userData.original.set(0, 0, 0);
     }
     semanticPartsRef.current = semParts;
@@ -457,20 +454,23 @@ export function DismantleRig({
     if (rootRef.current) {
       rootRef.current.position.y = modelConfig.basePosition[1] + lift;
     }
+    if (occluderRef.current) {
+      // Expand only the cheap broad-phase while parts are separated. The
+      // second-stage ray test still uses the actual moving meshes, so empty
+      // space inside the exploded assembly never becomes a dead zone.
+      occluderRef.current.scale.setScalar(t > 0.03 ? 3.6 : 1);
+    }
 
     // -------- External subsystems blow outward & rotate --------
     for (const g of semanticPartsRef.current) {
       const u = g.userData;
       const l = smooth(localT(t, u.start, u.end));
-      for (const child of g.children) {
-        const mesh = child as THREE.Object3D;
-        mesh.position.set(
-          u.original.x + u.explode.x * l,
-          u.original.y + u.explode.y * l,
-          u.original.z + u.explode.z * l,
-        );
-        mesh.rotation.set(u.rot.x * l, u.rot.y * l, u.rot.z * l);
-      }
+      g.position.set(
+        u.original.x + u.explode.x * l,
+        u.original.y + u.explode.y * l,
+        u.original.z + u.explode.z * l,
+      );
+      g.rotation.set(u.rot.x * l, u.rot.y * l, u.rot.z * l);
     }
 
     // -------- Internal modules fade in then explode outward --------
@@ -510,10 +510,16 @@ export function DismantleRig({
 
   return (
     <group
+      name="rover-model-rig"
       ref={rootRef}
       position={modelConfig.basePosition}
       rotation={[0, modelConfig.rotationY, 0]}
       scale={modelConfig.scale}
-    />
+    >
+      <mesh ref={occluderRef} name="rover-soil-occluder" position={[0, 1.05, 0]}>
+        <boxGeometry args={[4.2, 2.5, 3.15]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
+      </mesh>
+    </group>
   );
 }

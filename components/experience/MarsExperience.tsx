@@ -1,121 +1,204 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import Lenis from 'lenis';
 import { SceneCanvas } from './SceneCanvas';
-import { HeroOverlay, sectionMeta, type SectionId } from './HeroOverlay';
-import { Footer } from './Footer';
+import { HeroOverlay } from './HeroOverlay';
+import { SiteFooter } from '@/components/layout/SiteFooter';
 import { PremiumNavbar } from '@/components/navbar';
 import { TeardownOverlay } from './TeardownOverlay';
-import { detectQuality, getReducedMotion } from '@/lib/performance';
+import { MissionLoader } from './MissionLoader';
+import { SolarCalibrationPanel } from './SolarCalibrationPanel';
+import { getReducedMotion } from '@/lib/performance';
 import { phases } from '@/lib/scrollTimeline';
 
-/**
- * Length of the teardown animation in seconds.
- * 3 s explode out + 3 s reassemble back to the original form.
- */
-const TEARDOWN_DURATION_S = 6;
-
-// NOTE: Lenis, gsap, and ScrollTrigger are imported lazily inside the
-// first-interaction effect below so they don't initialise during the
-// dynamic import() of this component (which would compete with first
-// paint). ScrollTrigger is only registered right before the first
-// ScrollTrigger call inside the boot function.
-
-/** Threshold for entering free-explore mode (last phase start). */
+const MANUAL_TEARDOWN_DURATION = 6.4;
 const FREE_EXPLORE_START = phases[phases.length - 1].start;
+const AUTO_TEARDOWN_START = 0.755;
+const AUTO_TEARDOWN_PEAK = 0.82;
+const AUTO_TEARDOWN_HOLD = 0.855;
+const AUTO_TEARDOWN_END = FREE_EXPLORE_START;
 
-/**
- * Threshold just before the footer section begins scrolling into view.
- * Scroll progress is measured only across the Mars hero/explore area,
- * so 1.0 means the footer is about to enter the viewport.
- */
-const FOOTER_START = 0.985;
+const clamp = (value: number) => Math.min(1, Math.max(0, value));
+const smooth = (value: number) => {
+  const t = clamp(value);
+  return t * t * (3 - 2 * t);
+};
 
-/**
- * Top-level client component for the Mars landing experience.
- *
- * - Boots Lenis smooth scroll and syncs it with GSAP ScrollTrigger.
- * - Feeds normalized progress (0..1) to the 3D canvas.
- * - Renders the DOM overlay (sections, footer, hint, teardown button).
- * - Unlocks free pan/zoom/rotate on the 3D model at the end of scroll.
- *
- * NO staged loading: the WebGL Canvas mounts immediately when this
- * component runs. The canvas's <Suspense> fallback paints the same
- * clear colour as the live scene, so the page appears fully loaded
- * before the GLB finishes parsing. The teardown button only becomes
- * interactable after the user reaches the free-explore phase.
- */
 export default function MarsExperience() {
+  const rootRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
+  const pointerRef = useRef({ x: 0, y: 0 });
+  const lastUiProgressRef = useRef(-1);
   const [uiProgress, setUiProgress] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [noWebGL, setNoWebGL] = useState(false);
   const [freeExplore, setFreeExplore] = useState(false);
   const [showDismantleButton, setShowDismantleButton] = useState(false);
-  const lastUiProgressRef = useRef(-1);
+  const [sceneReady, setSceneReady] = useState(false);
+  const [loaderVisible, setLoaderVisible] = useState(true);
 
-  // -------- Teardown (Rover Teardown button) state --------
   const dismantleProgressRef = useRef(0);
   const dismantleTimelineRef = useRef(0);
-  const [dismantleActive, setDismantleActive] = useState(false);
+  const [manualDismantle, setManualDismantle] = useState(false);
+  const [autoDismantle, setAutoDismantle] = useState(false);
+  const [scrubDismantle, setScrubDismantle] = useState(0);
+  const scrubDismantleRef = useRef(0);
+  const manualDismantleRef = useRef(false);
   const dismantleStartRef = useRef<number | null>(null);
-  const dismantleRafRef = useRef<number>(0);
+  const dismantleRafRef = useRef(0);
+
+  const resetMissionToTop = useCallback(() => {
+    cancelAnimationFrame(dismantleRafRef.current);
+    dismantleRafRef.current = 0;
+    dismantleStartRef.current = null;
+    manualDismantleRef.current = false;
+    dismantleProgressRef.current = 0;
+    dismantleTimelineRef.current = 0;
+    scrubDismantleRef.current = 0;
+    progressRef.current = 0;
+    lastUiProgressRef.current = 0;
+    pointerRef.current.x = 0;
+    pointerRef.current.y = 0;
+
+    setUiProgress(0);
+    setFreeExplore(false);
+    setShowDismantleButton(false);
+    setManualDismantle(false);
+    setAutoDismantle(false);
+    setScrubDismantle(0);
+
+    const root = rootRef.current;
+    root?.style.setProperty('--pointer-x', '0');
+    root?.style.setProperty('--pointer-y', '0');
+    root?.removeAttribute('data-cursor-active');
+    root?.removeAttribute('data-cursor-pressed');
+
+    if (window.scrollX !== 0 || window.scrollY !== 0) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+  }, []);
+
+  // A Next.js route transition can carry the previous page's document scroll
+  // into Home. That stale Y value used to reach syncScrollProgress first,
+  // putting the camera, hero copy, teardown state, and controls into a later
+  // mission phase. Reset before paint for plain `/` visits. Explicit
+  // `/#section` links remain valid and keep their intended anchor position.
+  useLayoutEffect(() => {
+    if (window.location.hash) return undefined;
+
+    const previousRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = 'manual';
+    let frame = 0;
+
+    const restoreInitialMission = () => {
+      if (window.location.pathname !== '/' || window.location.hash) return;
+      resetMissionToTop();
+    };
+
+    restoreInitialMission();
+    frame = window.requestAnimationFrame(restoreInitialMission);
+    window.addEventListener('pageshow', restoreInitialMission);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('pageshow', restoreInitialMission);
+      window.history.scrollRestoration = previousRestoration;
+    };
+  }, [resetMissionToTop]);
+
+  // Browser/Next scroll restoration can run a frame after the page mounts.
+  // Keep the unscoped Home entry at its canonical first frame until the
+  // loading curtain has left; hash-based mission entry points are excluded.
+  useEffect(() => {
+    if (!loaderVisible || window.location.hash) return undefined;
+    let frame = 0;
+    const holdInitialMission = () => {
+      if (window.location.pathname !== '/' || window.location.hash) return;
+      resetMissionToTop();
+      frame = window.requestAnimationFrame(holdInitialMission);
+    };
+    frame = window.requestAnimationFrame(holdInitialMission);
+    return () => window.cancelAnimationFrame(frame);
+  }, [loaderVisible, resetMissionToTop]);
 
   const triggerDismantle = useCallback(() => {
-    if (dismantleActive) return;
-    setDismantleActive(true);
+    if (manualDismantleRef.current) return;
+    scrubDismantleRef.current = 0;
+    setScrubDismantle(0);
+    manualDismantleRef.current = true;
+    setManualDismantle(true);
     dismantleStartRef.current = null;
+
     const tick = (now: number) => {
-      if (dismantleStartRef.current === null) {
-        dismantleStartRef.current = now;
-      }
-      const start = dismantleStartRef.current;
-      const elapsed = (now - start) / 1000;
-      const half = TEARDOWN_DURATION_S / 2;
-      dismantleTimelineRef.current = Math.min(1, elapsed / TEARDOWN_DURATION_S);
-      const phase =
-        elapsed < half
-          ? Math.sin((elapsed / half) * Math.PI / 2)
-          : Math.max(0, Math.cos(((elapsed - half) / half) * Math.PI / 2));
-      dismantleProgressRef.current = phase;
+      if (dismantleStartRef.current === null) dismantleStartRef.current = now;
+      const elapsed = (now - dismantleStartRef.current) / 1000;
+      const explodeEnd = 2.15;
+      const holdEnd = 3.7;
 
-      if (elapsed < TEARDOWN_DURATION_S) {
+      dismantleTimelineRef.current = clamp(elapsed / MANUAL_TEARDOWN_DURATION);
+      dismantleProgressRef.current =
+        elapsed < explodeEnd
+          ? smooth(elapsed / explodeEnd)
+          : elapsed < holdEnd
+            ? 1
+            : 1 - smooth((elapsed - holdEnd) / (MANUAL_TEARDOWN_DURATION - holdEnd));
+
+      if (elapsed < MANUAL_TEARDOWN_DURATION) {
         dismantleRafRef.current = requestAnimationFrame(tick);
-      } else {
-        dismantleProgressRef.current = 0;
-        dismantleTimelineRef.current = 0;
-        dismantleStartRef.current = null;
-        setDismantleActive(false);
+        return;
       }
-    };
-    dismantleRafRef.current = requestAnimationFrame(tick);
-  }, [dismantleActive]);
 
-  useEffect(() => {
-    return () => {
-      cancelAnimationFrame(dismantleRafRef.current);
+      dismantleProgressRef.current = 0;
+      dismantleTimelineRef.current = 0;
+      dismantleStartRef.current = null;
+      manualDismantleRef.current = false;
+      setManualDismantle(false);
     };
+
+    dismantleRafRef.current = requestAnimationFrame(tick);
   }, []);
+
+  const completeLoader = useCallback(() => setLoaderVisible(false), []);
 
   const syncScrollProgress = useCallback(() => {
     const footerTop = document.querySelector<HTMLElement>('[data-page-footer]')?.offsetTop;
     const heroEnd = footerTop ?? document.documentElement.scrollHeight;
-    const h = heroEnd - window.innerHeight;
-    const p = h > 0 ? window.scrollY / h : 0;
-    const clamped = Math.max(0, Math.min(1, p));
+    const scrollable = Math.max(1, heroEnd - window.innerHeight);
+    const progress = clamp(window.scrollY / scrollable);
+    progressRef.current = progress;
 
-    progressRef.current = clamped;
-
-    if (Math.abs(clamped - lastUiProgressRef.current) >= 0.005) {
-      lastUiProgressRef.current = clamped;
-      setUiProgress(clamped);
+    if (Math.abs(progress - lastUiProgressRef.current) >= 0.0025) {
+      lastUiProgressRef.current = progress;
+      setUiProgress(progress);
     }
 
-    const shouldExplore = clamped >= FREE_EXPLORE_START;
-    setFreeExplore((prev) => (prev !== shouldExplore ? shouldExplore : prev));
+    const explore = progress >= FREE_EXPLORE_START;
+    setFreeExplore((current) => (current === explore ? current : explore));
+    setShowDismantleButton(explore && progress < 0.988);
 
-    const shouldShowButton = shouldExplore && clamped < FOOTER_START;
-    setShowDismantleButton((prev) => (prev !== shouldShowButton ? shouldShowButton : prev));
+    if (!manualDismantleRef.current) {
+      const automatic = progress >= AUTO_TEARDOWN_START && progress < AUTO_TEARDOWN_END;
+      setAutoDismantle((current) => (current === automatic ? current : automatic));
+
+      if (automatic) {
+        dismantleTimelineRef.current = clamp(
+          (progress - AUTO_TEARDOWN_START) / (AUTO_TEARDOWN_END - AUTO_TEARDOWN_START),
+        );
+        dismantleProgressRef.current =
+          progress < AUTO_TEARDOWN_PEAK
+            ? smooth((progress - AUTO_TEARDOWN_START) / (AUTO_TEARDOWN_PEAK - AUTO_TEARDOWN_START))
+            : progress < AUTO_TEARDOWN_HOLD
+              ? 1
+              : 1 - smooth((progress - AUTO_TEARDOWN_HOLD) / (AUTO_TEARDOWN_END - AUTO_TEARDOWN_HOLD));
+      } else if (progress >= FREE_EXPLORE_START) {
+        dismantleProgressRef.current = scrubDismantleRef.current;
+        dismantleTimelineRef.current = scrubDismantleRef.current > 0 ? 0.5 : 0;
+      } else {
+        dismantleProgressRef.current = 0;
+        dismantleTimelineRef.current = 0;
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -128,214 +211,161 @@ export default function MarsExperience() {
     };
   }, [syncScrollProgress]);
 
-  // Pin scroll during teardown so Lenis/OrbitControls can't push the
-  // page back to the top while the animation is playing.
-  const pinnedScrollYRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!dismantleActive) {
-      pinnedScrollYRef.current = null;
-      return undefined;
-    }
-    pinnedScrollYRef.current = window.scrollY;
-    let raf = 0;
-    const lock = () => {
-      const target = pinnedScrollYRef.current ?? window.scrollY;
-      if (Math.abs(window.scrollY - target) > 0.5) {
-        window.scrollTo({ top: target, behavior: 'auto' });
-      }
-      raf = requestAnimationFrame(lock);
+    const onPointerMove = (event: PointerEvent) => {
+      const x = (event.clientX / Math.max(1, window.innerWidth) - 0.5) * 2;
+      const y = (event.clientY / Math.max(1, window.innerHeight) - 0.5) * 2;
+      pointerRef.current.x += (x - pointerRef.current.x) * 0.28;
+      pointerRef.current.y += (y - pointerRef.current.y) * 0.28;
+      rootRef.current?.style.setProperty('--pointer-x', pointerRef.current.x.toFixed(3));
+      rootRef.current?.style.setProperty('--pointer-y', pointerRef.current.y.toFixed(3));
+      rootRef.current?.style.setProperty('--cursor-x', `${event.clientX}px`);
+      rootRef.current?.style.setProperty('--cursor-y', `${event.clientY}px`);
+      rootRef.current?.setAttribute('data-cursor-active', 'true');
     };
-    raf = requestAnimationFrame(lock);
+    const onPointerLeave = () => {
+      rootRef.current?.removeAttribute('data-cursor-active');
+      rootRef.current?.removeAttribute('data-cursor-pressed');
+    };
+    const onPointerDown = () => rootRef.current?.setAttribute('data-cursor-pressed', 'true');
+    const onPointerUp = () => rootRef.current?.removeAttribute('data-cursor-pressed');
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('pointerdown', onPointerDown, { passive: true });
+    window.addEventListener('pointerup', onPointerUp, { passive: true });
+    window.addEventListener('pointercancel', onPointerLeave, { passive: true });
+    window.addEventListener('blur', onPointerLeave);
+    document.documentElement.addEventListener('pointerleave', onPointerLeave);
     return () => {
-      cancelAnimationFrame(raf);
-      pinnedScrollYRef.current = null;
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerLeave);
+      window.removeEventListener('blur', onPointerLeave);
+      document.documentElement.removeEventListener('pointerleave', onPointerLeave);
     };
-  }, [dismantleActive]);
+  }, []);
 
-  // Probe for WebGL support — degrade to a static hero if missing.
+  const scrubTeardown = useCallback((value: number) => {
+    if (manualDismantleRef.current) return;
+    const progress = clamp(value);
+    scrubDismantleRef.current = progress;
+    dismantleProgressRef.current = progress;
+    dismantleTimelineRef.current = progress > 0 ? 0.5 : 0;
+    setScrubDismantle(progress);
+  }, []);
+
   useEffect(() => {
     try {
       const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+      const gl = canvas.getContext('webgl2');
       if (!gl) setNoWebGL(true);
     } catch {
       setNoWebGL(true);
     }
   }, []);
 
-  // Reduced-motion preference.
   useEffect(() => {
-    const m = window.matchMedia?.('(prefers-reduced-motion: reduce)');
-    const apply = () => setReduceMotion(getReducedMotion() || (m?.matches ?? false));
+    const media = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const apply = () => setReduceMotion(getReducedMotion() || (media?.matches ?? false));
     apply();
-    m?.addEventListener?.('change', apply);
-    return () => m?.removeEventListener?.('change', apply);
+    media?.addEventListener?.('change', apply);
+    return () => media?.removeEventListener?.('change', apply);
   }, []);
 
-  // Lenis + ScrollTrigger sync — DEFERRED until first user interaction
-  // so we never compete with first paint. The 3D Canvas still mounts
-  // immediately; only the smooth-scroll rAF loop is delayed.
   useEffect(() => {
-    if (reduceMotion) return undefined;
-
-    let rafId = 0;
-    type LenisInstance = {
-      raf: (t: number) => void;
-      on: (event: 'scroll', cb: () => void) => void;
-      destroy: () => void;
+    if (reduceMotion || loaderVisible) return undefined;
+    const lenis = new Lenis({
+      duration: 1.05,
+      easing: (value: number) => Math.min(1, 1.001 - Math.pow(2, -10 * value)),
+      smoothWheel: true,
+      wheelMultiplier: 0.92,
+      touchMultiplier: 1.12,
+    });
+    let frame = 0;
+    const raf = (time: number) => {
+      lenis.raf(time);
+      frame = requestAnimationFrame(raf);
     };
-    let lenis: LenisInstance | null = null;
-    let mounted = true;
-    let booted = false;
-    let pendingBoot: number | null = null;
-
-    const boot = async () => {
-      if (booted || !mounted) return;
-      booted = true;
-      window.removeEventListener('scroll', onInteract);
-      window.removeEventListener('wheel', onInteract);
-      window.removeEventListener('pointerdown', onInteract);
-      window.removeEventListener('keydown', onInteract);
-      window.removeEventListener('touchstart', onInteract);
-
-      const [{ default: LenisMod }, { gsap }, { ScrollTrigger }] = await Promise.all([
-        import('lenis'),
-        import('gsap'),
-        import('gsap/ScrollTrigger'),
-      ]);
-
-      if (!mounted) return;
-      gsap.registerPlugin(ScrollTrigger);
-
-      lenis = new LenisMod({
-        duration: 1.2,
-        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        smoothWheel: true,
-      });
-
-      const raf = (time: number) => {
-        lenis?.raf(time);
-        rafId = requestAnimationFrame(raf);
-      };
-      rafId = requestAnimationFrame(raf);
-
-      const onScroll = () => {
-        ScrollTrigger.update();
-        syncScrollProgress();
-      };
-      lenis.on('scroll', onScroll);
-
-      requestAnimationFrame(() => ScrollTrigger.refresh());
-    };
-
-    const onInteract = () => {
-      if (booted) return;
-      if (pendingBoot !== null) return;
-      pendingBoot = window.requestAnimationFrame(() => {
-        pendingBoot = null;
-        void boot();
-      });
-    };
-
-    window.addEventListener('scroll', onInteract, { once: true, passive: true });
-    window.addEventListener('wheel', onInteract, { once: true, passive: true });
-    window.addEventListener('pointerdown', onInteract, { once: true, passive: true });
-    window.addEventListener('touchstart', onInteract, { once: true, passive: true });
-    window.addEventListener('keydown', onInteract, { once: true });
-
+    lenis.on('scroll', syncScrollProgress);
+    frame = requestAnimationFrame(raf);
     return () => {
-      mounted = false;
-      window.removeEventListener('scroll', onInteract);
-      window.removeEventListener('wheel', onInteract);
-      window.removeEventListener('pointerdown', onInteract);
-      window.removeEventListener('touchstart', onInteract);
-      window.removeEventListener('keydown', onInteract);
-      if (pendingBoot !== null) cancelAnimationFrame(pendingBoot);
-      cancelAnimationFrame(rafId);
-      lenis?.destroy();
+      cancelAnimationFrame(frame);
+      lenis.destroy();
     };
-  }, [reduceMotion, syncScrollProgress]);
+  }, [loaderVisible, reduceMotion, syncScrollProgress]);
 
-  // -------------------------------------------------------------------
+  useEffect(() => {
+    if (!manualDismantle) return undefined;
+    const lockedY = window.scrollY;
+    let frame = 0;
+    const lock = () => {
+      if (Math.abs(window.scrollY - lockedY) > 0.5) window.scrollTo(0, lockedY);
+      frame = requestAnimationFrame(lock);
+    };
+    frame = requestAnimationFrame(lock);
+    return () => cancelAnimationFrame(frame);
+  }, [manualDismantle]);
+
+  useEffect(() => {
+    const shell = rootRef.current?.querySelector<HTMLElement>('.mission-canvas');
+    if (!shell) return undefined;
+    const keepWheelInLab = (event: WheelEvent) => {
+      const progress = progressRef.current;
+      if (progress >= 0.952 && progress < 0.988) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    shell.addEventListener('wheel', keepWheelInLab, { passive: false });
+    return () => shell.removeEventListener('wheel', keepWheelInLab);
+  }, []);
+
+  useEffect(() => () => cancelAnimationFrame(dismantleRafRef.current), []);
+
   if (noWebGL) {
     return (
-      <div className="relative h-screen w-full overflow-hidden bg-mars-900 text-mars-50">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#b8431b_0%,#2f0f06_60%,#180804_100%)]" />
-        <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
-          <h1 className="font-display text-7xl tracking-tight md:text-9xl">MISSION MARS</h1>
-          <p className="mt-6 max-w-xl text-mars-100/80">
-            Your browser does not support WebGL. We still want you to see the mission —
-            here&apos;s the static experience.
-          </p>
-          <p className="mt-2 text-sm text-mars-200/60">UMRT // Mars Rover</p>
+      <main className="page-pre-paint grid min-h-screen place-items-center px-6 text-center">
+        <div>
+          <p className="mission-kicker justify-center">UIU MARS ROVER TEAM</p>
+          <h1 className="mt-6 font-display text-6xl font-semibold tracking-[-0.07em] sm:text-8xl">BUILT BEYOND EARTH</h1>
+          <p className="mx-auto mt-6 max-w-lg text-sm leading-7 text-white/60">This mission needs WebGL. Open it in a modern browser with hardware acceleration to enter the 3D rover experience.</p>
         </div>
-      </div>
+      </main>
     );
   }
 
+  const dismantleActive = manualDismantle || autoDismantle || scrubDismantle > 0;
+
   return (
-    <>
-      {/* ROOT: a single stacking context that owns the Canvas, the
-          hero overlay sections, and the Footer. Making this root
-          `relative isolate` lets the Footer's `z-10` reliably stack
-          above the fixed Canvas wrapper inside the same context —
-          otherwise the fixed Canvas paints on top because fixed
-          elements live in the page-level stacking context by default. */}
-      <div className="relative isolate w-full bg-mars-900 text-mars-50">
-        {/* Premium navigation bar — fixed at top, z-50 floats above
-            everything else inside this stacking context. */}
-        <PremiumNavbar />
+    <div ref={rootRef} className="mission-experience">
+      <div className="mission-custom-cursor" aria-hidden="true"><i /><b /><span>SURFACE / TRACE</span></div>
+      {loaderVisible && <MissionLoader ready={sceneReady} onComplete={completeLoader} />}
+      <PremiumNavbar />
+      {!loaderVisible && <SolarCalibrationPanel />}
 
-        {/* Quality badge for devs. Positioned below the navbar (top-20)
-            so it doesn't overlap the fixed nav bar. */}
-        <div className="pointer-events-none fixed left-4 top-20 z-30 rounded-full bg-black/30 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-mars-200/80 backdrop-blur">
-          Quality: {detectQuality()}
-        </div>
-
-        {/* Canvas: full-viewport, fixed inside the same stacking
-            context as the overlay + footer. Stays at z-0 so all DOM
-            siblings in this root (overlay sections, footer) can stack
-            above it. It is `pointer-events-none` while the user is
-            being driven by scroll, and `pointer-events-auto` once
-            free-explore unlocks so OrbitControls can drag on it. */}
-        <div
-          className={`fixed inset-0 z-0 ${
-            freeExplore ? 'pointer-events-auto' : 'pointer-events-none'
-          }`}
-        >
-          <SceneCanvas
-            progressRef={progressRef}
-            reduceMotion={reduceMotion}
-            dismantleProgressRef={dismantleProgressRef}
-            dismantleTimelineRef={dismantleTimelineRef}
-            dismantleActive={dismantleActive}
-          />
-        </div>
-
-        {/* DOM overlay: scroll-driving sections in document flow */}
-        <HeroOverlay loading={false} progress={uiProgress} />
-
-        {/* Section markers used as ScrollTrigger anchors */}
-        {sectionMeta.map((s) => (
-          <span key={s.id} id={`anchor-${s.id}`} data-phase={s.id satisfies SectionId} className="block h-0 w-0" />
-        ))}
-
-        {/* Rover Teardown button. Fixed bottom-center, sits inside
-            this root's stacking context at z-20 so it overlays the
-            canvas but stays BELOW the Footer. */}
-        <TeardownOverlay
-          visible={showDismantleButton}
-          playing={dismantleActive}
-          onTrigger={triggerDismantle}
+      <div className={`mission-canvas ${freeExplore ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+        <SceneCanvas
+          progressRef={progressRef}
+          pointerRef={pointerRef}
+          reduceMotion={reduceMotion}
+          dismantleProgressRef={dismantleProgressRef}
+          dismantleTimelineRef={dismantleTimelineRef}
+          dismantleActive={dismantleActive}
+          onReady={() => setSceneReady(true)}
         />
-
-        {/* Footer: Earth + starfield backdrop + three columns +
-            "Meet Our Webmasters" CTA. `relative z-10` inside the
-            SAME stacking context as the canvas, so the Footer's
-            opaque black background reliably covers the canvas when
-            the user scrolls past the free-explore panel. */}
-        <Footer data-page-footer />
       </div>
-    </>
+
+      <HeroOverlay progress={uiProgress} />
+
+      <TeardownOverlay
+        visible={showDismantleButton}
+        playing={manualDismantle}
+        progress={scrubDismantle}
+        onScrub={scrubTeardown}
+        onTrigger={triggerDismantle}
+      />
+
+      <SiteFooter data-page-footer />
+    </div>
   );
 }
