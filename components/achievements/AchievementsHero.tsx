@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /* ─── CSS Keyframes (injected once) ─────────────────────────────────── */
 const keyframes = `
@@ -49,7 +49,9 @@ function generateParticles() {
 
 /* ─── Component ────────────────────────────────────────────────────── */
 export default function AchievementsHero() {
+  const sectionRef = useRef<HTMLElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [active, setActive] = useState(true);
   const [particles, setParticles] = useState<any[]>([]);
 
   useEffect(() => {
@@ -61,8 +63,19 @@ export default function AchievementsHero() {
     return () => cancelAnimationFrame(id);
   }, []);
 
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => setActive(entry.isIntersecting),
+      { rootMargin: '100px 0px' },
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-mars-900">
+    <section ref={sectionRef} className="relative flex min-h-screen items-center justify-center overflow-hidden bg-mars-900">
       {/* Injected keyframes */}
       <style>{keyframes}</style>
 
@@ -107,6 +120,7 @@ export default function AchievementsHero() {
               height: p.size,
               opacity: p.opacity,
               animation: `twinkle ${p.duration} ${p.delay} ease-in-out infinite, drift ${p.driftDuration} ${p.delay} ease-in-out infinite`,
+              animationPlayState: active ? 'running' : 'paused',
             }}
           />
         ))}

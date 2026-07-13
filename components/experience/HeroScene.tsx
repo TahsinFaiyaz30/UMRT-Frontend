@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useEffect, useMemo, useRef } from 'react';
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Environment, Lightformer, useTexture } from '@react-three/drei';
@@ -38,12 +38,42 @@ export const HeroScene = forwardRef<
   const groundRef = useRef<THREE.Mesh>(null);
   const solarSettings = useSolarCalibrationSettings();
   const solar = useMemo(() => solarLightingFromSettings(solarSettings), [solarSettings]);
-  const environmentEnergy = solar.intensity / 3.25;
+  const [environmentSettings, setEnvironmentSettings] = useState(solarSettings);
+  const [dismantleMounted, setDismantleMounted] = useState(Boolean(dismantleActive));
+  const environmentSolar = useMemo(
+    () => solarLightingFromSettings(environmentSettings),
+    [environmentSettings],
+  );
+  const environmentEnergy = environmentSolar.intensity / 3.25;
+
+  // Rebuilding a cube-map environment for every pointer sample from the solar
+  // joystick creates a rapid stream of half-float render targets and shader
+  // recompiles. Direct lights and visible atmospheric uniforms still update
+  // immediately; only the reflection capture waits until the control settles.
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setEnvironmentSettings(solarSettings), 180);
+    return () => window.clearTimeout(timeout);
+  }, [solarSettings]);
+
+  // Keep the assembled rover alive while the temporary teardown is visible so
+  // crossing the timeline boundary does not repeatedly clone and compile the
+  // whole GLTF. The teardown itself gets a short reuse window, then unmounts
+  // and releases its resources when the user has genuinely left that phase.
+  useEffect(() => {
+    if (dismantleActive) {
+      setDismantleMounted(true);
+      return undefined;
+    }
+    if (!dismantleMounted) return undefined;
+    const timeout = window.setTimeout(() => setDismantleMounted(false), 4_000);
+    return () => window.clearTimeout(timeout);
+  }, [dismantleActive, dismantleMounted]);
+
   const environmentKey = [
-    solarSettings.temperature,
+    environmentSettings.temperature,
     environmentEnergy.toFixed(2),
-    solarSettings.azimuth,
-    solarSettings.elevation,
+    environmentSettings.azimuth,
+    environmentSettings.elevation,
   ].join('-');
   return (
     <>
@@ -53,18 +83,18 @@ export const HeroScene = forwardRef<
       <Environment key={environmentKey} resolution={256} frames={1} background={false}>
         <Lightformer
           form="ring"
-          color={solar.color}
+          color={environmentSolar.color}
           intensity={4.2 * environmentEnergy}
           scale={12}
-          position={solar.position.map((value) => value * 0.46) as [number, number, number]}
+          position={environmentSolar.position.map((value) => value * 0.46) as [number, number, number]}
           target={[0, 0, 0]}
         />
         <Lightformer
           form="rect"
-          color={solar.color}
+          color={environmentSolar.color}
           intensity={1.35 * environmentEnergy}
           scale={[8, 4, 1]}
-          position={solar.position.map((value, index) => index === 1
+          position={environmentSolar.position.map((value, index) => index === 1
             ? Math.max(4, value * 0.2)
             : -value * 0.22) as [number, number, number]}
           target={[0, 0.8, 0]}
@@ -98,6 +128,7 @@ export const HeroScene = forwardRef<
       <CinematicGround quality={quality} groundRef={groundRef} />
       <SoilInteraction
         groundRef={groundRef}
+        quality={quality}
         sunDirection={solar.position}
         sunColor={solar.color}
         sunStrength={solar.intensity / 3.25}
@@ -111,10 +142,13 @@ export const HeroScene = forwardRef<
         sunStrength={solar.intensity / 3.25}
       />
 
-      {dismantleActive && dismantleProgressRef ? (
-        <DismantleRig progressRef={dismantleProgressRef} timelineRef={dismantleTimelineRef} />
-      ) : (
+      <group visible={!dismantleActive}>
         <ModelRig ref={ref} running={false} />
+      </group>
+      {dismantleMounted && dismantleProgressRef && (
+        <group visible={Boolean(dismantleActive)}>
+          <DismantleRig progressRef={dismantleProgressRef} timelineRef={dismantleTimelineRef} />
+        </group>
       )}
     </>
   );

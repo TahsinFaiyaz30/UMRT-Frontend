@@ -5,6 +5,7 @@ import type { RefObject } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {
   teardownMotions,
   internalModules,
@@ -298,33 +299,48 @@ function buildInternals(
     );
   }
 
-  // Each module starts at its own "original" position. We clone every
-  // material and zero its opacity so the modules are invisible until
-  // they fade in later in the timeline.
+  // Each module moves and fades as one semantic unit. Merge its hundreds of
+  // tiny boxes, pins, rods, and cylinders by material before they ever reach
+  // WebGL. Baking the existing local transforms into the merged buffers keeps
+  // the exact shape while collapsing hundreds of geometries, materials, draw
+  // calls, and shader bookkeeping objects to a few dozen.
   for (const g of groups) {
     g.userData.original.copy(g.position);
+    g.updateMatrixWorld(true);
+    const inverseGroupMatrix = g.matrixWorld.clone().invert();
+    const geometriesByMaterial = new Map<THREE.MeshStandardMaterial, THREE.BufferGeometry[]>();
+    const sourceGeometries = new Set<THREE.BufferGeometry>();
+
     g.traverse((o) => {
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
+      const sourceMaterial = (Array.isArray(mesh.material)
+        ? mesh.material[0]
+        : mesh.material) as THREE.MeshStandardMaterial;
+      const relativeMatrix = inverseGroupMatrix.clone().multiply(mesh.matrixWorld);
+      const geometry = mesh.geometry.clone().applyMatrix4(relativeMatrix);
+      const bucket = geometriesByMaterial.get(sourceMaterial) ?? [];
+      bucket.push(geometry);
+      geometriesByMaterial.set(sourceMaterial, bucket);
+      sourceGeometries.add(mesh.geometry);
+    });
+
+    g.clear();
+    sourceGeometries.forEach((geometry) => geometry.dispose());
+
+    geometriesByMaterial.forEach((geometries, sourceMaterial) => {
+      const merged = mergeGeometries(geometries, false);
+      geometries.forEach((geometry) => geometry.dispose());
+      if (!merged) return;
+
+      const material = sourceMaterial.clone();
+      material.transparent = true;
+      material.opacity = 0;
+      material.depthWrite = false;
+      material.needsUpdate = true;
+      const mesh = new THREE.Mesh(merged, material);
       mesh.layers.enable(1);
-      const src = mesh.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[];
-      if (Array.isArray(src)) {
-        mesh.material = src.map((m) => {
-          const c = m.clone();
-          c.transparent = true;
-          c.opacity = 0;
-          c.depthWrite = false;
-          c.needsUpdate = true;
-          return c;
-        });
-      } else {
-        const c = src.clone();
-        c.transparent = true;
-        c.opacity = 0;
-        c.depthWrite = false;
-        c.needsUpdate = true;
-        mesh.material = c;
-      }
+      g.add(mesh);
     });
   }
 
@@ -375,6 +391,14 @@ export function DismantleRig({
     const cloned = gltf.scene.clone(true);
     const labelGroups: Record<string, SemanticGroup> = {};
     const semParts: SemanticGroup[] = [];
+    const clonedMaterialCache = new Map<THREE.Material, THREE.Material>();
+    const cloneMaterial = (material: THREE.Material) => {
+      const cached = clonedMaterialCache.get(material);
+      if (cached) return cached;
+      const clone = material.clone();
+      clonedMaterialCache.set(material, clone);
+      return clone;
+    };
 
     cloned.updateMatrixWorld(true);
     const collected: { mesh: THREE.Mesh; label: string; matrix: THREE.Matrix4 }[] = [];
@@ -391,8 +415,8 @@ export function DismantleRig({
       // teardown gets independent clones so it can release shader programs
       // without mutating or invalidating the assembled rover.
       mesh.material = Array.isArray(mesh.material)
-        ? mesh.material.map((material) => material.clone())
-        : mesh.material.clone();
+        ? mesh.material.map(cloneMaterial)
+        : cloneMaterial(mesh.material);
       // Boost env map intensity on the rover's own materials so they
       // sit nicely alongside the procedural internals.
       const matArr = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -437,10 +461,13 @@ export function DismantleRig({
 
     return () => {
       // External meshes share GLTF geometry but own their cloned materials.
+      const disposedExternalMaterials = new Set<THREE.Material>();
       semParts.forEach((group) => {
         group.traverse((object) => {
           const mesh = object as THREE.Mesh;
-          if (mesh.isMesh) disposeMaterials(mesh.material, false);
+          if (mesh.isMesh) {
+            disposeMaterials(mesh.material, false, disposedExternalMaterials);
+          }
         });
         root.remove(group);
         group.clear();

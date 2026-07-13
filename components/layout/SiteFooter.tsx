@@ -7,6 +7,8 @@ import Link from 'next/link';
 export function SiteFooter(props: ComponentPropsWithoutRef<'footer'>) {
   const { className = '', ...rest } = props;
   const footerRef = useRef<HTMLElement>(null);
+  const pointerFrameRef = useRef(0);
+  const latestPointerRef = useRef({ x: 0, y: 0 });
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -17,14 +19,23 @@ export function SiteFooter(props: ComponentPropsWithoutRef<'footer'>) {
       { threshold: 0.16 },
     );
     observer.observe(footer);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (pointerFrameRef.current) cancelAnimationFrame(pointerFrameRef.current);
+    };
   }, []);
 
   const moveAtmosphere = (event: ReactPointerEvent<HTMLElement>) => {
-    const x = event.clientX / Math.max(1, window.innerWidth) - 0.5;
-    const y = event.clientY / Math.max(1, window.innerHeight) - 0.5;
-    footerRef.current?.style.setProperty('--footer-x', x.toFixed(3));
-    footerRef.current?.style.setProperty('--footer-y', y.toFixed(3));
+    latestPointerRef.current.x = event.clientX;
+    latestPointerRef.current.y = event.clientY;
+    if (pointerFrameRef.current) return;
+    pointerFrameRef.current = requestAnimationFrame(() => {
+      pointerFrameRef.current = 0;
+      const x = latestPointerRef.current.x / Math.max(1, window.innerWidth) - 0.5;
+      const y = latestPointerRef.current.y / Math.max(1, window.innerHeight) - 0.5;
+      footerRef.current?.style.setProperty('--footer-x', x.toFixed(3));
+      footerRef.current?.style.setProperty('--footer-y', y.toFixed(3));
+    });
   };
 
   return (
@@ -56,10 +67,10 @@ export function SiteFooter(props: ComponentPropsWithoutRef<'footer'>) {
 
             <div className="mission-footer-column">
               <strong>EXPLORE UMRT</strong>
-              <Link href="/achievements">Achievements</Link>
-              <Link href="/certificates">Certificates</Link>
-              <Link href="/#part_focus_1">Rover systems</Link>
-              <Link href="/#final_recenter">Teardown lab</Link>
+              <Link prefetch={false} href="/achievements">Achievements</Link>
+              <Link prefetch={false} href="/certificates">Certificates</Link>
+              <Link prefetch={false} href="/#part_focus_1">Rover systems</Link>
+              <Link prefetch={false} href="/#final_recenter">Teardown lab</Link>
               <a href="mailto:marsrover@uiu.ac.bd?subject=Joining%20the%20UIU%20Mars%20Rover%20Team">Join the mission</a>
             </div>
 

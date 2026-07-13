@@ -35,7 +35,7 @@ export function PremiumNavbar() {
   return (
     <header className="umrt-nav" data-scrolled={scrolled} data-open={open}>
       <div className="umrt-nav-inner">
-        <Link href="/" className="umrt-brand" aria-label="UMRT home" onClick={() => setOpen(false)}>
+        <Link prefetch={false} href="/" className="umrt-brand" aria-label="UMRT home" onClick={() => setOpen(false)}>
           <span className="umrt-brand-mark" aria-hidden="true" />
           <span className="umrt-brand-copy">
             <strong>UMRT</strong>
@@ -45,7 +45,7 @@ export function PremiumNavbar() {
 
         <nav className="umrt-nav-links" aria-label="Primary navigation">
           {links.map((link) => (
-            <Link key={link.href} href={link.href}>{link.label}</Link>
+            <Link prefetch={false} key={link.href} href={link.href}>{link.label}</Link>
           ))}
         </nav>
 
@@ -53,20 +53,20 @@ export function PremiumNavbar() {
           <div className="umrt-nav-hover-inner">
             <div className="umrt-nav-hover-column">
               <span>THE MACHINE</span>
-              <Link href="/#part_focus_1"><b>Vision mast</b><small>Stereo perception + terrain intelligence.</small></Link>
-              <Link href="/#part_focus_2_left"><b>Science arm</b><small>Sample handling and field manipulation.</small></Link>
-              <Link href="/#part_focus_3_right"><b>Mobility</b><small>Rocker-bogie traversal architecture.</small></Link>
+              <Link prefetch={false} href="/#part_focus_1"><b>Vision mast</b><small>Stereo perception + terrain intelligence.</small></Link>
+              <Link prefetch={false} href="/#part_focus_2_left"><b>Science arm</b><small>Sample handling and field manipulation.</small></Link>
+              <Link prefetch={false} href="/#part_focus_3_right"><b>Mobility</b><small>Rocker-bogie traversal architecture.</small></Link>
             </div>
 
             <div className="umrt-nav-hover-column">
               <span>THE MISSION</span>
-              <Link href="/achievements"><b>Competition archive</b><small>Eight milestones across five seasons.</small></Link>
-              <Link href="/certificates"><b>Certificate vault</b><small>Official records, distinctions, and mission credentials.</small></Link>
-              <Link href="/#final_recenter"><b>System teardown</b><small>Inspect the rover by subsystem.</small></Link>
-              <Link href="/#free_explore_unlock"><b>Free 3D lab</b><small>Orbit, pan, zoom, and control the explosion.</small></Link>
+              <Link prefetch={false} href="/achievements"><b>Competition archive</b><small>Eight milestones across five seasons.</small></Link>
+              <Link prefetch={false} href="/certificates"><b>Certificate vault</b><small>Official records, distinctions, and mission credentials.</small></Link>
+              <Link prefetch={false} href="/#final_recenter"><b>System teardown</b><small>Inspect the rover by subsystem.</small></Link>
+              <Link prefetch={false} href="/#free_explore_unlock"><b>Free 3D lab</b><small>Orbit, pan, zoom, and control the explosion.</small></Link>
             </div>
 
-            <Link href="/#free_explore_unlock" className="umrt-nav-hover-feature">
+            <Link prefetch={false} href="/#free_explore_unlock" className="umrt-nav-hover-feature">
               <span>ENGINEERING BRIEF</span>
               <strong>ROVER<br />SYSTEM 04</strong>
               <p>A complete interactive surface for exploring the machine UMRT takes beyond the road.</p>
@@ -75,7 +75,7 @@ export function PremiumNavbar() {
           </div>
         </div>
 
-        <Link href="/#free_explore_unlock" className="umrt-nav-action">
+        <Link prefetch={false} href="/#free_explore_unlock" className="umrt-nav-action">
           EXPLORE <span>↗</span>
         </Link>
 
@@ -100,9 +100,9 @@ export function PremiumNavbar() {
         data-lenis-prevent
       >
         {links.map((link) => (
-          <Link key={link.href} href={link.href} onClick={() => setOpen(false)}>{link.label}</Link>
+          <Link prefetch={false} key={link.href} href={link.href} onClick={() => setOpen(false)}>{link.label}</Link>
         ))}
-        <Link href="/#free_explore_unlock" onClick={() => setOpen(false)}>Explore model</Link>
+        <Link prefetch={false} href="/#free_explore_unlock" onClick={() => setOpen(false)}>Explore model</Link>
       </nav>
     </header>
   );

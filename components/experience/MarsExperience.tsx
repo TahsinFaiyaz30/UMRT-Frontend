@@ -212,18 +212,35 @@ export default function MarsExperience() {
   }, [syncScrollProgress]);
 
   useEffect(() => {
+    let pointerUiFrame = 0;
+    let latestClientX = 0;
+    let latestClientY = 0;
+
+    const flushPointerUi = () => {
+      pointerUiFrame = 0;
+      const root = rootRef.current;
+      if (!root) return;
+      root.style.setProperty('--pointer-x', pointerRef.current.x.toFixed(3));
+      root.style.setProperty('--pointer-y', pointerRef.current.y.toFixed(3));
+      root.style.setProperty('--cursor-x', `${latestClientX}px`);
+      root.style.setProperty('--cursor-y', `${latestClientY}px`);
+      root.setAttribute('data-cursor-active', 'true');
+    };
+
     const onPointerMove = (event: PointerEvent) => {
       const x = (event.clientX / Math.max(1, window.innerWidth) - 0.5) * 2;
       const y = (event.clientY / Math.max(1, window.innerHeight) - 0.5) * 2;
       pointerRef.current.x += (x - pointerRef.current.x) * 0.28;
       pointerRef.current.y += (y - pointerRef.current.y) * 0.28;
-      rootRef.current?.style.setProperty('--pointer-x', pointerRef.current.x.toFixed(3));
-      rootRef.current?.style.setProperty('--pointer-y', pointerRef.current.y.toFixed(3));
-      rootRef.current?.style.setProperty('--cursor-x', `${event.clientX}px`);
-      rootRef.current?.style.setProperty('--cursor-y', `${event.clientY}px`);
-      rootRef.current?.setAttribute('data-cursor-active', 'true');
+      latestClientX = event.clientX;
+      latestClientY = event.clientY;
+      if (!pointerUiFrame) pointerUiFrame = window.requestAnimationFrame(flushPointerUi);
     };
     const onPointerLeave = () => {
+      if (pointerUiFrame) {
+        window.cancelAnimationFrame(pointerUiFrame);
+        pointerUiFrame = 0;
+      }
       rootRef.current?.removeAttribute('data-cursor-active');
       rootRef.current?.removeAttribute('data-cursor-pressed');
     };
@@ -236,6 +253,7 @@ export default function MarsExperience() {
     window.addEventListener('blur', onPointerLeave);
     document.documentElement.addEventListener('pointerleave', onPointerLeave);
     return () => {
+      if (pointerUiFrame) window.cancelAnimationFrame(pointerUiFrame);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointerup', onPointerUp);

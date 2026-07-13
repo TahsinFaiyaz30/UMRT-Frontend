@@ -1,6 +1,8 @@
 'use client';
 
 import {
+  createContext,
+  useContext,
   useRef,
   useMemo,
   useEffect,
@@ -8,14 +10,13 @@ import {
   Suspense,
 } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Edges, Html, Stars, useTexture } from '@react-three/drei';
+import { Edges, useTexture } from '@react-three/drei';
 import { EffectComposer, Bloom, BrightnessContrast, SMAA, Vignette } from '@react-three/postprocessing';
 import type { EffectComposer as EffectComposerImpl } from 'postprocessing';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { detectQuality, dprFor } from '@/lib/performance';
-import { disposeRenderer } from '@/lib/threeDisposal';
 
 /* ================================================================== *
  *  GSAP ScrollTrigger                                                 *
@@ -79,6 +80,63 @@ const LERP_SPEED       = 0.08;
  * ================================================================== */
 const scroll = { target: 0, current: 0 };
 
+type ProjectionRegistry = {
+  cards: Map<number, THREE.Object3D>;
+  labels: Map<string, THREE.Object3D>;
+};
+
+type GalleryDomHandles = {
+  root: HTMLDivElement | null;
+  cameraLayer: HTMLDivElement | null;
+  cards: Map<number, HTMLDivElement>;
+  labels: Map<string, HTMLSpanElement>;
+};
+
+const ProjectionRegistryContext = createContext<ProjectionRegistry | null>(null);
+
+const CAMERA_CSS_MULTIPLIERS = [
+  1, -1, 1, 1,
+  1, -1, 1, 1,
+  1, -1, 1, 1,
+  1, -1, 1, 1,
+];
+const OBJECT_CSS_MULTIPLIERS = [
+  1 / 40, 1 / 40, 1 / 40, 1,
+  -1 / 40, -1 / 40, -1 / 40, -1,
+  1 / 40, 1 / 40, 1 / 40, 1,
+  1, 1, 1, 1,
+];
+
+function cssNumber(value: number) {
+  return Math.abs(value) < 1e-10 ? 0 : value;
+}
+
+function cssMatrix3d(matrix: THREE.Matrix4, multipliers: number[], prefix = '') {
+  return `${prefix}matrix3d(${matrix.elements
+    .map((value, index) => cssNumber(value * multipliers[index]))
+    .join(',')})`;
+}
+
+function WorldLabel({
+  id,
+  position,
+}: {
+  id: string;
+  position: [number, number, number];
+}) {
+  const registry = useContext(ProjectionRegistryContext);
+  return (
+    <object3D
+      ref={(anchor) => {
+        if (!registry) return;
+        if (anchor) registry.labels.set(id, anchor);
+        else registry.labels.delete(id);
+      }}
+      position={position}
+    />
+  );
+}
+
 /* ================================================================== *
  *  Environment — Dark, cinematic background                           *
  * ================================================================== */
@@ -121,8 +179,8 @@ function Skydome() {
  *  In the reference image, the planes form a continuous ribbon.       *
  *  rotation.y = Math.atan2(x, z) makes them face directly outward.    *
  * ================================================================== */
-function ImagePlane({ item, index }: { item: GalleryItem; index: number }) {
-  const [hovered, setHovered] = useState(false);
+function ImagePlane({ index, hovered }: { index: number; hovered: boolean }) {
+  const registry = useContext(ProjectionRegistryContext);
 
   // 1. Calculate the angle around the Y axis
   // Add Math.PI / 2 so the first item (index 0) starts perfectly facing the camera (z = R, x = 0)
@@ -152,94 +210,20 @@ function ImagePlane({ item, index }: { item: GalleryItem; index: number }) {
           opacity={hovered ? 0.4 : 0.15}
           side={THREE.DoubleSide}
         />
-        <Edges scale={1} color={hovered ? '#ffffff' : 'rgba(255,255,255,0.1)'} />
+        <Edges scale={1} color="#ffffff" />
       </mesh>
 
-      {/* ── Interactive DOM Content ── */}
-      <Html
-        transform
+      {/* DOM content is rendered once in the page's React root. This anchor
+          supplies the exact world transform without creating a React root per card. */}
+      <object3D
+        ref={(anchor) => {
+          if (!registry) return;
+          if (anchor) registry.cards.set(index, anchor);
+          else registry.cards.delete(index);
+        }}
         position={[0, 0, 0.02]}
-        center
         scale={0.01}
-        occlude="blending"
-        className="flex flex-col justify-end"
-        style={{ width: '400px', height: '250px', pointerEvents: 'auto' }}
-      >
-        <div
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-          style={{
-            width: '100%',
-            height: '100%',
-            position: 'relative',
-            cursor: 'pointer',
-            transition: 'transform 0.5s cubic-bezier(0.16,1,0.3,1), box-shadow 0.5s ease',
-            transform: hovered ? 'scale(1.1) translateY(-10px)' : 'scale(1)',
-            boxShadow: hovered
-              ? '0 20px 50px rgba(255,255,255,0.15), inset 0 0 30px rgba(255,255,255,0.5)'
-              : '0 4px 20px rgba(0,0,0,0.5)',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            zIndex: hovered ? 50 : 1,
-          }}
-        >
-          {/* Greyish Blurry Glass Background */}
-          <div className="absolute inset-0 rounded-2xl border border-white/10 bg-gray-500/10 backdrop-blur-xl transition-all duration-300 group-hover:bg-gray-400/20" />
-
-          {/* Always-visible: Year + Title */}
-          <div className="relative z-10 flex h-full flex-col justify-end px-6 pb-5 text-left">
-            <span className="font-display text-5xl font-extrabold tracking-widest text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-              {item.year}
-            </span>
-            <p className="mt-1 font-body text-xl font-bold tracking-wider text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
-              {item.title}
-            </p>
-          </div>
-
-          {/* Hover overlay — slides up with dummy description data */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'flex-end',
-              padding: '24px',
-              background: 'linear-gradient(to top, rgba(200,200,200,0.95) 0%, rgba(200,200,200,0.7) 50%, rgba(200,200,200,0.2) 100%)',
-              backdropFilter: 'blur(12px)',
-              opacity: hovered ? 1 : 0,
-              transform: hovered ? 'translateY(0)' : 'translateY(20px)',
-              transition: 'opacity 0.35s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1)',
-              borderRadius: '12px',
-              zIndex: 20,
-            }}
-          >
-            <span
-              style={{
-                fontSize: '11px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.2em',
-                color: '#333333',
-                fontWeight: 800,
-                marginBottom: '8px',
-              }}
-            >
-              {item.year} — {item.title}
-            </span>
-            <p
-              style={{
-                fontSize: '14px',
-                lineHeight: 1.6,
-                color: '#111111',
-                fontWeight: 600,
-                margin: 0,
-              }}
-            >
-              {item.description}
-            </p>
-          </div>
-        </div>
-      </Html>
+      />
     </group>
   );
 }
@@ -299,7 +283,149 @@ const GALLERY_TEXTURE_URLS = [
   ...SOLAR_DATA.map((planet) => planet.textureMap),
 ];
 
-function Moon({ moon }: { moon: MoonData }) {
+const GALLERY_LABELS = SOLAR_DATA.flatMap((planet) => [
+  {
+    id: `planet-${planet.name}`,
+    text: planet.name,
+    className: 'whitespace-nowrap font-display text-[9px] font-bold tracking-widest text-white/70 drop-shadow-md',
+  },
+  ...planet.moons.map((moon) => ({
+    id: `${planet.name}-${moon.name}`,
+    text: moon.name,
+    className: 'whitespace-nowrap font-display text-[7px] font-bold tracking-widest text-white/50',
+  })),
+]);
+
+function GalleryDomOverlay({
+  handles,
+  hoveredIndex,
+  onHover,
+}: {
+  handles: GalleryDomHandles;
+  hoveredIndex: number | null;
+  onHover: (index: number | null) => void;
+}) {
+  return (
+    <div
+      ref={(element) => { handles.root = element; }}
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      style={{ zIndex: 8_123_144, transformStyle: 'preserve-3d' }}
+    >
+      <div
+        ref={(element) => { handles.cameraLayer = element; }}
+        className="pointer-events-none absolute left-0 top-0"
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        {ITEMS.map((item, index) => {
+          const hovered = hoveredIndex === index;
+          return (
+            <div
+              key={`gallery-card-${index}`}
+              ref={(element) => {
+                if (element) handles.cards.set(index, element);
+                else handles.cards.delete(index);
+              }}
+              className="absolute flex flex-col justify-end"
+              onMouseEnter={() => onHover(index)}
+              onMouseLeave={() => onHover(null)}
+              style={{
+                width: '400px',
+                height: '250px',
+                pointerEvents: 'auto',
+                transformStyle: 'preserve-3d',
+              }}
+            >
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  position: 'relative',
+                  cursor: 'pointer',
+                  transition: 'transform 0.5s cubic-bezier(0.16,1,0.3,1), box-shadow 0.5s ease',
+                  transform: hovered ? 'scale(1.1) translateY(-10px)' : 'scale(1)',
+                  boxShadow: hovered
+                    ? '0 20px 50px rgba(255,255,255,0.15), inset 0 0 30px rgba(255,255,255,0.5)'
+                    : '0 4px 20px rgba(0,0,0,0.5)',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  zIndex: hovered ? 50 : 1,
+                }}
+              >
+                <div className="absolute inset-0 rounded-2xl border border-white/10 bg-gray-500/10 backdrop-blur-xl transition-all duration-300 group-hover:bg-gray-400/20" />
+
+                <div className="relative z-10 flex h-full flex-col justify-end px-6 pb-5 text-left">
+                  <span className="font-display text-5xl font-extrabold tracking-widest text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+                    {item.year}
+                  </span>
+                  <p className="mt-1 font-body text-xl font-bold tracking-wider text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                    {item.title}
+                  </p>
+                </div>
+
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'flex-end',
+                    padding: '24px',
+                    background: 'linear-gradient(to top, rgba(200,200,200,0.95) 0%, rgba(200,200,200,0.7) 50%, rgba(200,200,200,0.2) 100%)',
+                    backdropFilter: 'blur(12px)',
+                    opacity: hovered ? 1 : 0,
+                    transform: hovered ? 'translateY(0)' : 'translateY(20px)',
+                    transition: 'opacity 0.35s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1)',
+                    borderRadius: '12px',
+                    zIndex: 20,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.2em',
+                      color: '#333333',
+                      fontWeight: 800,
+                      marginBottom: '8px',
+                    }}
+                  >
+                    {item.year} — {item.title}
+                  </span>
+                  <p
+                    style={{
+                      fontSize: '14px',
+                      lineHeight: 1.6,
+                      color: '#111111',
+                      fontWeight: 600,
+                      margin: 0,
+                    }}
+                  >
+                    {item.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {GALLERY_LABELS.map((label) => (
+        <span
+          key={label.id}
+          ref={(element) => {
+            if (element) handles.labels.set(label.id, element);
+            else handles.labels.delete(label.id);
+          }}
+          className={`pointer-events-none absolute ${label.className}`}
+        >
+          {label.text}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function Moon({ moon, planetName }: { moon: MoonData; planetName: string }) {
   const orbitRef = useRef<THREE.Group>(null);
   const timeOffset = useMemo(() => Math.random() * 100, []);
   
@@ -326,11 +452,10 @@ function Moon({ moon }: { moon: MoonData }) {
           <sphereGeometry args={[moon.size, 32, 32]} />
           <meshStandardMaterial map={texture} roughness={0.8} />
         </mesh>
-        <Html position={[moon.dist + 0.1, 0, 0]} center className="pointer-events-none">
-          <span className="whitespace-nowrap font-display text-[7px] font-bold tracking-widest text-white/50">
-            {moon.name}
-          </span>
-        </Html>
+        <WorldLabel
+          id={`${planetName}-${moon.name}`}
+          position={[moon.dist + 0.1, 0, 0]}
+        />
       </group>
     </group>
   );
@@ -351,11 +476,10 @@ function PlanetBody({ data, yPos }: { data: PlanetData; yPos: number }) {
   return (
     <group position={[0, yPos, 0]}>
       {/* Planet Label */}
-      <Html position={[data.size + 0.5, 0, 0]} center className="pointer-events-none">
-        <span className="whitespace-nowrap font-display text-[9px] font-bold tracking-widest text-white/70 drop-shadow-md">
-          {data.name}
-        </span>
-      </Html>
+      <WorldLabel
+        id={`planet-${data.name}`}
+        position={[data.size + 0.5, 0, 0]}
+      />
 
       {/* Tilt the planet system slightly to match the reference image's perspective */}
       <group rotation={[0.15, 0, 0]} ref={planetRef}>
@@ -420,7 +544,7 @@ function PlanetBody({ data, yPos }: { data: PlanetData; yPos: number }) {
 
         {/* Moons */}
         {data.moons.map((moon, idx) => (
-          <Moon key={idx} moon={moon} />
+          <Moon key={idx} moon={moon} planetName={data.name} />
         ))}
       </group>
     </group>
@@ -485,10 +609,21 @@ function SolarSystem() {
 /* ================================================================== *
  *  Scroll-Driven Helix Group                                          *
  * ================================================================== */
-function HelixGroup() {
+function HelixGroup({
+  registry,
+  domHandles,
+  hoveredIndex,
+}: {
+  registry: ProjectionRegistry;
+  domHandles: GalleryDomHandles;
+  hoveredIndex: number | null;
+}) {
   const groupRef = useRef<THREE.Group>(null);
+  const worldPosition = useMemo(() => new THREE.Vector3(), []);
+  const viewPosition = useMemo(() => new THREE.Vector3(), []);
+  const projectedPosition = useMemo(() => new THREE.Vector3(), []);
 
-  useFrame(() => {
+  useFrame(({ camera, size }) => {
     if (!groupRef.current) return;
 
     scroll.current = THREE.MathUtils.lerp(
@@ -503,15 +638,75 @@ function HelixGroup() {
     groupRef.current.rotation.y = p * SCROLL_ROT;
     // Lift the helix to bring lower elements up, starting from the offset
     groupRef.current.position.y = INITIAL_Y_OFFSET + p * TOTAL_LIFT;
+
+    groupRef.current.updateWorldMatrix(false, true);
+    camera.updateWorldMatrix(true, false);
+
+    const root = domHandles.root;
+    const cameraLayer = domHandles.cameraLayer;
+    if (!root || !cameraLayer) return;
+
+    const perspective = camera.projectionMatrix.elements[5] * size.height * 0.5;
+    root.style.perspective = `${perspective}px`;
+    cameraLayer.style.width = `${size.width}px`;
+    cameraLayer.style.height = `${size.height}px`;
+    cameraLayer.style.transform = [
+      `translateZ(${perspective}px)`,
+      cssMatrix3d(camera.matrixWorldInverse, CAMERA_CSS_MULTIPLIERS),
+      `translate(${size.width * 0.5}px,${size.height * 0.5}px)`,
+    ].join(' ');
+
+    registry.cards.forEach((anchor, index) => {
+      const element = domHandles.cards.get(index);
+      if (!element) return;
+
+      anchor.updateWorldMatrix(true, false);
+      anchor.getWorldPosition(worldPosition);
+      viewPosition.copy(worldPosition).applyMatrix4(camera.matrixWorldInverse);
+      const visible = viewPosition.z < -camera.near && viewPosition.z > -camera.far;
+      element.style.display = visible ? 'flex' : 'none';
+      if (!visible) return;
+
+      element.style.transform = cssMatrix3d(
+        anchor.matrixWorld,
+        OBJECT_CSS_MULTIPLIERS,
+        'translate(-50%,-50%) ',
+      );
+      const depth = THREE.MathUtils.clamp(
+        (-viewPosition.z - camera.near) / (camera.far - camera.near),
+        0,
+        1,
+      );
+      element.style.zIndex = String(Math.round((1 - depth) * 16_777_271));
+    });
+
+    registry.labels.forEach((anchor, id) => {
+      const element = domHandles.labels.get(id);
+      if (!element) return;
+
+      anchor.updateWorldMatrix(true, false);
+      anchor.getWorldPosition(worldPosition);
+      projectedPosition.copy(worldPosition).project(camera);
+      const visible = projectedPosition.z >= -1 && projectedPosition.z <= 1;
+      element.style.display = visible ? 'block' : 'none';
+      if (!visible) return;
+
+      const x = (projectedPosition.x * 0.5 + 0.5) * size.width;
+      const y = (-projectedPosition.y * 0.5 + 0.5) * size.height;
+      element.style.transform = `translate(-50%,-50%) translate(${x}px,${y}px)`;
+      element.style.zIndex = String(Math.round((1 - (projectedPosition.z + 1) * 0.5) * 16_777_271));
+    });
   });
 
   return (
-    <group ref={groupRef}>
-      <SolarSystem />
-      {ITEMS.map((item, i) => (
-        <ImagePlane key={`ribbon-${i}`} item={item} index={i} />
-      ))}
-    </group>
+    <ProjectionRegistryContext.Provider value={registry}>
+      <group ref={groupRef}>
+        <SolarSystem />
+        {ITEMS.map((_, i) => (
+          <ImagePlane key={`ribbon-${i}`} index={i} hovered={hoveredIndex === i} />
+        ))}
+      </group>
+    </ProjectionRegistryContext.Provider>
   );
 }
 
@@ -593,8 +788,20 @@ function GalleryPostProcessing() {
  * ================================================================== */
 export default function HelixGallery3D() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const projectionRegistryRef = useRef<ProjectionRegistry>({
+    cards: new Map(),
+    labels: new Map(),
+  });
+  const domHandlesRef = useRef<GalleryDomHandles>({
+    root: null,
+    cameraLayer: null,
+    cards: new Map(),
+    labels: new Map(),
+  });
   const [canvasActive, setCanvasActive] = useState(false);
+  const [canvasMounted, setCanvasMounted] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const unmountTimerRef = useRef<number | null>(null);
   const quality = useMemo(() => detectQuality(), []);
   const dprMax = useMemo(() => dprFor(quality), [quality]);
 
@@ -625,13 +832,54 @@ export default function HelixGallery3D() {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => () => {
-    GALLERY_TEXTURE_URLS.forEach((url) => useTexture.clear(url));
-    disposeRenderer(rendererRef.current);
-    rendererRef.current = null;
-    scroll.target = 0;
-    scroll.current = 0;
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (unmountTimerRef.current) {
+            window.clearTimeout(unmountTimerRef.current);
+            unmountTimerRef.current = null;
+          }
+          setCanvasMounted(true);
+          return;
+        }
+        if (unmountTimerRef.current) window.clearTimeout(unmountTimerRef.current);
+        unmountTimerRef.current = window.setTimeout(() => {
+          setCanvasMounted(false);
+          unmountTimerRef.current = null;
+        }, 3_000);
+      },
+      { rootMargin: '50% 0px' },
+    );
+    observer.observe(container);
+    return () => {
+      observer.disconnect();
+      if (unmountTimerRef.current) {
+        window.clearTimeout(unmountTimerRef.current);
+        unmountTimerRef.current = null;
+      }
+    };
   }, []);
+
+  useEffect(() => {
+    if (!canvasMounted) {
+      setHoveredIndex(null);
+      projectionRegistryRef.current.cards.clear();
+      projectionRegistryRef.current.labels.clear();
+      domHandlesRef.current.cards.clear();
+      domHandlesRef.current.labels.clear();
+      domHandlesRef.current.root = null;
+      domHandlesRef.current.cameraLayer = null;
+      return undefined;
+    }
+    return () => {
+      GALLERY_TEXTURE_URLS.forEach((url) => useTexture.clear(url));
+      scroll.target = 0;
+      scroll.current = 0;
+    };
+  }, [canvasMounted]);
 
   return (
     <section
@@ -644,40 +892,50 @@ export default function HelixGallery3D() {
         className="sticky top-0 h-screen w-full overflow-hidden"
         style={{ background: 'black', zIndex: 10 }}
       >
-        <Overlay active={canvasActive} />
+        <Overlay active={canvasActive && canvasMounted} />
 
-        <Canvas
-          shadows
-          dpr={[1, dprMax]}
-          frameloop={canvasActive ? 'always' : 'never'}
-          camera={{
-            position: [0, 2, 16],
-            fov: 40,
-            near: 0.1,
-            far: 300,
-          }}
-          gl={{
-            antialias: false,
-            powerPreference: 'high-performance',
-            toneMapping: THREE.ACESFilmicToneMapping,
-            toneMappingExposure: 1.0,
-            alpha: false,
-          }}
-          style={{ position: 'absolute', inset: 0 }}
-          onCreated={(state) => {
-            rendererRef.current = state.gl;
-          }}
-        >
-          <Suspense fallback={null}>
-            <Environment />
-            <Skydome />
-            <HelixGroup />
+        {canvasMounted && (
+          <>
+            <Canvas
+              shadows
+              dpr={[Math.min(1, dprMax), dprMax]}
+              frameloop={canvasActive ? 'always' : 'never'}
+              camera={{
+                position: [0, 2, 16],
+                fov: 40,
+                near: 0.1,
+                far: 300,
+              }}
+              gl={{
+                antialias: false,
+                powerPreference: 'high-performance',
+                toneMapping: THREE.ACESFilmicToneMapping,
+                toneMappingExposure: 1.0,
+                alpha: false,
+              }}
+              style={{ position: 'absolute', inset: 0 }}
+            >
+              <Suspense fallback={null}>
+                <Environment />
+                <Skydome />
+                <HelixGroup
+                  registry={projectionRegistryRef.current}
+                  domHandles={domHandlesRef.current}
+                  hoveredIndex={hoveredIndex}
+                />
 
-            {/* SMAA preserves clean edges without the multi-hundred-MB
-                8x multisampled post-processing target. */}
-            <GalleryPostProcessing />
-          </Suspense>
-        </Canvas>
+                {/* SMAA preserves clean edges without the multi-hundred-MB
+                    8x multisampled post-processing target. */}
+                <GalleryPostProcessing />
+              </Suspense>
+            </Canvas>
+            <GalleryDomOverlay
+              handles={domHandlesRef.current}
+              hoveredIndex={hoveredIndex}
+              onHover={setHoveredIndex}
+            />
+          </>
+        )}
       </div>
 
       {/* Scrolling Gradient Overlay (Brown -> Transparent -> Brown) */}

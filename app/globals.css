@@ -1794,6 +1794,18 @@ html[data-mission-loading='true'] body {
   animation: footer-ticker 24s linear infinite;
 }
 
+/* The footer exists far below the fold on every route. Do not keep its large
+   composited planet, orbit, star, and ticker layers advancing while none of
+   them can be seen. Intersection state is already maintained by SiteFooter. */
+.mission-footer[data-visible='false'] .mission-footer-orb,
+.mission-footer[data-visible='false'] .mission-footer-orb::before,
+.mission-footer[data-visible='false'] .mission-footer-orb::after,
+.mission-footer[data-visible='false'] .mission-footer-orbits i,
+.mission-footer[data-visible='false'] .mission-footer-stars,
+.mission-footer[data-visible='false'] .mission-footer-ticker div {
+  animation-play-state: paused;
+}
+
 .mission-footer-ticker span {
   display: inline-flex;
   align-items: center;

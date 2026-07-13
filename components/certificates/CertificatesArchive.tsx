@@ -149,24 +149,60 @@ function CertificateDocument({
   );
 }
 
-function setCosmicPointer(event: ReactPointerEvent<HTMLElement>) {
-  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (event.pointerType === 'touch' || !finePointer || reducedMotion) return;
-  const element = event.currentTarget;
-  const document = element.querySelector<HTMLElement>('[data-cosmic-document]');
-  const bounds = document?.getBoundingClientRect() ?? element.getBoundingClientRect();
-  const x = Math.min(1, Math.max(0, (event.clientX - bounds.left) / Math.max(1, bounds.width)));
-  const y = Math.min(1, Math.max(0, (event.clientY - bounds.top) / Math.max(1, bounds.height)));
+type PointerVisualState = {
+  frame: number;
+  clientX: number;
+  clientY: number;
+  visual?: HTMLElement | null;
+};
 
-  element.style.setProperty('--scan-x', `${(x * 100).toFixed(1)}%`);
-  element.style.setProperty('--scan-y', `${(y * 100).toFixed(1)}%`);
-  element.style.setProperty('--drift-x', `${((x - 0.5) * -12).toFixed(1)}px`);
-  element.style.setProperty('--drift-y', `${((y - 0.5) * -8).toFixed(1)}px`);
+let finePointerMedia: MediaQueryList | null = null;
+let reducedMotionMedia: MediaQueryList | null = null;
+const cosmicPointerState = new WeakMap<HTMLElement, PointerVisualState>();
+const stagePointerState = new WeakMap<HTMLElement, PointerVisualState>();
+
+function pointerVisualsEnabled(event: ReactPointerEvent<HTMLElement>) {
+  if (event.pointerType === 'touch') return false;
+  finePointerMedia ??= window.matchMedia('(hover: hover) and (pointer: fine)');
+  reducedMotionMedia ??= window.matchMedia('(prefers-reduced-motion: reduce)');
+  return finePointerMedia.matches && !reducedMotionMedia.matches;
+}
+
+function setCosmicPointer(event: ReactPointerEvent<HTMLElement>) {
+  if (!pointerVisualsEnabled(event)) return;
+  const element = event.currentTarget;
+  const state = cosmicPointerState.get(element) ?? {
+    frame: 0,
+    clientX: event.clientX,
+    clientY: event.clientY,
+  };
+  state.clientX = event.clientX;
+  state.clientY = event.clientY;
+  if (!state.frame) {
+    state.frame = window.requestAnimationFrame(() => {
+      state.frame = 0;
+      if (!element.isConnected) return;
+      if (!state.visual?.isConnected) {
+        state.visual = element.querySelector<HTMLElement>('[data-cosmic-document]');
+      }
+      const bounds = state.visual?.getBoundingClientRect() ?? element.getBoundingClientRect();
+      const x = Math.min(1, Math.max(0, (state.clientX - bounds.left) / Math.max(1, bounds.width)));
+      const y = Math.min(1, Math.max(0, (state.clientY - bounds.top) / Math.max(1, bounds.height)));
+
+      element.style.setProperty('--scan-x', `${(x * 100).toFixed(1)}%`);
+      element.style.setProperty('--scan-y', `${(y * 100).toFixed(1)}%`);
+      element.style.setProperty('--drift-x', `${((x - 0.5) * -12).toFixed(1)}px`);
+      element.style.setProperty('--drift-y', `${((y - 0.5) * -8).toFixed(1)}px`);
+    });
+  }
+  cosmicPointerState.set(element, state);
 }
 
 function resetCosmicPointer(event: ReactPointerEvent<HTMLElement>) {
   const element = event.currentTarget;
+  const state = cosmicPointerState.get(element);
+  if (state?.frame) window.cancelAnimationFrame(state.frame);
+  cosmicPointerState.delete(element);
   element.style.setProperty('--scan-x', '50%');
   element.style.setProperty('--scan-y', '50%');
   element.style.setProperty('--drift-x', '0px');
@@ -174,22 +210,37 @@ function resetCosmicPointer(event: ReactPointerEvent<HTMLElement>) {
 }
 
 function setStageTilt(event: ReactPointerEvent<HTMLElement>) {
-  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (event.pointerType === 'touch' || !finePointer || reducedMotion) return;
+  if (!pointerVisualsEnabled(event)) return;
   const element = event.currentTarget;
-  const bounds = element.getBoundingClientRect();
-  const x = (event.clientX - bounds.left) / Math.max(1, bounds.width) - 0.5;
-  const y = (event.clientY - bounds.top) / Math.max(1, bounds.height) - 0.5;
+  const state = stagePointerState.get(element) ?? {
+    frame: 0,
+    clientX: event.clientX,
+    clientY: event.clientY,
+  };
+  state.clientX = event.clientX;
+  state.clientY = event.clientY;
+  if (!state.frame) {
+    state.frame = window.requestAnimationFrame(() => {
+      state.frame = 0;
+      if (!element.isConnected) return;
+      const bounds = element.getBoundingClientRect();
+      const x = (state.clientX - bounds.left) / Math.max(1, bounds.width) - 0.5;
+      const y = (state.clientY - bounds.top) / Math.max(1, bounds.height) - 0.5;
 
-  element.style.setProperty('--tilt-x', `${(-y * 2.8).toFixed(2)}deg`);
-  element.style.setProperty('--tilt-y', `${(x * 2.8).toFixed(2)}deg`);
-  element.style.setProperty('--light-x', `${((x + 0.5) * 100).toFixed(1)}%`);
-  element.style.setProperty('--light-y', `${((y + 0.5) * 100).toFixed(1)}%`);
+      element.style.setProperty('--tilt-x', `${(-y * 2.8).toFixed(2)}deg`);
+      element.style.setProperty('--tilt-y', `${(x * 2.8).toFixed(2)}deg`);
+      element.style.setProperty('--light-x', `${((x + 0.5) * 100).toFixed(1)}%`);
+      element.style.setProperty('--light-y', `${((y + 0.5) * 100).toFixed(1)}%`);
+    });
+  }
+  stagePointerState.set(element, state);
 }
 
 function resetStageTilt(event: ReactPointerEvent<HTMLElement>) {
   const element = event.currentTarget;
+  const state = stagePointerState.get(element);
+  if (state?.frame) window.cancelAnimationFrame(state.frame);
+  stagePointerState.delete(element);
   element.style.setProperty('--tilt-x', '0deg');
   element.style.setProperty('--tilt-y', '0deg');
   element.style.setProperty('--light-x', '50%');

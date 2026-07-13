@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type { RefObject } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import type { Quality } from '@/lib/performance';
 
 const MAX_DUST = 1400;
 const MAX_COARSE_GRAINS = 96;
@@ -225,7 +226,23 @@ type PointerSample = {
   buttons: number;
 };
 
+const MAX_QUEUED_POINTER_SAMPLES = 96;
+
+function emptyPointerSample(): PointerSample {
+  return {
+    ndcX: 0,
+    ndcY: 0,
+    screenX: 0,
+    screenY: 0,
+    timestamp: 0,
+    inside: false,
+    blocked: false,
+    buttons: 0,
+  };
+}
+
 type DustParticle = {
+  activeListIndex: number;
   profile: number;
   life: number;
   maxLife: number;
@@ -365,6 +382,45 @@ function resetAttributeRowUpdates(updates: AttributeRowUpdates) {
     updates.maxColumns[row] = -1;
   }
   updates.touchedCount = 0;
+}
+
+function uploadAttributeRows(
+  attribute: THREE.BufferAttribute,
+  updates: AttributeRowUpdates,
+) {
+  const stride = updates.segments + 1;
+  attribute.clearUpdateRanges();
+
+  // A normal stroke touches only a compact set of rows, where precise ranges
+  // minimize transferred bytes. A rapid high-polling sweep can touch hundreds
+  // of rows in one frame; issuing hundreds of bufferSubData commands makes the
+  // browser/GPU command queue balloon. Collapse that exceptional case into a
+  // single bounding upload so command memory stays bounded.
+  const maximumPreciseRanges = 16;
+  if (updates.touchedCount <= maximumPreciseRanges) {
+    for (let index = 0; index < updates.touchedCount; index += 1) {
+      const row = updates.touchedRows[index];
+      const minColumn = updates.minColumns[row];
+      const maxColumn = updates.maxColumns[row];
+      attribute.addUpdateRange(
+        (row * stride + minColumn) * attribute.itemSize,
+        (maxColumn - minColumn + 1) * attribute.itemSize,
+      );
+    }
+  } else {
+    let firstVertex = Number.POSITIVE_INFINITY;
+    let lastVertex = -1;
+    for (let index = 0; index < updates.touchedCount; index += 1) {
+      const row = updates.touchedRows[index];
+      firstVertex = Math.min(firstVertex, row * stride + updates.minColumns[row]);
+      lastVertex = Math.max(lastVertex, row * stride + updates.maxColumns[row]);
+    }
+    attribute.addUpdateRange(
+      firstVertex * attribute.itemSize,
+      (lastVertex - firstVertex + 1) * attribute.itemSize,
+    );
+  }
+  attribute.needsUpdate = true;
 }
 
 function getLooseFineReservoir(meta: SurfaceMeta) {
@@ -507,11 +563,13 @@ function projectDeformedSurfaceContact(
 
 export function SoilInteraction({
   groundRef,
+  quality,
   sunDirection,
   sunColor,
   sunStrength,
 }: {
   groundRef: RefObject<THREE.Mesh | null>;
+  quality: Quality;
   sunDirection: readonly [number, number, number];
   sunColor: string;
   sunStrength: number;
@@ -530,6 +588,9 @@ export function SoilInteraction({
   const pointerBlocked = useRef(false);
   const pointerButtons = useRef(0);
   const pointerSamples = useRef<PointerSample[]>([]);
+  const pointerSamplePool = useRef<PointerSample[]>(
+    Array.from({ length: MAX_QUEUED_POINTER_SAMPLES }, emptyPointerSample),
+  );
   const processedTimestamp = useRef(0);
   const lastPoint = useRef<THREE.Vector3 | null>(null);
   const lastScreenPoint = useRef<THREE.Vector2 | null>(null);
@@ -540,6 +601,7 @@ export function SoilInteraction({
   const dustIndex = useRef(0);
   const coarseGrainIndex = useRef(0);
   const activeDustCount = useRef(0);
+  const activeDustIndices = useRef<number[]>([]);
   const activeGrainCount = useRef(0);
   const surfaceActive = useRef(false);
   const surfaceDirty = useRef(false);
@@ -560,6 +622,7 @@ export function SoilInteraction({
   }), []);
   const particles = useRef<DustParticle[]>(
     Array.from({ length: MAX_DUST }, (_, index) => ({
+      activeListIndex: -1,
       profile: 1,
       life: 0,
       maxLife: 1,
@@ -715,6 +778,8 @@ export function SoilInteraction({
   useEffect(() => () => {
     dustGeometry.dispose();
     pointerSamples.current.length = 0;
+    activeDustIndices.current.length = 0;
+    activeDustCount.current = 0;
     particles.current.length = 0;
     coarseGrains.current.length = 0;
     albedoTextureRef.current = null;
@@ -749,9 +814,19 @@ export function SoilInteraction({
 
   useEffect(() => {
     const finePointer = window.matchMedia?.('(hover: hover) and (pointer: fine)');
+    let canvasBounds = gl.domElement.getBoundingClientRect();
+    const updateCanvasBounds = () => {
+      canvasBounds = gl.domElement.getBoundingClientRect();
+    };
+    const resizeObserver = typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(updateCanvasBounds);
+    resizeObserver?.observe(gl.domElement);
+    window.addEventListener('resize', updateCanvasBounds, { passive: true });
+
     const updatePointer = (event: PointerEvent) => {
       if (finePointer && !finePointer.matches) return;
-      const bounds = gl.domElement.getBoundingClientRect();
+      const bounds = canvasBounds;
       const blocked = event.target instanceof Element
         && Boolean(event.target.closest(
           'a, button, input, [role="button"], .mission-loader, .teardown-console, [aria-label="Solar calibration"], [data-page-footer]',
@@ -759,17 +834,8 @@ export function SoilInteraction({
       const coalesced = typeof event.getCoalescedEvents === 'function'
         ? event.getCoalescedEvents()
         : [];
-      const sourceEvents = coalesced.length > 0 ? [...coalesced, event] : [event];
 
-      // PointerEvent coalescing is common on high-polling mice. Processing
-      // only the final event once per frame creates gaps that feel like the
-      // terrain has stopped seeing the cursor, so preserve the physical path.
-      sourceEvents.forEach((sample, index) => {
-        const previous = index > 0 ? sourceEvents[index - 1] : undefined;
-        if (previous
-          && sample.timeStamp === previous.timeStamp
-          && sample.clientX === previous.clientX
-          && sample.clientY === previous.clientY) return;
+      const queueSample = (sample: PointerEvent) => {
         const inside = sample.clientX >= bounds.left
           && sample.clientX <= bounds.right
           && sample.clientY >= bounds.top
@@ -796,24 +862,45 @@ export function SoilInteraction({
           queuedTail.screenY = screenY;
           queuedTail.timestamp = sample.timeStamp;
         } else {
-          queuedSamples.push({
-            ndcX,
-            ndcY,
-            screenX,
-            screenY,
-            timestamp: sample.timeStamp,
-            inside,
-            blocked,
-            buttons: sample.buttons,
-          });
+          const queuedSample = pointerSamplePool.current[queuedSamples.length]
+            ?? emptyPointerSample();
+          queuedSample.ndcX = ndcX;
+          queuedSample.ndcY = ndcY;
+          queuedSample.screenX = screenX;
+          queuedSample.screenY = screenY;
+          queuedSample.timestamp = sample.timeStamp;
+          queuedSample.inside = inside;
+          queuedSample.blocked = blocked;
+          queuedSample.buttons = sample.buttons;
+          queuedSamples.push(queuedSample);
         }
-      });
+      };
+
+      // PointerEvent coalescing is common on high-polling mice. Append the
+      // browser-provided samples without spreading a fresh array or creating a
+      // callback closure for every physical mouse packet.
+      for (let index = 0; index < coalesced.length; index += 1) {
+        const sample = coalesced[index];
+        const previous = index > 0 ? coalesced[index - 1] : undefined;
+        if (previous
+          && sample.timeStamp === previous.timeStamp
+          && sample.clientX === previous.clientX
+          && sample.clientY === previous.clientY) continue;
+        queueSample(sample);
+      }
+      const coalescedTail = coalesced[coalesced.length - 1];
+      if (!coalescedTail
+        || coalescedTail.timeStamp !== event.timeStamp
+        || coalescedTail.clientX !== event.clientX
+        || coalescedTail.clientY !== event.clientY) {
+        queueSample(event);
+      }
 
       // Uniform thinning preserves both temporal endpoints. Dropping the head
       // of a burst created a discontinuity between the prior frame's contact
       // and the retained tail on high-polling mice.
       const pendingSamples = pointerSamples.current;
-      const maximumQueuedSamples = 96;
+      const maximumQueuedSamples = MAX_QUEUED_POINTER_SAMPLES;
       if (pendingSamples.length > maximumQueuedSamples) {
         const lastSample = pendingSamples[pendingSamples.length - 1];
         const sourceStride = (pendingSamples.length - 1) / (maximumQueuedSamples - 1);
@@ -868,6 +955,8 @@ export function SoilInteraction({
     window.addEventListener('blur', leave);
     document.documentElement.addEventListener('pointerleave', leave);
     return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', updateCanvasBounds);
       window.removeEventListener('pointermove', updatePointer);
       window.removeEventListener('pointerup', release);
       window.removeEventListener('pointercancel', leave);
@@ -1420,15 +1509,19 @@ export function SoilInteraction({
     let spawnedCount = 0;
     for (let index = 0; index < count; index += 1) {
       let particle: DustParticle | undefined;
+      let particleIndex = -1;
       for (let offset = 0; offset < MAX_DUST; offset += 1) {
         const candidateIndex = (dustIndex.current + offset) % MAX_DUST;
         const candidate = particles.current[candidateIndex];
         if (candidate.life > 0) continue;
         particle = candidate;
+        particleIndex = candidateIndex;
         dustIndex.current = (candidateIndex + 1) % MAX_DUST;
         break;
       }
       if (!particle) break;
+      particle.activeListIndex = activeDustIndices.current.length;
+      activeDustIndices.current.push(particleIndex);
       activeDustCount.current += 1;
       spawnedCount += 1;
       // Suspended profile represents the optically dominant <20 µm fines;
@@ -1751,13 +1844,28 @@ export function SoilInteraction({
     return true;
   };
 
+  const deactivateDustParticle = (particleIndex: number, particle: DustParticle) => {
+    const activeIndices = activeDustIndices.current;
+    const listIndex = particle.activeListIndex;
+    if (listIndex < 0 || listIndex >= activeIndices.length) return;
+    const lastParticleIndex = activeIndices[activeIndices.length - 1];
+    activeIndices.pop();
+    if (listIndex < activeIndices.length) {
+      activeIndices[listIndex] = lastParticleIndex;
+      particles.current[lastParticleIndex].activeListIndex = listIndex;
+    }
+    particle.activeListIndex = -1;
+    activeDustCount.current = activeIndices.length;
+  };
+
   useFrame((state, delta) => {
     const ground = groundRef.current;
     const queuedSamples = pointerSamples.current;
     // The deformation path is interpolated between these expensive ray/height
-    // anchors, so 18 samples still preserve a continuous curved trace while
+    // anchors. The connector stamps between anchors, so the displayed path
+    // stays continuous without raymarching every high-polling mouse packet.
     // avoiding dozens of 768-step heightfield marches in one frame.
-    const maximumFrameSamples = 18;
+    const maximumFrameSamples = quality === 'high' ? 10 : quality === 'medium' ? 7 : 4;
     if (queuedSamples.length > maximumFrameSamples) {
       const lastSample = queuedSamples[queuedSamples.length - 1];
       const sourceStride = (queuedSamples.length - 1) / (maximumFrameSamples - 1);
@@ -1770,8 +1878,8 @@ export function SoilInteraction({
       queuedSamples[maximumFrameSamples - 1] = lastSample;
       queuedSamples.length = maximumFrameSamples;
     }
-    const samples = queuedSamples.splice(0, queuedSamples.length);
-    const pointerMoved = samples.length > 0;
+    const sampleCount = queuedSamples.length;
+    const pointerMoved = sampleCount > 0;
     const cameraMoved = previousCameraPosition.current.distanceToSquared(camera.position) > 0.000004
       || 1 - Math.abs(previousCameraQuaternion.current.dot(camera.quaternion)) > 0.000002
       || !previousProjectionMatrix.current.equals(camera.projectionMatrix);
@@ -1821,7 +1929,8 @@ export function SoilInteraction({
 
     if (pointerMoved) {
       let latestHit: SurfaceHit | undefined;
-      samples.forEach((sample) => {
+      for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex += 1) {
+        const sample = queuedSamples[sampleIndex];
         pointer.current.set(sample.ndcX, sample.ndcY);
         const previousTimestamp = processedTimestamp.current;
         const elapsedMs = sample.timestamp - previousTimestamp;
@@ -1916,7 +2025,8 @@ export function SoilInteraction({
           velocityAnchorTimestamp.current = 0;
           screenVelocity.current = 0;
         }
-      });
+      }
+      queuedSamples.length = 0;
       setSurfaceCursor(Boolean(latestHit));
     }
 
@@ -1926,18 +2036,7 @@ export function SoilInteraction({
       const meta = geometry.userData.surfaceMeta as SurfaceMeta | undefined;
       const position = geometry.getAttribute('position') as THREE.BufferAttribute;
       if (meta && meta.segments === pendingPositionRows.segments) {
-        const stride = meta.segments + 1;
-        position.clearUpdateRanges();
-        for (let index = 0; index < pendingPositionRows.touchedCount; index += 1) {
-          const row = pendingPositionRows.touchedRows[index];
-          const minColumn = pendingPositionRows.minColumns[row];
-          const maxColumn = pendingPositionRows.maxColumns[row];
-          position.addUpdateRange(
-            (row * stride + minColumn) * position.itemSize,
-            (maxColumn - minColumn + 1) * position.itemSize,
-          );
-        }
-        position.needsUpdate = true;
+        uploadAttributeRows(position, pendingPositionRows);
       }
       resetAttributeRowUpdates(pendingPositionRows);
     }
@@ -1956,7 +2055,6 @@ export function SoilInteraction({
       if (meta && meta.segments === pendingNormalRows.segments) {
         const stride = meta.segments + 1;
         const spacing = meta.size / meta.segments;
-        normal.clearUpdateRanges();
         for (let updateIndex = 0; updateIndex < pendingNormalRows.touchedCount; updateIndex += 1) {
           const row = pendingNormalRows.touchedRows[updateIndex];
           const minColumn = pendingNormalRows.minColumns[row];
@@ -1979,12 +2077,8 @@ export function SoilInteraction({
               inverseLength,
             );
           }
-          normal.addUpdateRange(
-            (row * stride + minColumn) * normal.itemSize,
-            (maxColumn - minColumn + 1) * normal.itemSize,
-          );
         }
-        normal.needsUpdate = true;
+        uploadAttributeRows(normal, pendingNormalRows);
       }
       resetAttributeRowUpdates(pendingNormalRows);
       surfaceDirty.current = false;
@@ -2007,19 +2101,21 @@ export function SoilInteraction({
 
     if (activeDustCount.current > 0) {
       let dustChanged = false;
-      particles.current.forEach((particle, index) => {
-        if (particle.life <= 0) return;
+      const activeIndices = activeDustIndices.current;
+      for (let activeIndex = activeIndices.length - 1; activeIndex >= 0; activeIndex -= 1) {
+        const index = activeIndices[activeIndex];
+        const particle = particles.current[index];
         particle.life -= frameStep;
         if (particle.life <= 0) {
           particle.life = 0;
           particle.massKg = 0;
-          activeDustCount.current = Math.max(0, activeDustCount.current - 1);
+          deactivateDustParticle(index, particle);
           positions.setXYZ(index, 0, -999, 0);
           sizes.setX(index, 0);
           alphas.setX(index, 0);
           stretches.setX(index, 1);
           dustChanged = true;
-          return;
+          continue;
         }
         const ageSeconds = particle.maxLife - particle.life;
         const curlTime = state.clock.elapsedTime * 0.34;
@@ -2120,13 +2216,13 @@ export function SoilInteraction({
         if (deposited || outsideSimulation || centreOpticalDepth < DUST_OPTICAL_DEPTH_EPSILON) {
           particle.life = 0;
           particle.massKg = 0;
-          activeDustCount.current = Math.max(0, activeDustCount.current - 1);
+          deactivateDustParticle(index, particle);
           positions.setXYZ(index, 0, -999, 0);
           sizes.setX(index, 0);
           alphas.setX(index, 0);
           stretches.setX(index, 1);
           dustChanged = true;
-          return;
+          continue;
         }
         // This sub-frame birth ramp prevents point-sprite popping. There is no
         // arbitrary age fade: disappearance comes from area dilution,
@@ -2151,7 +2247,7 @@ export function SoilInteraction({
           particle.velocity.z,
         );
         dustChanged = true;
-      });
+      }
       if (dustChanged) {
         positions.needsUpdate = true;
         sizes.needsUpdate = true;

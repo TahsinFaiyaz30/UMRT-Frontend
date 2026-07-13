@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import type { Group } from 'three';
 import { detectQuality, dprFor, type Quality, getReducedMotion } from '@/lib/performance';
 import { modelConfig } from '@/lib/modelConfig';
-import { disposeObjectResources, disposeRenderer } from '@/lib/threeDisposal';
+import { disposeObjectResources } from '@/lib/threeDisposal';
 import { HeroScene } from './HeroScene';
 import { ScrollDirector } from './ScrollDirector';
 import { FreeExploreControls } from './FreeExploreControls';
@@ -53,20 +53,14 @@ export function SceneCanvas({
   const quality = useMemo<Quality>(() => detectQuality(), []);
   const cameraGroupRef = useRef<Group | null>(null);
   const rigRef = useRef<ModelRigHandle | null>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
 
   const dprMax = useMemo(() => dprFor(quality), [quality]);
   const prefersReduced = reduceMotion || getReducedMotion();
 
-  useEffect(() => () => {
-    disposeRenderer(rendererRef.current);
-    rendererRef.current = null;
-  }, []);
-
   return (
     <Canvas
       shadows
-      dpr={[1, dprMax]}
+      dpr={[Math.min(1, dprMax), dprMax]}
       gl={{
         antialias: dprMax <= 1.25,
         powerPreference: 'high-performance',
@@ -80,7 +74,6 @@ export function SceneCanvas({
       flat={false}
       onCreated={(state) => {
         const gl = state.gl;
-        rendererRef.current = gl;
         gl.sortObjects = true;
         gl.toneMapping = THREE.ACESFilmicToneMapping;
         gl.toneMappingExposure = 1.18;

@@ -73,12 +73,3 @@ export function disposeObjectResources(
     }
   });
 }
-
-/** Tear down a route-owned renderer immediately instead of waiting for R3F's delay. */
-export function disposeRenderer(renderer: THREE.WebGLRenderer | null | undefined) {
-  if (!renderer) return;
-  renderer.setAnimationLoop(null);
-  renderer.renderLists.dispose();
-  renderer.dispose();
-  renderer.forceContextLoss();
-}
