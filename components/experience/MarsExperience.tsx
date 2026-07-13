@@ -300,14 +300,52 @@ export default function MarsExperience() {
       touchMultiplier: 1.12,
     });
     let frame = 0;
-    const raf = (time: number) => {
-      lenis.raf(time);
-      frame = requestAnimationFrame(raf);
+    let activeUntil = performance.now() + 120;
+
+    const wake = () => {
+      activeUntil = performance.now() + 120;
+      if (!frame && !document.hidden) frame = requestAnimationFrame(raf);
     };
-    lenis.on('scroll', syncScrollProgress);
-    frame = requestAnimationFrame(raf);
+
+    const raf = (time: number) => {
+      frame = 0;
+      if (document.hidden) return;
+      lenis.raf(time);
+      const targetDistance = Math.abs(lenis.targetScroll - lenis.animatedScroll);
+      if (
+        lenis.isScrolling !== false
+        || targetDistance > 0.05
+        || Math.abs(lenis.velocity) > 0.01
+        || time < activeUntil
+      ) {
+        frame = requestAnimationFrame(raf);
+      }
+    };
+
+    const stopScrollListener = lenis.on('scroll', () => {
+      syncScrollProgress();
+      wake();
+    });
+    const stopVirtualScrollListener = lenis.on('virtual-scroll', wake);
+    const handleVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      } else {
+        wake();
+      }
+    };
+
+    window.addEventListener('scroll', wake, { passive: true });
+    document.addEventListener('visibilitychange', handleVisibility);
+    wake();
+
     return () => {
       cancelAnimationFrame(frame);
+      stopScrollListener();
+      stopVirtualScrollListener();
+      window.removeEventListener('scroll', wake);
+      document.removeEventListener('visibilitychange', handleVisibility);
       lenis.destroy();
     };
   }, [loaderVisible, reduceMotion, syncScrollProgress]);

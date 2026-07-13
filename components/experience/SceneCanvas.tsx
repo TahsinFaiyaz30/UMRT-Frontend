@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { Suspense, useEffect, useMemo, useRef } from 'react';
 import type { RefObject } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PerspectiveCamera, useGLTF } from '@react-three/drei';
@@ -9,6 +9,10 @@ import type { Group } from 'three';
 import { detectQuality, dprFor, type Quality, getReducedMotion } from '@/lib/performance';
 import { modelConfig } from '@/lib/modelConfig';
 import { disposeObjectResources } from '@/lib/threeDisposal';
+import {
+  HybridFrameGovernor,
+  WebGLRendererLifecycle,
+} from '@/components/performance/HybridFrameGovernor';
 import { HeroScene } from './HeroScene';
 import { ScrollDirector } from './ScrollDirector';
 import { FreeExploreControls } from './FreeExploreControls';
@@ -28,7 +32,7 @@ import type { ModelRigHandle } from './ModelRig';
  *
  * - WebGL2 with ACES Filmic tone mapping
  * - Capability-selected quality with a bounded, stable render DPR
- * - Activity-aware rendering for the atmospheric and soil simulations
+ * - Hybrid rendering: 60 FPS while active, low cadence while idle, paused hidden
  */
 export function SceneCanvas({
   progressRef,
@@ -80,7 +84,7 @@ export function SceneCanvas({
         gl.setClearColor('#080302', 1);
       }}
     >
-      <FrameGovernor dismantleActive={dismantleActive} reduceMotion={prefersReduced} />
+      <HybridFrameGovernor forceActive={dismantleActive} reduceMotion={prefersReduced} />
       <PerspectiveCamera
         makeDefault
         position={[5.45, 1.55, 7.0]}
@@ -95,7 +99,7 @@ export function SceneCanvas({
           which paints the same Mars background — no visible flash between
           "first paint" and "GLB ready". */}
       <Suspense fallback={<MinimalPlaceholder />}>
-        <RendererResourceLifecycle />
+        <WebGLRendererLifecycle />
         <ModelResourceLifecycle />
         <HeroScene
           ref={rigRef as unknown as RefObject<ModelRigHandle>}
@@ -118,130 +122,6 @@ export function SceneCanvas({
       <object3D ref={cameraGroupRef} />
     </Canvas>
   );
-}
-
-const ACTIVE_FRAME_INTERVAL_MS = 1_000 / 24;
-const IDLE_FRAME_INTERVAL_MS = 1_000 / 10;
-const REDUCED_MOTION_FRAME_INTERVAL_MS = 1_000 / 4;
-const ACTIVITY_TAIL_MS = 1_200;
-
-/**
- * Keep interaction fluid without rendering an expensive WebGL scene at full
- * speed forever. Demand mode stops completely while hidden, runs at a quiet
- * cinematic cadence while idle, and wakes immediately for user input.
- */
-function FrameGovernor({
-  dismantleActive,
-  reduceMotion,
-}: {
-  dismantleActive: boolean;
-  reduceMotion: boolean;
-}) {
-  const invalidate = useThree((state) => state.invalidate);
-  const activityUntilRef = useRef(0);
-  const lastRenderedAtRef = useRef(Number.NEGATIVE_INFINITY);
-  const timerRef = useRef<number | null>(null);
-  const scheduleNextRef = useRef<() => void>(() => undefined);
-
-  useFrame(() => {
-    lastRenderedAtRef.current = performance.now();
-    scheduleNextRef.current();
-  });
-
-  useEffect(() => {
-    let disposed = false;
-
-    const clearTimer = () => {
-      if (timerRef.current === null) return;
-      window.clearTimeout(timerRef.current);
-      timerRef.current = null;
-    };
-
-    const scheduleNext = () => {
-      clearTimer();
-      if (disposed || document.hidden) return;
-      const active = dismantleActive || performance.now() < activityUntilRef.current;
-      const delay = active
-        ? ACTIVE_FRAME_INTERVAL_MS
-        : reduceMotion
-          ? REDUCED_MOTION_FRAME_INTERVAL_MS
-          : IDLE_FRAME_INTERVAL_MS;
-      timerRef.current = window.setTimeout(() => {
-        timerRef.current = null;
-        if (!disposed && !document.hidden) invalidate();
-      }, delay);
-    };
-
-    scheduleNextRef.current = scheduleNext;
-
-    const markActive = () => {
-      const now = performance.now();
-      activityUntilRef.current = now + ACTIVITY_TAIL_MS;
-      clearTimer();
-      if (document.hidden) return;
-      const remaining = ACTIVE_FRAME_INTERVAL_MS - (now - lastRenderedAtRef.current);
-      if (remaining <= 0) {
-        invalidate();
-        return;
-      }
-      timerRef.current = window.setTimeout(() => {
-        timerRef.current = null;
-        if (!disposed && !document.hidden) invalidate();
-      }, remaining);
-    };
-
-    const handleVisibility = () => {
-      if (document.hidden) clearTimer();
-      else markActive();
-    };
-
-    const passive = { passive: true } as const;
-    window.addEventListener('pointerdown', markActive, passive);
-    window.addEventListener('pointermove', markActive, passive);
-    window.addEventListener('pointerup', markActive, passive);
-    window.addEventListener('touchmove', markActive, passive);
-    window.addEventListener('wheel', markActive, passive);
-    window.addEventListener('scroll', markActive, passive);
-    window.addEventListener('keydown', markActive);
-    window.addEventListener('focus', markActive);
-    document.addEventListener('visibilitychange', handleVisibility);
-    markActive();
-
-    return () => {
-      disposed = true;
-      clearTimer();
-      scheduleNextRef.current = () => undefined;
-      window.removeEventListener('pointerdown', markActive);
-      window.removeEventListener('pointermove', markActive);
-      window.removeEventListener('pointerup', markActive);
-      window.removeEventListener('touchmove', markActive);
-      window.removeEventListener('wheel', markActive);
-      window.removeEventListener('scroll', markActive);
-      window.removeEventListener('keydown', markActive);
-      window.removeEventListener('focus', markActive);
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
-  }, [dismantleActive, invalidate, reduceMotion]);
-
-  return null;
-}
-
-/**
- * R3F releases the WebGL context on unmount, but Chromium can keep the lost
- * canvas native object alive while it finishes GPU teardown. Detach it before
- * React removes the page subtree so that native retention cannot pin the
- * entire previous route in memory.
- */
-function RendererResourceLifecycle() {
-  const gl = useThree((state) => state.gl);
-
-  useLayoutEffect(() => () => {
-    const canvas = gl.domElement;
-    gl.setAnimationLoop(null);
-    canvas.remove();
-  }, [gl]);
-
-  return null;
 }
 
 /** Keep the shared GLTF alive for scene swaps, then release its cache on route exit. */
@@ -281,7 +161,7 @@ function SceneReadySignal({ onReady }: { onReady?: () => void }) {
 // Ultra-cheap first-paint scene. Same lighting direction + background
 // as the live HeroScene so the transition to the real scene is invisible.
 // One slowly-spinning cube gives the GPU something to render even on
-// demand-loop frames that begin before useGLTF resolves.
+// hybrid-loop frames that begin before useGLTF resolves.
 // ---------------------------------------------------------------------
 function MinimalPlaceholder() {
   const meshRef = useRef<THREE.Mesh>(null);

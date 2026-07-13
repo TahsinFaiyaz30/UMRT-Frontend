@@ -17,6 +17,11 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { detectQuality, dprFor } from '@/lib/performance';
+import { disposeTexture } from '@/lib/threeDisposal';
+import {
+  HybridFrameGovernor,
+  WebGLRendererLifecycle,
+} from '@/components/performance/HybridFrameGovernor';
 
 /* ================================================================== *
  *  GSAP ScrollTrigger                                                 *
@@ -282,6 +287,18 @@ const GALLERY_TEXTURE_URLS = [
   '/textures/moonmap1k.jpg',
   ...SOLAR_DATA.map((planet) => planet.textureMap),
 ];
+
+function GalleryTextureLifecycle() {
+  const textures = useTexture(GALLERY_TEXTURE_URLS);
+
+  useEffect(() => () => {
+    const disposed = new Set<THREE.Texture>();
+    textures.forEach((texture) => disposeTexture(texture, disposed));
+    GALLERY_TEXTURE_URLS.forEach((url) => useTexture.clear(url));
+  }, [textures]);
+
+  return null;
+}
 
 const GALLERY_LABELS = SOLAR_DATA.flatMap((planet) => [
   {
@@ -718,18 +735,33 @@ function Overlay({ active }: { active: boolean }) {
 
   useEffect(() => {
     if (!active) return undefined;
-    let raf: number;
+    let raf = 0;
     let lastPercentage = -1;
-    const update = () => {
+    let activeUntil = performance.now() + 200;
+
+    const update = (now: number) => {
+      raf = 0;
       const nextPercentage = Math.round(scroll.current * 100);
       if (nextPercentage !== lastPercentage) {
         lastPercentage = nextPercentage;
         setScrollPct(nextPercentage);
       }
-      raf = requestAnimationFrame(update);
+      if (now < activeUntil || Math.abs(scroll.target - scroll.current) > 0.0001) {
+        raf = requestAnimationFrame(update);
+      }
     };
-    raf = requestAnimationFrame(update);
-    return () => cancelAnimationFrame(raf);
+
+    const wake = () => {
+      activeUntil = performance.now() + 1_200;
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+
+    window.addEventListener('scroll', wake, { passive: true });
+    wake();
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', wake);
+    };
   }, [active]);
 
   return (
@@ -899,7 +931,7 @@ export default function HelixGallery3D() {
             <Canvas
               shadows
               dpr={[Math.min(1, dprMax), dprMax]}
-              frameloop={canvasActive ? 'always' : 'never'}
+              frameloop="demand"
               camera={{
                 position: [0, 2, 16],
                 fov: 40,
@@ -915,7 +947,13 @@ export default function HelixGallery3D() {
               }}
               style={{ position: 'absolute', inset: 0 }}
             >
+              <HybridFrameGovernor
+                startupDurationMs={1_200}
+                suspended={!canvasActive}
+              />
               <Suspense fallback={null}>
+                <WebGLRendererLifecycle />
+                <GalleryTextureLifecycle />
                 <Environment />
                 <Skydome />
                 <HelixGroup

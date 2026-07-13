@@ -238,8 +238,10 @@ type MutableMarsSunCoordinates = {
 };
 
 const MARS_AXIAL_TILT_RADIANS = 25.19 * Math.PI / 180;
-const MARS_REFERENCE_LATITUDE_RADIANS = 0;
-const MARS_REFERENCE_SOLAR_LONGITUDE_RADIANS = 90 * Math.PI / 180;
+// A northern-winter reference at 50.642° N gives the requested low southern
+// opening sun while retaining a physically coherent Martian daily arc.
+const MARS_REFERENCE_LATITUDE_RADIANS = 50.642165964 * Math.PI / 180;
+const MARS_REFERENCE_SOLAR_LONGITUDE_RADIANS = 270 * Math.PI / 180;
 const MARS_SOLAR_DECLINATION_RADIANS = Math.asin(
   Math.sin(MARS_AXIAL_TILT_RADIANS) * Math.sin(MARS_REFERENCE_SOLAR_LONGITUDE_RADIANS),
 );
@@ -247,13 +249,9 @@ const MARS_REFERENCE_LATITUDE_SIN = Math.sin(MARS_REFERENCE_LATITUDE_RADIANS);
 const MARS_REFERENCE_LATITUDE_COS = Math.cos(MARS_REFERENCE_LATITUDE_RADIANS);
 const MARS_SOLAR_DECLINATION_SIN = Math.sin(MARS_SOLAR_DECLINATION_RADIANS);
 const MARS_SOLAR_DECLINATION_COS = Math.cos(MARS_SOLAR_DECLINATION_RADIANS);
-const MARS_SUNRISE_HOUR_ANGLE = -Math.acos(clamp(
-  -Math.tan(MARS_REFERENCE_LATITUDE_RADIANS) * Math.tan(MARS_SOLAR_DECLINATION_RADIANS),
-  -1,
-  1,
-));
-const MARS_SUNRISE_PHASE = 0.5 + MARS_SUNRISE_HOUR_ANGLE / (Math.PI * 2);
-const MARS_AUTO_INITIAL_PHASE = MARS_SUNRISE_PHASE + 0.006;
+// 13:00:23 local solar time at this reference resolves exactly to the existing
+// calibrated opening position: azimuth -166°, elevation 13°.
+const MARS_AUTO_INITIAL_PHASE = 0.5419427267991284;
 const MARS_TWILIGHT_START_SINE = Math.sin(-6 * Math.PI / 180);
 const MARS_FULL_DAYLIGHT_SINE = Math.sin(2 * Math.PI / 180);
 let marsAutoCycleEpochMilliseconds: number | undefined;
