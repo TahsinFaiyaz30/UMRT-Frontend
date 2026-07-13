@@ -79,10 +79,10 @@ export function HybridFrameGovernor({
     const handlePointerDown = () => addEnergy(1);
     const handlePointerUp = () => addEnergy(0.38);
     const handleTouchMove = () => addEnergy(0.55);
-    // Lenis emits scroll events throughout its easing tail. They indicate a
-    // changing camera, but not automatically a 40/60 FPS interaction; the
-    // originating wheel/pointer impulse determines the higher tiers.
-    const handleScroll = () => addEnergy(0.1);
+    // Scrolling changes both the DOM overlay and the WebGL camera. Keep those
+    // layers on the same display-rate cadence until Lenis finishes its easing
+    // tail; throttling only the canvas produces a visible old/new-frame flash.
+    const handleScroll = () => addEnergy(1);
     const handleKeyDown = () => addEnergy(0.35);
     const handleFocus = () => {
       foreground = true;

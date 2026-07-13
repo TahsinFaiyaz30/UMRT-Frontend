@@ -350,7 +350,7 @@ export function SolarCalibrationPanel({
             <span>SUN POSITION</span>
             <small>
               {settings.autoSunCycle
-                ? `AUTO / MST ${String(Math.floor(automaticPosition.localSolarTimeHours)).padStart(2, '0')}H`
+                ? `AUTO / LTST ${String(Math.floor(automaticPosition.localSolarTimeHours)).padStart(2, '0')}H`
                 : 'DRAG TO ORIENT'}
             </small>
           </div>

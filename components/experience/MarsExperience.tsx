@@ -18,6 +18,10 @@ const AUTO_TEARDOWN_START = 0.755;
 const AUTO_TEARDOWN_PEAK = 0.82;
 const AUTO_TEARDOWN_HOLD = 0.855;
 const AUTO_TEARDOWN_END = FREE_EXPLORE_START;
+// About three CSS pixels on the current mission length. This retains React's
+// no-op filtering at the end of Lenis' sub-pixel tail without reducing active
+// overlay motion to an observable half-rate cadence.
+const UI_PROGRESS_EPSILON = 0.00025;
 
 const clamp = (value: number) => Math.min(1, Math.max(0, value));
 const smooth = (value: number) => {
@@ -172,7 +176,7 @@ export default function MarsExperience() {
     const progress = clamp(window.scrollY / scrollableDistanceRef.current);
     progressRef.current = progress;
 
-    if (Math.abs(progress - lastUiProgressRef.current) >= 0.0025) {
+    if (Math.abs(progress - lastUiProgressRef.current) >= UI_PROGRESS_EPSILON) {
       lastUiProgressRef.current = progress;
       setUiProgress(progress);
     }
