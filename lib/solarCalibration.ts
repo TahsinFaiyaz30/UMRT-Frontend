@@ -225,8 +225,13 @@ export const MARS_SOL_DURATION_SECONDS = 88_775.244;
 /** Website playback speed: one complete Martian sol every eight minutes. */
 export const MARS_AUTO_SOL_DURATION_SECONDS = 480;
 
-/** Website playback speed: one complete seasonal Mars year every two hours. */
-export const MARS_AUTO_YEAR_DURATION_SECONDS = 120 * 60;
+/**
+ * A non-repeating companion period for the elevation sweep. Its irrational
+ * ratio to the azimuth cycle prevents the same azimuth/elevation pairs from
+ * looping, so the automatic calibration eventually samples the whole sky.
+ */
+export const MARS_AUTO_ELEVATION_DURATION_SECONDS = MARS_AUTO_SOL_DURATION_SECONDS
+  * ((1 + Math.sqrt(5)) / 2);
 
 export type MarsSunCoordinates = {
   azimuth: number;
@@ -241,18 +246,14 @@ type MutableMarsSunCoordinates = {
 };
 
 const RADIANS_PER_DEGREE = Math.PI / 180;
-// A northern-winter reference at 50.381° N gives the requested low southern
-// opening sun while retaining a physically coherent Martian daily arc. The
-// value is calibrated against Mars24's planetographic declination equation.
-const MARS_REFERENCE_LATITUDE_RADIANS = 50.38132824484847 * RADIANS_PER_DEGREE;
-const MARS_REFERENCE_LATITUDE_SIN = Math.sin(MARS_REFERENCE_LATITUDE_RADIANS);
-const MARS_REFERENCE_LATITUDE_COS = Math.cos(MARS_REFERENCE_LATITUDE_RADIANS);
-// The synthetic seasonal clock begins at northern winter solstice. This mean
-// anomaly resolves to Ls=270° after Mars' orbital equation-of-center terms.
-const MARS_INITIAL_MEAN_ANOMALY_RADIANS = 15.734044459161554 * RADIANS_PER_DEGREE;
-const MARS_PERIHELION_SOLAR_LONGITUDE_RADIANS = 251 * RADIANS_PER_DEGREE;
-// 13:00:32 local true solar time at this reference resolves exactly to the existing
-// calibrated opening position: azimuth -166°, elevation 13°.
+const MARS_AUTO_INITIAL_AZIMUTH = -166;
+const MARS_AUTO_INITIAL_ELEVATION = 13;
+// Preserve the requested opening position and begin on the descending half of
+// the elevation sweep, so the initial movement still reads as sunset.
+const MARS_AUTO_INITIAL_ELEVATION_PHASE = Math.PI - Math.asin(
+  (MARS_AUTO_INITIAL_ELEVATION - 45) / 45,
+);
+// The readout retains a familiar 24-hour compressed-sol clock.
 const MARS_AUTO_INITIAL_PHASE = 0.5420321012919584;
 const MARS_TWILIGHT_START_SINE = Math.sin(-6 * RADIANS_PER_DEGREE);
 const MARS_FULL_DAYLIGHT_SINE = Math.sin(2 * RADIANS_PER_DEGREE);
@@ -261,33 +262,11 @@ let marsAutoCycleEpochMilliseconds: number | undefined;
 const positiveModulo = (value: number, divisor: number) => ((value % divisor) + divisor) % divisor;
 
 /**
- * Mars24/Allison-McEwen short series. Orbital eccentricity makes Ls advance
- * unevenly, so the seasonal north/south drift is not a uniform decorative
- * rotation around the scene.
- */
-function marsSolarLongitudeAt(meanAnomaly: number) {
-  const equationOfCenterDegrees = 10.691 * Math.sin(meanAnomaly)
-    + 0.623 * Math.sin(2 * meanAnomaly)
-    + 0.05 * Math.sin(3 * meanAnomaly)
-    + 0.005 * Math.sin(4 * meanAnomaly)
-    + 0.0005 * Math.sin(5 * meanAnomaly);
-  return meanAnomaly
-    + MARS_PERIHELION_SOLAR_LONGITUDE_RADIANS
-    + equationOfCenterDegrees * RADIANS_PER_DEGREE;
-}
-
-/** Mars24's planetographic solar-declination approximation. */
-function marsSolarDeclinationAt(solarLongitude: number) {
-  const seasonalSine = Math.sin(solarLongitude);
-  return Math.asin(0.42565 * seasonalSine)
-    + 0.25 * seasonalSine * RADIANS_PER_DEGREE;
-}
-
-/**
- * Calculate a seasonal Martian sun path without allocating when an output
- * object is supplied. The website compresses both the 24-hour sol and the
- * 668.5921-sol tropical year, while retaining the physical azimuth/elevation
- * geometry and Mars' non-uniform orbital advance.
+ * Calculate an allocation-free full-hemisphere calibration sweep. No single
+ * fixed point on Mars can physically observe every azimuth/elevation pair, so
+ * automatic calibration deliberately uses independent, smoothly moving axes.
+ * Their irrational period ratio makes the path dense instead of repeating one
+ * circle, while the eight-minute azimuth cadence keeps the motion restrained.
  */
 export function automaticMarsSunCoordinatesAt(
   timestampMilliseconds: number,
@@ -302,21 +281,14 @@ export function automaticMarsSunCoordinatesAt(
     MARS_AUTO_INITIAL_PHASE + elapsedSeconds / MARS_AUTO_SOL_DURATION_SECONDS,
     1,
   );
-  const meanAnomaly = MARS_INITIAL_MEAN_ANOMALY_RADIANS
-    + elapsedSeconds / MARS_AUTO_YEAR_DURATION_SECONDS * Math.PI * 2;
-  const solarDeclination = marsSolarDeclinationAt(marsSolarLongitudeAt(meanAnomaly));
-  const solarDeclinationSin = Math.sin(solarDeclination);
-  const solarDeclinationCos = Math.cos(solarDeclination);
-  const hourAngle = (phase - 0.5) * Math.PI * 2;
-  const hourAngleCos = Math.cos(hourAngle);
-  const east = -solarDeclinationCos * Math.sin(hourAngle);
-  const north = solarDeclinationSin * MARS_REFERENCE_LATITUDE_COS
-    - solarDeclinationCos * hourAngleCos * MARS_REFERENCE_LATITUDE_SIN;
-  const up = MARS_REFERENCE_LATITUDE_SIN * solarDeclinationSin
-    + MARS_REFERENCE_LATITUDE_COS * solarDeclinationCos * hourAngleCos;
+  const elevationPhase = MARS_AUTO_INITIAL_ELEVATION_PHASE
+    + elapsedSeconds / MARS_AUTO_ELEVATION_DURATION_SECONDS * Math.PI * 2;
 
-  out.azimuth = Math.atan2(east, north) * 180 / Math.PI;
-  out.elevation = Math.asin(clamp(up, -1, 1)) * 180 / Math.PI;
+  out.azimuth = positiveModulo(
+    MARS_AUTO_INITIAL_AZIMUTH + elapsedSeconds / MARS_AUTO_SOL_DURATION_SECONDS * 360 + 180,
+    360,
+  ) - 180;
+  out.elevation = clamp(45 + Math.sin(elevationPhase) * 45, 0, 90);
   out.localSolarTimeHours = phase * 24;
   return out;
 }

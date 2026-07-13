@@ -337,7 +337,7 @@ export function SolarCalibrationPanel({
             type="button"
             role="switch"
             aria-checked={settings.autoSunCycle}
-            aria-label="Automatic Martian sunrise and sunset"
+            aria-label="Automatic full-hemisphere Martian sun sweep"
             onClick={toggleAutomaticSun}
           >
             <span>{settings.autoSunCycle ? 'AUTO' : 'MANUAL'}</span>
@@ -350,7 +350,7 @@ export function SolarCalibrationPanel({
             <span>SUN POSITION</span>
             <small>
               {settings.autoSunCycle
-                ? `AUTO / LTST ${String(Math.floor(automaticPosition.localSolarTimeHours)).padStart(2, '0')}H`
+                ? `AUTO / SOL ${String(Math.floor(automaticPosition.localSolarTimeHours)).padStart(2, '0')}H`
                 : 'DRAG TO ORIENT'}
             </small>
           </div>
@@ -388,7 +388,7 @@ export function SolarCalibrationPanel({
         </div>
         <p id={instructionId} className={styles.instructions}>
           {settings.autoSunCycle
-            ? 'Automatic Martian sun tracking is active. Switch to manual mode to adjust the position.'
+            ? 'Automatic full-hemisphere sun calibration is active. Switch to manual mode to adjust the position.'
             : 'Drag around the compass to set azimuth; move toward the center to raise the sun. Arrow keys adjust, Shift makes fine adjustments, and Home restores its position.'}
         </p>
 
