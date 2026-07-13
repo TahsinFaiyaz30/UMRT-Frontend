@@ -5,8 +5,10 @@ import { useThree } from '@react-three/fiber';
 
 const ACTIVE_FRAME_INTERVAL_MS = 1_000 / 60;
 const MODERATE_FRAME_INTERVAL_MS = 1_000 / 40;
-const GENTLE_FRAME_INTERVAL_MS = 1_000 / 24;
-const IDLE_FRAME_INTERVAL_MS = 1_000 / 20;
+const GENTLE_FRAME_INTERVAL_MS = 1_000 / 30;
+const IDLE_FRAME_INTERVAL_MS = 1_000 / 30;
+const OVERLOAD_FRAME_INTERVAL_MS = 1_000 / 24;
+const REDUCED_ACTIVE_FRAME_INTERVAL_MS = 1_000 / 24;
 const REDUCED_MOTION_FRAME_INTERVAL_MS = 1_000 / 4;
 const ENERGY_DECAY_MS = 440;
 const DEFAULT_STARTUP_DURATION_MS = 1_200;
@@ -20,7 +22,7 @@ type HybridFrameGovernorProps = {
 
 /**
  * Match WebGL cost to how much the picture is changing. A lightweight RAF
- * scheduler selects 10/24/40/60 FPS from real pointer velocity, wheel force,
+ * scheduler selects 4/24/30/40/60 FPS from real pointer velocity, wheel force,
  * dragging, scrolling, and forced animation, then decays back to idle.
  */
 export function HybridFrameGovernor({
@@ -122,7 +124,7 @@ export function HybridFrameGovernor({
         if (forceActiveRef.current || now < startupUntil) energy = 1;
         let interval = reduceMotion
           ? energy >= 0.28
-            ? GENTLE_FRAME_INTERVAL_MS
+            ? REDUCED_ACTIVE_FRAME_INTERVAL_MS
             : REDUCED_MOTION_FRAME_INTERVAL_MS
           : energy >= 0.72
             ? ACTIVE_FRAME_INTERVAL_MS
@@ -132,7 +134,7 @@ export function HybridFrameGovernor({
                 ? GENTLE_FRAME_INTERVAL_MS
                 : IDLE_FRAME_INTERVAL_MS;
         if (!reduceMotion) {
-          if (overload >= 0.65) interval = Math.max(interval, GENTLE_FRAME_INTERVAL_MS);
+          if (overload >= 0.65) interval = Math.max(interval, OVERLOAD_FRAME_INTERVAL_MS);
           else if (overload >= 0.25) interval = Math.max(interval, MODERATE_FRAME_INTERVAL_MS);
         }
         const elapsed = now - lastInvalidation;
