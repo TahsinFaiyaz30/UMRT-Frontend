@@ -181,7 +181,10 @@ export default function AchievementsHero() {
         >
           <div
             className="relative rounded-2xl border border-mars-200/10 bg-black/20 p-8 backdrop-blur-xl"
-            style={{ animation: 'glowPulse 4s ease-in-out infinite' }}
+            style={{
+              animation: 'glowPulse 4s ease-in-out infinite',
+              animationPlayState: active ? 'running' : 'paused',
+            }}
           >
             {/* Shimmer bar */}
             <div
@@ -191,6 +194,7 @@ export default function AchievementsHero() {
                   'linear-gradient(90deg, transparent 0%, rgba(255,178,124,0.5) 50%, transparent 100%)',
                 backgroundSize: '200% 100%',
                 animation: 'shimmer 4s linear infinite',
+                animationPlayState: active ? 'running' : 'paused',
               }}
             />
 
@@ -224,7 +228,10 @@ export default function AchievementsHero() {
       >
         <div
           className="flex flex-col items-center gap-2"
-          style={{ animation: 'scrollBounce 2s ease-in-out infinite' }}
+          style={{
+            animation: 'scrollBounce 2s ease-in-out infinite',
+            animationPlayState: active ? 'running' : 'paused',
+          }}
         >
           <span className="text-xs uppercase tracking-widest text-mars-100/60">
             Scroll

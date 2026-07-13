@@ -15,6 +15,12 @@ type CameraKeyframe = {
   fov: number;
 };
 
+type CameraPathSample = {
+  previous: CameraKeyframe;
+  next: CameraKeyframe;
+  local: number;
+};
+
 const CAMERA_PATH: CameraKeyframe[] = [
   { at: 0.00, position: [5.45, 1.55, 7.0], target: [0.3, 0.72, 0], fov: 32 },
   { at: 0.12, position: [3.15, 2.25, 5.65], target: [0.35, 1.02, 0], fov: 32 },
@@ -32,14 +38,17 @@ function easeInOut(value: number) {
   return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 }
 
-function samplePath(progress: number) {
-  let nextIndex = CAMERA_PATH.findIndex((frame) => progress <= frame.at);
-  if (nextIndex <= 0) nextIndex = 1;
-  if (nextIndex < 0) nextIndex = CAMERA_PATH.length - 1;
+function samplePath(progress: number, result: CameraPathSample) {
+  let nextIndex = 1;
+  while (nextIndex < CAMERA_PATH.length - 1 && progress > CAMERA_PATH[nextIndex].at) {
+    nextIndex += 1;
+  }
   const previous = CAMERA_PATH[nextIndex - 1];
   const next = CAMERA_PATH[nextIndex];
-  const local = easeInOut((progress - previous.at) / Math.max(0.001, next.at - previous.at));
-  return { previous, next, local };
+  result.previous = previous;
+  result.next = next;
+  result.local = easeInOut((progress - previous.at) / Math.max(0.001, next.at - previous.at));
+  return result;
 }
 
 export function ScrollDirector({
@@ -60,6 +69,12 @@ export function ScrollDirector({
   const desiredTarget = useMemo(() => new THREE.Vector3(), []);
   const nextPosition = useMemo(() => new THREE.Vector3(), []);
   const nextTarget = useMemo(() => new THREE.Vector3(), []);
+  const mobileDistance = useMemo(() => new THREE.Vector3(), []);
+  const pathSample = useMemo<CameraPathSample>(() => ({
+    previous: CAMERA_PATH[0],
+    next: CAMERA_PATH[1],
+    local: 0,
+  }), []);
 
   useFrame((_, delta) => {
     const progress = clamp(progressRef.current ?? 0);
@@ -75,23 +90,27 @@ export function ScrollDirector({
     scene.userData.freeExploreActive = false;
 
     const cameraObject = camera as PerspectiveCamera;
-    const { previous, next, local } = samplePath(reduceMotion ? Math.min(progress, 0.25) : progress);
+    const { previous, next, local } = samplePath(
+      reduceMotion ? Math.min(progress, 0.25) : progress,
+      pathSample,
+    );
     desiredPosition.set(...previous.position).lerp(nextPosition.set(...next.position), local);
     desiredTarget.set(...previous.target).lerp(nextTarget.set(...next.target), local);
 
     const mobile = size.width < 720;
     if (mobile) {
-      const distance = desiredPosition.clone().sub(desiredTarget).multiplyScalar(1.22);
-      desiredPosition.copy(desiredTarget).add(distance);
+      mobileDistance.copy(desiredPosition).sub(desiredTarget).multiplyScalar(1.22);
+      desiredPosition.copy(desiredTarget).add(mobileDistance);
       desiredTarget.y -= 0.08;
     }
 
     if (!reduceMotion) {
-      const pointer = pointerRef.current ?? { x: 0, y: 0 };
-      desiredPosition.x += pointer.x * (mobile ? 0.05 : 0.16);
-      desiredPosition.y -= pointer.y * (mobile ? 0.03 : 0.1);
-      desiredTarget.x += pointer.x * 0.055;
-      desiredTarget.y -= pointer.y * 0.035;
+      const pointerX = pointerRef.current?.x ?? 0;
+      const pointerY = pointerRef.current?.y ?? 0;
+      desiredPosition.x += pointerX * (mobile ? 0.05 : 0.16);
+      desiredPosition.y -= pointerY * (mobile ? 0.03 : 0.1);
+      desiredTarget.x += pointerX * 0.055;
+      desiredTarget.y -= pointerY * 0.035;
     }
 
     const damping = 1 - Math.exp(-delta * 5.4);

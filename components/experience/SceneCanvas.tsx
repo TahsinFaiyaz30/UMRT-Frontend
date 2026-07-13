@@ -85,6 +85,7 @@ export function SceneCanvas({
       }}
     >
       <HybridFrameGovernor forceActive={dismantleActive} reduceMotion={prefersReduced} />
+      <WebGLRendererLifecycle />
       <PerspectiveCamera
         makeDefault
         position={[5.45, 1.55, 7.0]}
@@ -99,7 +100,6 @@ export function SceneCanvas({
           which paints the same Mars background — no visible flash between
           "first paint" and "GLB ready". */}
       <Suspense fallback={<MinimalPlaceholder />}>
-        <WebGLRendererLifecycle />
         <ModelResourceLifecycle />
         <HeroScene
           ref={rigRef as unknown as RefObject<ModelRigHandle>}

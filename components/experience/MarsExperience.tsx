@@ -30,6 +30,7 @@ export default function MarsExperience() {
   const progressRef = useRef(0);
   const pointerRef = useRef({ x: 0, y: 0 });
   const lastUiProgressRef = useRef(-1);
+  const scrollableDistanceRef = useRef(1);
   const [uiProgress, setUiProgress] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [noWebGL, setNoWebGL] = useState(false);
@@ -161,11 +162,14 @@ export default function MarsExperience() {
 
   const completeLoader = useCallback(() => setLoaderVisible(false), []);
 
-  const syncScrollProgress = useCallback(() => {
-    const footerTop = document.querySelector<HTMLElement>('[data-page-footer]')?.offsetTop;
+  const measureScrollableDistance = useCallback(() => {
+    const footerTop = rootRef.current?.querySelector<HTMLElement>('[data-page-footer]')?.offsetTop;
     const heroEnd = footerTop ?? document.documentElement.scrollHeight;
-    const scrollable = Math.max(1, heroEnd - window.innerHeight);
-    const progress = clamp(window.scrollY / scrollable);
+    scrollableDistanceRef.current = Math.max(1, heroEnd - window.innerHeight);
+  }, []);
+
+  const syncScrollProgress = useCallback(() => {
+    const progress = clamp(window.scrollY / scrollableDistanceRef.current);
     progressRef.current = progress;
 
     if (Math.abs(progress - lastUiProgressRef.current) >= 0.0025) {
@@ -202,14 +206,29 @@ export default function MarsExperience() {
   }, []);
 
   useEffect(() => {
+    measureScrollableDistance();
     syncScrollProgress();
-    window.addEventListener('scroll', syncScrollProgress, { passive: true });
-    window.addEventListener('resize', syncScrollProgress);
-    return () => {
-      window.removeEventListener('scroll', syncScrollProgress);
-      window.removeEventListener('resize', syncScrollProgress);
+    let measureFrame = 0;
+    const handleResize = () => {
+      window.cancelAnimationFrame(measureFrame);
+      measureFrame = window.requestAnimationFrame(() => {
+        measureScrollableDistance();
+        syncScrollProgress();
+      });
     };
-  }, [syncScrollProgress]);
+    const resizeObserver = typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(handleResize);
+    if (rootRef.current) resizeObserver?.observe(rootRef.current);
+    window.addEventListener('scroll', syncScrollProgress, { passive: true });
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.cancelAnimationFrame(measureFrame);
+      resizeObserver?.disconnect();
+      window.removeEventListener('scroll', syncScrollProgress);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [measureScrollableDistance, syncScrollProgress]);
 
   useEffect(() => {
     let pointerUiFrame = 0;
@@ -277,6 +296,7 @@ export default function MarsExperience() {
       const canvas = document.createElement('canvas');
       const gl = canvas.getContext('webgl2');
       if (!gl) setNoWebGL(true);
+      else gl.getExtension('WEBGL_lose_context')?.loseContext();
     } catch {
       setNoWebGL(true);
     }
@@ -322,10 +342,6 @@ export default function MarsExperience() {
       }
     };
 
-    const stopScrollListener = lenis.on('scroll', () => {
-      syncScrollProgress();
-      wake();
-    });
     const stopVirtualScrollListener = lenis.on('virtual-scroll', wake);
     const handleVisibility = () => {
       if (document.hidden) {
@@ -342,13 +358,12 @@ export default function MarsExperience() {
 
     return () => {
       cancelAnimationFrame(frame);
-      stopScrollListener();
       stopVirtualScrollListener();
       window.removeEventListener('scroll', wake);
       document.removeEventListener('visibilitychange', handleVisibility);
       lenis.destroy();
     };
-  }, [loaderVisible, reduceMotion, syncScrollProgress]);
+  }, [loaderVisible, reduceMotion]);
 
   useEffect(() => {
     if (!manualDismantle) return undefined;

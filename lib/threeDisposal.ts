@@ -6,6 +6,14 @@ type DisposeObjectOptions = {
   geometries?: boolean;
   materials?: boolean;
   textures?: boolean;
+  skeletons?: boolean;
+};
+
+type DisposableObject3D = THREE.Object3D & {
+  geometry?: THREE.BufferGeometry;
+  material?: MaterialLike;
+  skeleton?: THREE.Skeleton;
+  isSkinnedMesh?: boolean;
 };
 
 function textureValues(material: THREE.Material) {
@@ -55,21 +63,31 @@ export function disposeObjectResources(
     geometries = true,
     materials = true,
     textures = false,
+    skeletons = true,
   }: DisposeObjectOptions = {},
 ) {
   const disposedGeometries = new Set<THREE.BufferGeometry>();
   const disposedMaterials = new Set<THREE.Material>();
   const disposedTextures = new Set<THREE.Texture>();
+  const disposedSkeletons = new Set<THREE.Skeleton>();
 
   root.traverse((object) => {
-    const mesh = object as THREE.Mesh;
-    if (!mesh.isMesh) return;
-    if (geometries && mesh.geometry && !disposedGeometries.has(mesh.geometry)) {
-      disposedGeometries.add(mesh.geometry);
-      mesh.geometry.dispose();
+    const disposable = object as DisposableObject3D;
+    if (geometries && disposable.geometry && !disposedGeometries.has(disposable.geometry)) {
+      disposedGeometries.add(disposable.geometry);
+      disposable.geometry.dispose();
     }
-    if (materials) {
-      disposeMaterials(mesh.material, textures, disposedMaterials, disposedTextures);
+    if (materials && disposable.material) {
+      disposeMaterials(disposable.material, textures, disposedMaterials, disposedTextures);
+    }
+    if (
+      skeletons
+      && disposable.isSkinnedMesh
+      && disposable.skeleton
+      && !disposedSkeletons.has(disposable.skeleton)
+    ) {
+      disposedSkeletons.add(disposable.skeleton);
+      disposable.skeleton.dispose();
     }
   });
 }

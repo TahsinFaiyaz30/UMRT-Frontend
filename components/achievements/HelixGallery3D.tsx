@@ -951,8 +951,8 @@ export default function HelixGallery3D() {
                 startupDurationMs={1_200}
                 suspended={!canvasActive}
               />
+              <WebGLRendererLifecycle />
               <Suspense fallback={null}>
-                <WebGLRendererLifecycle />
                 <GalleryTextureLifecycle />
                 <Environment />
                 <Skydome />

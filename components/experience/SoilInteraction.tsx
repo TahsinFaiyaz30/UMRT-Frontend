@@ -597,6 +597,10 @@ export function SoilInteraction({
     Array.from({ length: MAX_QUEUED_POINTER_SAMPLES }, emptyPointerSample),
   );
   const processedTimestamp = useRef(0);
+  const lastPointStorage = useRef(new THREE.Vector3());
+  const lastScreenPointStorage = useRef(new THREE.Vector2());
+  const lastNdcPointStorage = useRef(new THREE.Vector2());
+  const velocityAnchorPointStorage = useRef(new THREE.Vector2());
   const lastPoint = useRef<THREE.Vector3 | null>(null);
   const lastScreenPoint = useRef<THREE.Vector2 | null>(null);
   const lastNdcPoint = useRef<THREE.Vector2 | null>(null);
@@ -1916,7 +1920,18 @@ export function SoilInteraction({
     // folded into the first soil segment and masquerades as cursor velocity.
     // Keeping the anchor in NDC preserves the user's real pointer delta even
     // on frames where both the camera and cursor legitimately move.
-    if (cameraMoved) {
+    if (cameraMoved && !pointerMoved) {
+      // Camera-only scrolling does not create a soil stroke. Retiring the old
+      // anchor makes the next real pointer sample a fresh contact and avoids
+      // ray-marching the dense heightfield on every eased scroll frame.
+      lastPoint.current = null;
+      lastScreenPoint.current = null;
+      lastNdcPoint.current = null;
+      velocityAnchorPoint.current = null;
+      velocityAnchorTimestamp.current = 0;
+      screenVelocity.current = 0;
+      processedTimestamp.current = 0;
+    } else if (cameraMoved) {
       if (
         ground
         && lastPoint.current
@@ -1929,7 +1944,7 @@ export function SoilInteraction({
         const reanchoredHit = visibleSurfaceHit(ground);
         if (reanchoredHit) {
           if (lastPoint.current) lastPoint.current.copy(reanchoredHit.point);
-          else lastPoint.current = reanchoredHit.point.clone();
+          else lastPoint.current = lastPointStorage.current.copy(reanchoredHit.point);
         } else lastPoint.current = null;
         if (!reanchoredHit) {
           lastScreenPoint.current = null;
@@ -1977,7 +1992,7 @@ export function SoilInteraction({
             screenVelocity.current = 0;
             velocityAnchorTimestamp.current = sample.timestamp;
             if (velocityAnchorPoint.current) velocityAnchorPoint.current.copy(pointerScreenScratch);
-            else velocityAnchorPoint.current = pointerScreenScratch.clone();
+            else velocityAnchorPoint.current = velocityAnchorPointStorage.current.copy(pointerScreenScratch);
           }
           if (!reanchor && lastPoint.current && lastScreenPoint.current) {
             const segmentPixels = lastScreenPoint.current.distanceTo(pointerScreenScratch);
@@ -2029,16 +2044,16 @@ export function SoilInteraction({
             );
           }
           if (!velocityAnchorPoint.current) {
-            velocityAnchorPoint.current = pointerScreenScratch.clone();
+            velocityAnchorPoint.current = velocityAnchorPointStorage.current.copy(pointerScreenScratch);
             velocityAnchorTimestamp.current = sample.timestamp;
             screenVelocity.current = 0;
           }
           if (lastPoint.current) lastPoint.current.copy(hit.point);
-          else lastPoint.current = hit.point.clone();
+          else lastPoint.current = lastPointStorage.current.copy(hit.point);
           if (lastScreenPoint.current) lastScreenPoint.current.copy(pointerScreenScratch);
-          else lastScreenPoint.current = pointerScreenScratch.clone();
+          else lastScreenPoint.current = lastScreenPointStorage.current.copy(pointerScreenScratch);
           if (lastNdcPoint.current) lastNdcPoint.current.set(sample.ndcX, sample.ndcY);
-          else lastNdcPoint.current = new THREE.Vector2(sample.ndcX, sample.ndcY);
+          else lastNdcPoint.current = lastNdcPointStorage.current.set(sample.ndcX, sample.ndcY);
         } else {
           lastPoint.current = null;
           lastScreenPoint.current = null;

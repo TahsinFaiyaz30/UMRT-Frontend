@@ -26,6 +26,7 @@ const GROUND_TEXTURES: string[] = [
 ];
 
 const AUTO_SUN_UPDATE_INTERVAL_MS = 100;
+const GROUND_NORMAL_SCALE = new THREE.Vector2(1.08, 1.08);
 
 export const HeroScene = forwardRef<
   ModelRigHandle,
@@ -714,7 +715,7 @@ function CinematicGround({
       <meshStandardMaterial
         map={albedo}
         normalMap={normal}
-        normalScale={new THREE.Vector2(1.08, 1.08)}
+        normalScale={GROUND_NORMAL_SCALE}
         vertexColors
         roughness={1}
         metalness={0}
