@@ -25,6 +25,8 @@ const GROUND_TEXTURES: string[] = [
   '/textures/mars-ground/normal.png',
 ];
 
+const AUTO_SUN_UPDATE_INTERVAL_MS = 100;
+
 export const HeroScene = forwardRef<
   ModelRigHandle,
   {
@@ -45,6 +47,9 @@ export const HeroScene = forwardRef<
   const solar = useMemo(() => solarLightingFromSettings(solarSettings), [solarSettings]);
   const liveSunPositionRef = useRef<[number, number, number]>([...solar.position]);
   const liveSunDaylightRef = useRef(1);
+  const liveSunRevisionRef = useRef(0);
+  const appliedLightingRevisionRef = useRef(-1);
+  const lastAutomaticSunUpdateRef = useRef(Number.NEGATIVE_INFINITY);
   const autoSunScratchRef = useRef({
     azimuth: solarSettings.azimuth,
     elevation: solarSettings.elevation,
@@ -64,7 +69,15 @@ export const HeroScene = forwardRef<
     livePosition[0] = solar.position[0];
     livePosition[1] = solar.position[1];
     livePosition[2] = solar.position[2];
+    liveSunDaylightRef.current = 1;
+    liveSunRevisionRef.current += 1;
   }, [solar.position, solarSettings.autoSunCycle]);
+
+  useEffect(() => {
+    if (solarSettings.autoSunCycle) {
+      lastAutomaticSunUpdateRef.current = Number.NEGATIVE_INFINITY;
+    }
+  }, [solarSettings.autoSunCycle]);
 
   useEffect(() => () => {
     scene.environmentIntensity = 1;
@@ -72,21 +85,26 @@ export const HeroScene = forwardRef<
 
   useFrame(() => {
     const livePosition = liveSunPositionRef.current;
-    if (solarSettings.autoSunCycle) {
+    const now = performance.now();
+    if (
+      solarSettings.autoSunCycle
+      && now - lastAutomaticSunUpdateRef.current >= AUTO_SUN_UPDATE_INTERVAL_MS
+    ) {
+      lastAutomaticSunUpdateRef.current = now;
       writeAutomaticMarsSunPosition(
-        performance.now(),
+        now,
         livePosition,
         autoSunScratchRef.current,
       );
+      liveSunDaylightRef.current = solarDaylightFactorFromPosition(livePosition);
+      liveSunRevisionRef.current += 1;
     }
 
-    // Direct light, shader direction, and environment exposure all follow one
-    // allocation-free position. The expensive environment cube map remains
-    // cached instead of being regenerated throughout the automatic cycle.
-    const daylight = solarSettings.autoSunCycle
-      ? solarDaylightFactorFromPosition(livePosition)
-      : 1;
-    liveSunDaylightRef.current = daylight;
+    // Direct light and shader consumers share one versioned, allocation-free
+    // position. They only upload new solar values when this revision changes.
+    if (appliedLightingRevisionRef.current === liveSunRevisionRef.current) return;
+    appliedLightingRevisionRef.current = liveSunRevisionRef.current;
+    const daylight = liveSunDaylightRef.current;
     if (ambientLightRef.current) {
       ambientLightRef.current.intensity = solar.intensity * 0.07 * (0.18 + daylight * 0.82);
     }
@@ -166,10 +184,12 @@ export const HeroScene = forwardRef<
         quality={quality}
         sunPositionRef={liveSunPositionRef}
         sunDaylightRef={liveSunDaylightRef}
+        sunRevisionRef={liveSunRevisionRef}
       />
       <CelestialBackdrop
         quality={quality}
         sunDirectionRef={liveSunPositionRef}
+        sunRevisionRef={liveSunRevisionRef}
         sunColor={solar.color}
       />
 
@@ -177,6 +197,7 @@ export const HeroScene = forwardRef<
         quality={quality}
         sunDirectionRef={liveSunPositionRef}
         sunDaylightRef={liveSunDaylightRef}
+        sunRevisionRef={liveSunRevisionRef}
         sunColor={solar.color}
         sunGlow={solar.glow}
         sunStrength={solar.intensity / 3.25}
@@ -187,6 +208,7 @@ export const HeroScene = forwardRef<
         quality={quality}
         sunDirectionRef={liveSunPositionRef}
         sunDaylightRef={liveSunDaylightRef}
+        sunRevisionRef={liveSunRevisionRef}
         sunColor={solar.color}
         sunStrength={solar.intensity / 3.25}
       />
@@ -195,6 +217,7 @@ export const HeroScene = forwardRef<
         count={particleCountFor(quality)}
         sunDirectionRef={liveSunPositionRef}
         sunDaylightRef={liveSunDaylightRef}
+        sunRevisionRef={liveSunRevisionRef}
         sunColor={solar.color}
         sunGlow={solar.glow}
         sunStrength={solar.intensity / 3.25}
@@ -515,6 +538,7 @@ function DustStorm({
   quality,
   sunDirectionRef,
   sunDaylightRef,
+  sunRevisionRef,
   sunColor,
   sunGlow,
   sunStrength,
@@ -522,11 +546,13 @@ function DustStorm({
   quality: Quality;
   sunDirectionRef: RefObject<readonly [number, number, number]>;
   sunDaylightRef: RefObject<number>;
+  sunRevisionRef: RefObject<number>;
   sunColor: string;
   sunGlow: number;
   sunStrength: number;
 }) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const appliedSunRevisionRef = useRef(-1);
   const fragmentShader = useMemo(() => dustFragmentShaderFor(quality), [quality]);
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
@@ -558,10 +584,13 @@ function DustStorm({
   useFrame((state) => {
     if (!materialRef.current) return;
     const materialUniforms = materialRef.current.uniforms;
-    const sunDirection = sunDirectionRef.current;
     materialUniforms.uTime.value = state.clock.elapsedTime;
-    (materialUniforms.uSunDirection.value as THREE.Vector3).set(...sunDirection).normalize();
-    materialUniforms.uSunStrength.value = sunStrength * sunDaylightRef.current;
+    if (appliedSunRevisionRef.current !== sunRevisionRef.current) {
+      appliedSunRevisionRef.current = sunRevisionRef.current;
+      const sunDirection = sunDirectionRef.current;
+      (materialUniforms.uSunDirection.value as THREE.Vector3).set(...sunDirection).normalize();
+      materialUniforms.uSunStrength.value = sunStrength * sunDaylightRef.current;
+    }
   });
 
   return (
@@ -700,17 +729,20 @@ function CalibratedSun({
   quality,
   sunPositionRef,
   sunDaylightRef,
+  sunRevisionRef,
 }: {
   solar: SolarLightingValues;
   quality: Quality;
   sunPositionRef: RefObject<readonly [number, number, number]>;
   sunDaylightRef: RefObject<number>;
+  sunRevisionRef: RefObject<number>;
 }) {
   const lightRef = useRef<THREE.DirectionalLight>(null);
   const sunGroupRef = useRef<THREE.Group>(null);
   const glowRef = useRef<THREE.Sprite>(null);
   const glowMaterialRef = useRef<THREE.SpriteMaterial>(null);
   const coreMaterialRef = useRef<THREE.SpriteMaterial>(null);
+  const appliedSunRevisionRef = useRef(-1);
   const glowTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
@@ -733,20 +765,27 @@ function CalibratedSun({
 
   useEffect(() => () => glowTexture.dispose(), [glowTexture]);
 
+  useEffect(() => {
+    appliedSunRevisionRef.current = -1;
+  }, [solar]);
+
   useFrame((state) => {
-    const sunPosition = sunPositionRef.current;
-    const daylight = sunDaylightRef.current;
-    lightRef.current?.position.set(...sunPosition);
-    sunGroupRef.current?.position.set(...sunPosition);
-    if (lightRef.current) lightRef.current.intensity = solar.intensity * daylight;
-    if (glowMaterialRef.current) {
-      glowMaterialRef.current.opacity = Math.min(1, solar.glow * 0.92 * visualStrength) * daylight;
-    }
-    if (coreMaterialRef.current) {
-      coreMaterialRef.current.opacity = Math.min(
-        1,
-        (0.72 + solar.glow * 0.14) * visualStrength,
-      ) * daylight;
+    if (appliedSunRevisionRef.current !== sunRevisionRef.current) {
+      appliedSunRevisionRef.current = sunRevisionRef.current;
+      const sunPosition = sunPositionRef.current;
+      const daylight = sunDaylightRef.current;
+      lightRef.current?.position.set(...sunPosition);
+      sunGroupRef.current?.position.set(...sunPosition);
+      if (lightRef.current) lightRef.current.intensity = solar.intensity * daylight;
+      if (glowMaterialRef.current) {
+        glowMaterialRef.current.opacity = Math.min(1, solar.glow * 0.92 * visualStrength) * daylight;
+      }
+      if (coreMaterialRef.current) {
+        coreMaterialRef.current.opacity = Math.min(
+          1,
+          (0.72 + solar.glow * 0.14) * visualStrength,
+        ) * daylight;
+      }
     }
     if (!glowRef.current) return;
     const pulse = 1 + Math.sin(state.clock.elapsedTime * 0.38) * 0.018;
@@ -999,6 +1038,7 @@ function DustField({
   count,
   sunDirectionRef,
   sunDaylightRef,
+  sunRevisionRef,
   sunColor,
   sunGlow,
   sunStrength,
@@ -1006,11 +1046,13 @@ function DustField({
   count: number;
   sunDirectionRef: RefObject<readonly [number, number, number]>;
   sunDaylightRef: RefObject<number>;
+  sunRevisionRef: RefObject<number>;
   sunColor: string;
   sunGlow: number;
   sunStrength: number;
 }) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const appliedSunRevisionRef = useRef(-1);
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
     uSunDirection: { value: new THREE.Vector3(0, 1, 0) },
@@ -1067,10 +1109,13 @@ function DustField({
   useFrame((state) => {
     if (materialRef.current) {
       const materialUniforms = materialRef.current.uniforms;
-      const sunDirection = sunDirectionRef.current;
       materialUniforms.uTime.value = state.clock.elapsedTime;
-      (materialUniforms.uSunDirection.value as THREE.Vector3).set(...sunDirection).normalize();
-      materialUniforms.uSunStrength.value = sunStrength * sunDaylightRef.current;
+      if (appliedSunRevisionRef.current !== sunRevisionRef.current) {
+        appliedSunRevisionRef.current = sunRevisionRef.current;
+        const sunDirection = sunDirectionRef.current;
+        (materialUniforms.uSunDirection.value as THREE.Vector3).set(...sunDirection).normalize();
+        materialUniforms.uSunStrength.value = sunStrength * sunDaylightRef.current;
+      }
     }
   });
 

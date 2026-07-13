@@ -8,6 +8,7 @@ import type { Quality } from '@/lib/performance';
 type CelestialBackdropProps = {
   quality: Quality;
   sunDirectionRef: RefObject<readonly [number, number, number]>;
+  sunRevisionRef: RefObject<number>;
   sunColor: string;
   reduceMotion?: boolean;
 };
@@ -302,10 +303,12 @@ const ATMOSPHERE_FRAGMENT_SHADER = `
 function DistantPlanet({
   quality,
   sunDirectionRef,
+  sunRevisionRef,
   sunColor,
   reduceMotion,
 }: CelestialBackdropProps) {
   const groupRef = useRef<THREE.Group>(null);
+  const appliedSunRevisionRef = useRef(-1);
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
     uSunDirection: { value: new THREE.Vector3(0.4, 0.7, 0.5).normalize() },
@@ -318,7 +321,10 @@ function DistantPlanet({
   }, [sunColor, sunDirectionRef, uniforms]);
 
   useFrame((state, delta) => {
-    uniforms.uSunDirection.value.set(...sunDirectionRef.current).normalize();
+    if (appliedSunRevisionRef.current !== sunRevisionRef.current) {
+      appliedSunRevisionRef.current = sunRevisionRef.current;
+      uniforms.uSunDirection.value.set(...sunDirectionRef.current).normalize();
+    }
     uniforms.uTime.value = reduceMotion ? 0 : state.clock.elapsedTime;
     if (groupRef.current && !reduceMotion) {
       groupRef.current.rotation.y += Math.min(delta, 0.05) * 0.0026;

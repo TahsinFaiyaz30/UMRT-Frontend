@@ -141,16 +141,16 @@ export function SolarCalibrationPanel({
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [open]);
 
-  // The 3D scene updates the sun through a mutable ref every frame. The panel
-  // samples that same clock at 10 Hz and lets CSS interpolate the indicator,
-  // avoiding a full React render on every animation frame.
+  // The 3D scene updates the sun through a mutable ref. The panel samples that
+  // same clock at 4 Hz and lets CSS interpolate the indicator, avoiding a full
+  // React render on every animation frame.
   useEffect(() => {
     if (!open || !settings.autoSunCycle) return undefined;
     const samplePosition = () => {
       setAutomaticPosition(automaticMarsSunCoordinatesAt(performance.now()));
     };
     samplePosition();
-    const interval = window.setInterval(samplePosition, 100);
+    const interval = window.setInterval(samplePosition, 250);
     return () => window.clearInterval(interval);
   }, [open, settings.autoSunCycle]);
 

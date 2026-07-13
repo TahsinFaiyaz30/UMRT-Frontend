@@ -222,8 +222,8 @@ export function solarPositionFromSettings(
 /** Mean length of a Martian solar day (sol), in terrestrial seconds. */
 export const MARS_SOL_DURATION_SECONDS = 88_775.244;
 
-/** Website playback speed: one complete Martian sol every two minutes. */
-export const MARS_AUTO_SOL_DURATION_SECONDS = 120;
+/** Website playback speed: one complete Martian sol every eight minutes. */
+export const MARS_AUTO_SOL_DURATION_SECONDS = 480;
 
 export type MarsSunCoordinates = {
   azimuth: number;

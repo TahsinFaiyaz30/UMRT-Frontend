@@ -584,7 +584,7 @@
   background: rgba(13, 9, 6, 0.92);
   box-shadow: 0 0 19px color-mix(in srgb, var(--sun-color) 46%, transparent), inset 0 0 0 3px rgba(255, 255, 255, 0.025);
   transform: translate(-50%, -50%);
-  transition: top 110ms linear, left 110ms linear, box-shadow 120ms ease;
+  transition: top 260ms linear, left 260ms linear, box-shadow 120ms ease;
   pointer-events: none;
 }
 

@@ -565,6 +565,7 @@ export function SoilInteraction({
   groundRef,
   quality,
   sunDirectionRef,
+  sunRevisionRef,
   sunDaylightRef,
   sunColor,
   sunStrength,
@@ -572,12 +573,14 @@ export function SoilInteraction({
   groundRef: RefObject<THREE.Mesh | null>;
   quality: Quality;
   sunDirectionRef: RefObject<readonly [number, number, number]>;
+  sunRevisionRef: RefObject<number>;
   sunDaylightRef: RefObject<number>;
   sunColor: string;
   sunStrength: number;
 }) {
   const { camera, gl, raycaster, scene } = useThree();
   const dustRef = useRef<THREE.Points>(null);
+  const appliedSunRevisionRef = useRef(-1);
   const dustMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const coarseGrainsRef = useRef<THREE.InstancedMesh>(null);
   const albedoTextureRef = useRef<THREE.Texture | null>(null);
@@ -1863,16 +1866,19 @@ export function SoilInteraction({
   };
 
   useFrame((state, delta) => {
-    const liveSunDirection = sunDirectionRef.current;
-    const liveSunStrength = sunStrength * sunDaylightRef.current;
-    dustUniforms.uSunDirection.value.set(...liveSunDirection).normalize();
-    dustUniforms.uSunStrength.value = liveSunStrength;
-    const liveSolarUniforms = dustMaterialRef.current?.uniforms;
-    if (liveSolarUniforms?.uSunDirection) {
-      liveSolarUniforms.uSunDirection.value.set(...liveSunDirection).normalize();
-    }
-    if (liveSolarUniforms?.uSunStrength) {
-      liveSolarUniforms.uSunStrength.value = liveSunStrength;
+    if (appliedSunRevisionRef.current !== sunRevisionRef.current) {
+      appliedSunRevisionRef.current = sunRevisionRef.current;
+      const liveSunDirection = sunDirectionRef.current;
+      const liveSunStrength = sunStrength * sunDaylightRef.current;
+      dustUniforms.uSunDirection.value.set(...liveSunDirection).normalize();
+      dustUniforms.uSunStrength.value = liveSunStrength;
+      const liveSolarUniforms = dustMaterialRef.current?.uniforms;
+      if (liveSolarUniforms?.uSunDirection) {
+        liveSolarUniforms.uSunDirection.value.set(...liveSunDirection).normalize();
+      }
+      if (liveSolarUniforms?.uSunStrength) {
+        liveSolarUniforms.uSunStrength.value = liveSunStrength;
+      }
     }
 
     const ground = groundRef.current;
@@ -1881,7 +1887,7 @@ export function SoilInteraction({
     // anchors. The connector stamps between anchors, so the displayed path
     // stays continuous without raymarching every high-polling mouse packet.
     // avoiding dozens of 768-step heightfield marches in one frame.
-    const maximumFrameSamples = quality === 'high' ? 10 : quality === 'medium' ? 7 : 4;
+    const maximumFrameSamples = quality === 'high' ? 4 : quality === 'medium' ? 3 : 2;
     if (queuedSamples.length > maximumFrameSamples) {
       const lastSample = queuedSamples[queuedSamples.length - 1];
       const sourceStride = (queuedSamples.length - 1) / (maximumFrameSamples - 1);
