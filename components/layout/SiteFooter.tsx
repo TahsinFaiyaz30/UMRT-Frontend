@@ -57,6 +57,7 @@ export function SiteFooter(props: ComponentPropsWithoutRef<'footer'>) {
             <div className="mission-footer-column">
               <strong>EXPLORE UMRT</strong>
               <Link href="/achievements">Achievements</Link>
+              <Link href="/certificates">Certificates</Link>
               <Link href="/#part_focus_1">Rover systems</Link>
               <Link href="/#final_recenter">Teardown lab</Link>
               <a href="mailto:marsrover@uiu.ac.bd?subject=Joining%20the%20UIU%20Mars%20Rover%20Team">Join the mission</a>

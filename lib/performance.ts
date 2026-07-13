@@ -26,11 +26,17 @@ export function detectQuality(): Quality {
 
 export function dprFor(quality: Quality): number {
   if (quality === 'low') return 1;
-  if (quality === 'medium') return Math.min(window.devicePixelRatio || 1, 1.5);
+  // Browser zoom below 100% reports a devicePixelRatio below 1. Passing that
+  // value through makes the WebGL backing buffer smaller than its CSS canvas,
+  // softening the rover, terrain, clouds, and every other scene edge together.
+  // Supersample that special case at 1x while retaining the existing caps for
+  // high-DPI displays.
+  const physicalDpr = Math.max(1, window.devicePixelRatio || 1);
+  if (quality === 'medium') return Math.min(physicalDpr, 1.5);
   // A physical pixel cap avoids turning a 1080p retina canvas into a 4K
   // multisampled framebuffer. This tier is chosen once at startup and never
   // silently downgrades the scene after the user begins exploring it.
-  return Math.min(window.devicePixelRatio || 1, 1.65);
+  return Math.min(physicalDpr, 1.65);
 }
 
 export function particleCountFor(quality: Quality): number {

@@ -1,3 +1,7 @@
+.routeStyleAnchor {
+  display: none;
+}
+
 .root {
   --rail-width: 52px;
   position: fixed;

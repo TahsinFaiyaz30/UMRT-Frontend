@@ -8,6 +8,7 @@ const links = [
   { href: '/#part_focus_1', label: 'Systems' },
   { href: '/#final_recenter', label: 'Teardown' },
   { href: '/achievements', label: 'Achievements' },
+  { href: '/certificates', label: 'Certificates' },
 ];
 
 export function PremiumNavbar() {
@@ -60,6 +61,7 @@ export function PremiumNavbar() {
             <div className="umrt-nav-hover-column">
               <span>THE MISSION</span>
               <Link href="/achievements"><b>Competition archive</b><small>Eight milestones across five seasons.</small></Link>
+              <Link href="/certificates"><b>Certificate vault</b><small>Official records, distinctions, and mission credentials.</small></Link>
               <Link href="/#final_recenter"><b>System teardown</b><small>Inspect the rover by subsystem.</small></Link>
               <Link href="/#free_explore_unlock"><b>Free 3D lab</b><small>Orbit, pan, zoom, and control the explosion.</small></Link>
             </div>

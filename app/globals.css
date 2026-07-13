@@ -2823,7 +2823,7 @@ html[data-mission-loading='true'] body {
   }
 
   .umrt-nav[data-open='true'] .umrt-mobile-panel {
-    max-height: 360px;
+    max-height: 460px;
     padding-top: 18px;
     padding-bottom: 28px;
     opacity: 1;
@@ -2899,7 +2899,7 @@ html[data-mission-loading='true'] body {
   }
 
   .umrt-nav[data-open='true'] .umrt-mobile-panel {
-    max-height: 360px;
+    max-height: 460px;
     padding-top: 18px;
     padding-bottom: 28px;
     opacity: 1;

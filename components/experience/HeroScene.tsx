@@ -10,6 +10,7 @@ import { particleCountFor } from '@/lib/performance';
 import { ModelRig, type ModelRigHandle } from './ModelRig';
 import { DismantleRig } from './DismantleRig';
 import { SoilInteraction } from './SoilInteraction';
+import { CelestialBackdrop } from './CelestialBackdrop';
 import {
   solarLightingFromSettings,
   useSolarCalibrationSettings,
@@ -75,6 +76,11 @@ export const HeroScene = forwardRef<
       <ambientLight intensity={solar.intensity * 0.07} color={solar.color} />
       <hemisphereLight args={[solar.color, '#120503', solar.intensity * 0.2]} />
       <CalibratedSun solar={solar} quality={quality} />
+      <CelestialBackdrop
+        quality={quality}
+        sunDirection={solar.position}
+        sunColor={solar.color}
+      />
 
       <DustStorm
         quality={quality}
@@ -93,7 +99,9 @@ export const HeroScene = forwardRef<
       <SignalRings />
       <DustField
         count={particleCountFor(quality)}
+        sunDirection={solar.position}
         sunColor={solar.color}
+        sunGlow={solar.glow}
         sunStrength={solar.intensity / 3.25}
       />
 
@@ -115,6 +123,19 @@ const SURFACE_BUMPS: Array<[number, number, number, number]> = [
   [-6, 21, 3.3, 1.24],
   [3.5, 15, 1.8, 0.46],
 ];
+
+const TERRAIN_LOW_COLOR = '#571a0f';
+const TERRAIN_HIGH_COLOR = '#a9472c';
+// Shared compacted-regolith average. Both the terrain vertex palette and
+// suspended dust derive from these same local iron-oxide endpoints.
+const TERRAIN_REGOLITH_AVERAGE = new THREE.Color(TERRAIN_LOW_COLOR)
+  .lerp(new THREE.Color(TERRAIN_HIGH_COLOR), 0.52);
+// Loose airborne fines scatter through pore space and present far more surface
+// area than compacted ground. Keep the terrain hue, but lift it toward the
+// brighter ferric fraction so solar-lit dust remains visible without becoming
+// an emissive orange overlay.
+const SUSPENDED_DUST_REFLECTANCE = TERRAIN_REGOLITH_AVERAGE.clone()
+  .lerp(new THREE.Color('#c97852'), 0.58);
 
 function hash2(x: number, y: number) {
   const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
@@ -197,11 +218,19 @@ const DUST_VERTEX_SHADER = `
   }
 `;
 
-const DUST_FRAGMENT_SHADER = `
+function dustFragmentShaderFor(quality: Quality) {
+  // The atmosphere is silhouette-critical behind the rover's mast and sensor
+  // head. Medium/high tiers therefore retain the four-octave structure that
+  // gave the original scene its crisp billows; only the low tier drops one
+  // octave. This is deliberately independent from the interactive soil dust.
+  const octaves = quality === 'low' ? 3 : 4;
+
+  return `
   uniform float uTime;
   uniform float uOpacity;
   uniform vec3 uSunDirection;
   uniform vec3 uSunColor;
+  uniform vec3 uRegolithReflectance;
   uniform float uSunGlow;
   uniform float uSunStrength;
   varying vec3 vDirection;
@@ -224,44 +253,165 @@ const DUST_FRAGMENT_SHADER = `
   float fbm3(vec3 p) {
     float value = 0.0;
     float amplitude = 0.52;
-    for (int i = 0; i < 4; i++) {
+    float normalization = 0.0;
+    for (int i = 0; i < ${octaves}; i++) {
       value += amplitude * noise3(p);
+      normalization += amplitude;
       p = p * 2.03 + vec3(7.1, 3.7, 5.9);
       amplitude *= 0.5;
     }
-    return value;
+    return value / max(normalization, 0.001);
+  }
+
+  float detailNoise3(vec3 p) {
+    // Two compact octaves are sufficient for erosion at the cloud rim. The
+    // broad volume still uses the full FBM stack, while this cheaper branch
+    // avoids paying for four additional octaves over the entire viewport.
+    float primary = noise3(p);
+    float secondary = noise3(p * 2.07 + vec3(4.7, 11.3, 2.9));
+    return primary * 0.68 + secondary * 0.32;
+  }
+
+  vec2 analyticCurl(vec2 p, float time) {
+    return vec2(
+      sin(p.y * 0.83 + time * 0.071)
+        + 0.43 * sin(p.x * 1.37 - time * 0.047),
+      cos(p.x * 0.79 - time * 0.063)
+        - 0.39 * cos(p.y * 1.21 + time * 0.052)
+    ) * 0.23;
+  }
+
+  float henyeyGreenstein(float cosTheta, float anisotropy) {
+    float anisotropySquared = anisotropy * anisotropy;
+    float denominator = max(
+      1.0 + anisotropySquared - 2.0 * anisotropy * cosTheta,
+      0.001
+    );
+    return (1.0 - anisotropySquared)
+      / (12.5663706144 * pow(denominator, 1.5));
   }
 
   void main() {
     vec3 direction = normalize(vDirection);
-    vec3 driftA = vec3(uTime * 0.018, -uTime * 0.0025, uTime * 0.009);
-    vec3 driftB = vec3(-uTime * 0.027, uTime * 0.0035, uTime * 0.014);
-    float warp = fbm3(direction * 2.35 + driftA * 0.42 + vec3(9.4, 1.8, 6.7));
-    vec3 domainWarp = vec3(1.25, -0.74, 0.92) * (warp - 0.5) * 2.1;
-    float broad = fbm3(direction * 6.2 + domainWarp + driftA + vec3(4.3, 9.7, 2.1));
-    float detail = fbm3(direction * 14.2 - domainWarp * 0.68 + driftB + vec3(17.1, 2.4, 11.8));
-    float cloud = smoothstep(0.5, 0.7, broad * 0.84 + detail * 0.24);
-    cloud *= mix(0.48, 1.0, smoothstep(0.36, 0.7, detail));
-    float bottomFade = smoothstep(-0.18, 0.02, direction.y);
-    float topFade = 1.0 - smoothstep(0.08, 0.36, direction.y);
-    float horizon = exp(-pow((direction.y - 0.08) * 3.1, 2.0));
-    float sunScatter = pow(max(dot(direction, normalize(uSunDirection)), 0.0), 5.0);
-    vec3 shadowDust = vec3(0.15, 0.012, 0.004);
-    vec3 copperDust = vec3(0.61, 0.058, 0.01);
-    vec3 sunDust = mix(vec3(1.0, 0.18, 0.025), uSunColor, 0.72);
-    vec3 color = mix(shadowDust, copperDust, clamp(0.18 + broad * 0.72, 0.0, 1.0));
-    float scatterEnergy = sunScatter * (0.24 + detail * 0.38) * (0.48 + uSunGlow * 0.72) * uSunStrength;
-    color = mix(color, sunDust, clamp(scatterEnergy, 0.0, 1.0));
+    float height = direction.y;
+    if (height < -0.2 || height > 0.52) discard;
+
+    // Hybrid atmosphere: retain the current coherent curl/advection field,
+    // but advect full 3D domain-warped FBM instead of projecting noise onto a
+    // narrow spherical strip. The latter was responsible for the stretched,
+    // nearly empty sky. Two differently moving volumes keep the billows alive
+    // without making their silhouettes boil or slide as one flat layer.
+    vec2 sphericalPlane = direction.xz * (5.4 + max(height, 0.0) * 2.8);
+    vec2 curl = analyticCurl(sphericalPlane * 0.7 + vec2(3.8, -6.1), uTime);
+    vec3 curlWarp = vec3(curl.x, (curl.x + curl.y) * 0.18, curl.y);
+    vec3 lowDrift = vec3(uTime * 0.018, -uTime * 0.0025, uTime * 0.009);
+    vec3 detailDrift = vec3(-uTime * 0.027, uTime * 0.0035, uTime * 0.014);
+    float warp = fbm3(
+      direction * 2.35
+      + lowDrift * 0.42
+      + curlWarp * 0.72
+      + vec3(9.4, 1.8, 6.7)
+    );
+    vec3 domainWarp = vec3(1.25, -0.74, 0.92) * (warp - 0.5) * 2.1
+      + curlWarp * 0.58;
+    float broad = fbm3(
+      direction * 6.2
+      + domainWarp
+      + lowDrift
+      + vec3(4.3, 9.7, 2.1)
+    );
+    float detail = fbm3(
+      direction * 14.2
+      - domainWarp * 0.68
+      + detailDrift
+      + vec3(17.1, 2.4, 11.8)
+    );
+    float highWisp = detailNoise3(
+      direction * 28.0
+      + domainWarp * 0.32
+      + vec3(-detailDrift.z, detailDrift.x, detailDrift.y) * 0.72
+      + vec3(2.8, 14.1, 21.7)
+    );
+
+    // Density is deliberately sparse. Fine noise erodes the broad body and
+    // breaks its rim instead of adding a second blanket of opacity. This keeps
+    // real black sky between cells while preserving detailed illuminated
+    // tendrils at their edges.
+    float billow = smoothstep(0.54, 0.73, broad * 0.84 + detail * 0.24);
+    float edgeCarving = smoothstep(0.4, 0.72, detail * 0.68 + highWisp * 0.38);
+    billow *= mix(0.28, 1.0, edgeCarving);
+    float detachedWisp = smoothstep(0.64, 0.8, detail * 0.7 + highWisp * 0.34);
+    float bottomFade = smoothstep(-0.18, 0.015, height);
+    float topFade = 1.0 - smoothstep(0.08, 0.36, height);
+    float horizonBand = exp(-pow((height - 0.075) * 3.15, 2.0));
+    float middleBand = smoothstep(0.02, 0.1, height)
+      * (1.0 - smoothstep(0.25, 0.44, height));
+    float aerosolDensity = (
+      billow * mix(0.46, 0.76, horizonBand)
+      + detachedWisp * middleBand * 0.055
+    ) * bottomFade * topFade;
+
+    // Preserve the current physical response to the calibration panel:
+    // Beer-Lambert extinction controls coverage while HG scattering controls
+    // how strongly the same cloud is illuminated toward the movable sun.
+    float horizonPath = 0.72 + 1.12 * exp(-abs(height - 0.035) * 8.5);
+    // Treat the quality opacity as a density calibration, then use the actual
+    // Beer-Lambert transmittance for compositing. Multiplying the final alpha
+    // by an artistic opacity let bright stars remain unnaturally crisp through
+    // optically thick dust even though the scattering color looked dense.
+    float densityCalibration = 0.82 + uOpacity * 0.5;
+    float opticalDepth = clamp(
+      aerosolDensity * horizonPath * densityCalibration,
+      0.0,
+      2.2
+    );
+    float transmittance = exp(-opticalDepth);
+    float alpha = 1.0 - transmittance;
+
+    const float anisotropy = 0.673;
+    const float singleScatteringAlbedo = 0.95;
+    float cosTheta = dot(direction, normalize(uSunDirection));
+    float phase = henyeyGreenstein(cosTheta, anisotropy);
+    float forwardLobe = smoothstep(0.35, 1.0, cosTheta);
     float illumination = clamp(uSunStrength, 0.0, 2.5);
-    color *= illumination;
-    float alpha = cloud * bottomFade * topFade * (0.16 + horizon * 0.84) * uOpacity;
-    alpha *= 1.0 + sunScatter * uSunGlow * uSunStrength * 0.22;
-    alpha *= clamp(illumination, 0.0, 1.35);
-    gl_FragColor = vec4(color, clamp(alpha, 0.0, 0.96));
+    float solarLuminance = dot(uSunColor, vec3(0.2126, 0.7152, 0.0722));
+    vec3 diffuseSpectrum = mix(uSunColor, vec3(solarLuminance), 0.14);
+    vec3 diffuseIrradiance = diffuseSpectrum * sqrt(illumination) * 0.38;
+    vec3 directIrradiance = uSunColor
+      * illumination
+      * singleScatteringAlbedo
+      * (0.32 + phase * (1.95 + uSunGlow * forwardLobe * 0.34));
+    float selfShadow = exp(-opticalDepth * 1.65);
+    vec3 fineDustReflectance = pow(
+      max(uRegolithReflectance, vec3(0.001)),
+      vec3(0.72)
+    );
+    vec3 color = fineDustReflectance * (diffuseIrradiance + directIrradiance)
+      * mix(0.46, 1.0, selfShadow);
+    color += fineDustReflectance * uSunColor
+      * forwardLobe * phase * uSunGlow * illumination * 0.34;
+
+    gl_FragColor = vec4(color, clamp(alpha, 0.0, 0.88));
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
 `;
+}
+
+function updateDustSolarUniforms(
+  material: THREE.ShaderMaterial | null,
+  sunDirection: readonly [number, number, number],
+  sunColor: string,
+  sunGlow: number,
+  sunStrength: number,
+) {
+  if (!material) return;
+  const materialUniforms = material.uniforms;
+  (materialUniforms.uSunDirection.value as THREE.Vector3).set(...sunDirection).normalize();
+  (materialUniforms.uSunColor.value as THREE.Color).set(sunColor);
+  materialUniforms.uSunGlow.value = sunGlow;
+  materialUniforms.uSunStrength.value = sunStrength;
+}
 
 function DustStorm({
   quality,
@@ -277,21 +427,33 @@ function DustStorm({
   sunStrength: number;
 }) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const fragmentShader = useMemo(() => dustFragmentShaderFor(quality), [quality]);
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
-    uOpacity: { value: quality === 'high' ? 0.72 : quality === 'medium' ? 0.62 : 0.5 },
+    uOpacity: { value: quality === 'high' ? 0.74 : quality === 'medium' ? 0.66 : 0.56 },
     uSunDirection: { value: new THREE.Vector3(0, 1, 0) },
-    uSunColor: { value: new THREE.Color('#ff5a1f') },
+    uSunColor: { value: new THREE.Color('#ffb078') },
+    uRegolithReflectance: { value: SUSPENDED_DUST_REFLECTANCE.clone() },
     uSunGlow: { value: 1 },
     uSunStrength: { value: 1 },
   }), [quality]);
 
   useEffect(() => {
-    uniforms.uSunDirection.value.set(...sunDirection).normalize();
-    uniforms.uSunColor.value.set(sunColor);
-    uniforms.uSunGlow.value = sunGlow;
-    uniforms.uSunStrength.value = sunStrength;
-  }, [sunColor, sunDirection, sunGlow, sunStrength, uniforms]);
+    updateDustSolarUniforms(
+      materialRef.current,
+      sunDirection,
+      sunColor,
+      sunGlow,
+      sunStrength,
+    );
+    if (materialRef.current) {
+      materialRef.current.uniforms.uOpacity.value = quality === 'high'
+        ? 0.74
+        : quality === 'medium'
+          ? 0.66
+          : 0.56;
+    }
+  }, [quality, sunColor, sunDirection, sunGlow, sunStrength]);
 
   useFrame((state) => {
     if (materialRef.current) materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
@@ -305,10 +467,11 @@ function DustStorm({
         uniforms={uniforms}
         transparent
         depthWrite={false}
+        blending={THREE.NormalBlending}
         fog={false}
         side={THREE.BackSide}
         vertexShader={DUST_VERTEX_SHADER}
-        fragmentShader={DUST_FRAGMENT_SHADER}
+        fragmentShader={fragmentShader}
       />
     </mesh>
   );
@@ -360,8 +523,8 @@ function CinematicGround({
     const colors = new Float32Array(position.count * 3);
     const baseHeights = new Float32Array(position.count);
     const deformations = new Float32Array(position.count);
-    const low = new THREE.Color('#571a0f');
-    const high = new THREE.Color('#a9472c');
+    const low = new THREE.Color(TERRAIN_LOW_COLOR);
+    const high = new THREE.Color(TERRAIN_HIGH_COLOR);
     const shade = new THREE.Color();
 
     for (let index = 0; index < position.count; index += 1) {
@@ -559,71 +722,207 @@ function HorizonForms() {
   );
 }
 
+const DUST_FIELD_VERTEX_SHADER = `
+  uniform float uTime;
+  uniform vec3 uSunDirection;
+  attribute float aAgeOffset;
+  attribute float aScale;
+  attribute float aLayer;
+  attribute float aTone;
+  varying float vCosTheta;
+  varying float vAnisotropy;
+  varying float vOpticalDepth;
+  varying float vTone;
+  varying float vVisibility;
+
+  void main() {
+    vec3 advectedPosition = position;
+    vec2 windDirection = normalize(vec2(0.93, 0.37));
+    const float lifeTime = 9.2;
+    float age = mod(uTime + aAgeOffset * lifeTime, lifeTime);
+    float windSpeed = mix(4.25, 5.35, aLayer);
+    vec2 wind = windDirection * age * windSpeed;
+
+    // An Eulerian curl field bends all particles through the same air mass;
+    // random birth age only staggers injection, never the wind direction.
+    vec2 flowSample = position.xz + wind;
+    vec2 curl = vec2(
+      sin(flowSample.y * 0.17 + uTime * 0.16)
+        + 0.46 * sin(flowSample.x * 0.11 - uTime * 0.09),
+      cos(flowSample.x * 0.15 - uTime * 0.13)
+        + 0.42 * cos(flowSample.y * 0.09 + uTime * 0.07)
+    );
+    advectedPosition.xz += wind + curl * mix(0.12, 0.58, aLayer);
+
+    const float fieldRadius = 31.5;
+    advectedPosition.x = mod(advectedPosition.x + fieldRadius, fieldRadius * 2.0) - fieldRadius;
+    advectedPosition.z = mod(advectedPosition.z + fieldRadius, fieldRadius * 2.0) - fieldRadius;
+    float verticalEddy = sin(
+      flowSample.x * 0.21 + flowSample.y * 0.16 + uTime * mix(0.18, 0.34, aLayer)
+    );
+    verticalEddy += 0.43 * cos(flowSample.y * 0.29 - uTime * 0.12);
+    advectedPosition.y += verticalEddy * mix(0.018, 0.19, aLayer);
+    advectedPosition.y -= age * mix(0.012, 0.0018, aLayer);
+    // Re-evaluate a cheap local floor after advection. The previous birth-
+    // position floor travelled with the particle and buried most motes as
+    // they crossed uneven terrain.
+    float advectedFloor = -0.105
+      + sin(advectedPosition.x * 0.31) * 0.035
+      + cos(advectedPosition.z * 0.27) * 0.028
+      + sin((advectedPosition.x + advectedPosition.z) * 0.11) * 0.022;
+    advectedPosition.y = max(advectedPosition.y, advectedFloor + 0.025);
+
+    vec4 worldPosition = modelMatrix * vec4(advectedPosition, 1.0);
+    vec4 viewPosition = viewMatrix * worldPosition;
+    float viewDepth = max(0.01, -viewPosition.z);
+    vec3 viewRay = normalize(worldPosition.xyz - cameraPosition);
+    vCosTheta = dot(viewRay, normalize(uSunDirection));
+    vAnisotropy = mix(0.42, 0.67, aLayer);
+    vTone = aTone;
+    vOpticalDepth = mix(0.24, 0.11, aLayer) * mix(0.82, 1.16, aTone);
+    float lifeFade = smoothstep(0.0, 0.42, age)
+      * (1.0 - smoothstep(8.35, lifeTime, age));
+    vVisibility = lifeFade
+      * smoothstep(0.8, 3.0, viewDepth)
+      * (1.0 - smoothstep(28.0, 48.0, viewDepth));
+
+    gl_PointSize = clamp(aScale * (245.0 / viewDepth), 1.0, 5.5);
+    gl_Position = projectionMatrix * viewPosition;
+  }
+`;
+
+const DUST_FIELD_FRAGMENT_SHADER = `
+  uniform vec3 uSunColor;
+  uniform vec3 uRegolithReflectance;
+  uniform float uSunGlow;
+  uniform float uSunStrength;
+  varying float vCosTheta;
+  varying float vAnisotropy;
+  varying float vOpticalDepth;
+  varying float vTone;
+  varying float vVisibility;
+
+  float henyeyGreenstein(float cosTheta, float anisotropy) {
+    float anisotropySquared = anisotropy * anisotropy;
+    float denominator = max(
+      1.0 + anisotropySquared - 2.0 * anisotropy * cosTheta,
+      0.001
+    );
+    return (1.0 - anisotropySquared)
+      / (12.5663706144 * pow(denominator, 1.5));
+  }
+
+  void main() {
+    vec2 point = gl_PointCoord * 2.0 - 1.0;
+    float radiusSquared = dot(point, point);
+    if (radiusSquared > 1.0) discard;
+
+    float radialDensity = exp(-radiusSquared * 3.8)
+      * (1.0 - smoothstep(0.68, 1.0, sqrt(radiusSquared)));
+    float opticalDepth = vOpticalDepth * radialDensity;
+    float alpha = (1.0 - exp(-opticalDepth)) * vVisibility;
+
+    const float singleScatteringAlbedo = 0.95;
+    float phase = henyeyGreenstein(vCosTheta, vAnisotropy);
+    float forwardLobe = smoothstep(0.35, 1.0, vCosTheta);
+    float illumination = clamp(uSunStrength, 0.0, 2.5);
+    vec3 regolithReflectance = uRegolithReflectance * mix(0.82, 1.13, vTone);
+    float solarLuminance = dot(uSunColor, vec3(0.2126, 0.7152, 0.0722));
+    vec3 diffuseSpectrum = mix(uSunColor, vec3(solarLuminance), 0.16);
+    vec3 diffuseIrradiance = diffuseSpectrum * sqrt(illumination) * 0.29;
+    vec3 directIrradiance = uSunColor
+      * illumination
+      * singleScatteringAlbedo
+      * (0.27 + phase * (1.55 + uSunGlow * forwardLobe * 0.2));
+    float selfShadow = exp(-opticalDepth * 5.0);
+    vec3 color = regolithReflectance * (diffuseIrradiance + directIrradiance)
+      * mix(0.48, 1.0, selfShadow);
+
+    gl_FragColor = vec4(color, clamp(alpha, 0.0, 0.3));
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }
+`;
+
 function DustField({
   count,
+  sunDirection,
   sunColor,
+  sunGlow,
   sunStrength,
 }: {
   count: number;
+  sunDirection: readonly [number, number, number];
   sunColor: string;
+  sunGlow: number;
   sunStrength: number;
 }) {
-  const pointsRef = useRef<THREE.Points>(null);
-  const litDustColor = useMemo(() => new THREE.Color('#5a1d12').lerp(
-    new THREE.Color(sunColor),
-    0.54,
-  ), [sunColor]);
-  const dustTexture = useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
-    const context = canvas.getContext('2d');
-    if (context) {
-      const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
-      gradient.addColorStop(0, 'rgba(255,255,255,0.95)');
-      gradient.addColorStop(0.32, 'rgba(255,255,255,0.72)');
-      gradient.addColorStop(1, 'rgba(255,255,255,0)');
-      context.fillStyle = gradient;
-      context.fillRect(0, 0, 64, 64);
-    }
-    return new THREE.CanvasTexture(canvas);
-  }, []);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const uniforms = useMemo(() => ({
+    uTime: { value: 0 },
+    uSunDirection: { value: new THREE.Vector3(0, 1, 0) },
+    uSunColor: { value: new THREE.Color('#ffb078') },
+    uRegolithReflectance: { value: SUSPENDED_DUST_REFLECTANCE.clone() },
+    uSunGlow: { value: 1 },
+    uSunStrength: { value: 1 },
+  }), []);
   const geometry = useMemo(() => {
     const positions = new Float32Array(count * 3);
+    const ageOffsets = new Float32Array(count);
+    const scales = new Float32Array(count);
+    const layers = new Float32Array(count);
+    const tones = new Float32Array(count);
     for (let index = 0; index < count; index += 1) {
       const angle = hash2(index + 3.1, 7.4) * Math.PI * 2;
       const radius = 1.8 + Math.sqrt(hash2(index + 8.3, 19.7)) * 29;
       const altitudeSeed = hash2(index + 11.7, 3.9);
-      positions[index * 3] = Math.cos(angle) * radius;
-      positions[index * 3 + 1] = altitudeSeed < 0.72
-        ? -0.14 + Math.pow(altitudeSeed / 0.72, 2.2) * 0.8
-        : 0.65 + ((altitudeSeed - 0.72) / 0.28) * 5.2;
-      positions[index * 3 + 2] = Math.sin(angle) * radius;
+      const layer = altitudeSeed < 0.78
+        ? Math.pow(altitudeSeed / 0.78, 2.4) * 0.38
+        : 0.38 + ((altitudeSeed - 0.78) / 0.22) * 0.62;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const terrainFloor = terrainHeight(x, -z) - 0.079;
+      positions[index * 3] = x;
+      positions[index * 3 + 1] = terrainFloor + 0.035 + Math.pow(layer, 1.7) * 4.8;
+      positions[index * 3 + 2] = z;
+      ageOffsets[index] = hash2(index + 29.3, 41.7);
+      scales[index] = 0.065 + Math.pow(hash2(index + 71.2, 5.4), 1.85) * 0.14;
+      layers[index] = layer;
+      tones[index] = hash2(index + 17.9, 83.1);
     }
     const buffer = new THREE.BufferGeometry();
     buffer.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    buffer.setAttribute('aAgeOffset', new THREE.BufferAttribute(ageOffsets, 1));
+    buffer.setAttribute('aScale', new THREE.BufferAttribute(scales, 1));
+    buffer.setAttribute('aLayer', new THREE.BufferAttribute(layers, 1));
+    buffer.setAttribute('aTone', new THREE.BufferAttribute(tones, 1));
     return buffer;
   }, [count]);
 
+  useEffect(() => {
+    updateDustSolarUniforms(
+      materialRef.current,
+      sunDirection,
+      sunColor,
+      sunGlow,
+      sunStrength,
+    );
+  }, [sunColor, sunDirection, sunGlow, sunStrength]);
+
   useFrame((state) => {
-    if (!pointsRef.current) return;
-    pointsRef.current.rotation.y = state.clock.elapsedTime * 0.006;
-    pointsRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.08) * 0.012;
-    pointsRef.current.position.x = Math.sin(state.clock.elapsedTime * 0.09) * 0.4;
-    pointsRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.13) * 0.12;
+    if (materialRef.current) {
+      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+    }
   });
 
   return (
-    <points ref={pointsRef} geometry={geometry}>
-      <pointsMaterial
-        color={litDustColor}
-        map={dustTexture}
-        alphaMap={dustTexture}
-        alphaTest={0.01}
-        size={0.052}
-        sizeAttenuation
+    <points geometry={geometry}>
+      <shaderMaterial
+        ref={materialRef}
+        uniforms={uniforms}
+        vertexShader={DUST_FIELD_VERTEX_SHADER}
+        fragmentShader={DUST_FIELD_FRAGMENT_SHADER}
         transparent
-        opacity={0.42 * THREE.MathUtils.clamp(sunStrength, 0, 1.5)}
         depthWrite={false}
         blending={THREE.NormalBlending}
       />

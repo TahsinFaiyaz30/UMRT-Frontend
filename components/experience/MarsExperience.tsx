@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Lenis from 'lenis';
 import { SceneCanvas } from './SceneCanvas';
 import { HeroOverlay } from './HeroOverlay';
@@ -47,6 +47,80 @@ export default function MarsExperience() {
   const manualDismantleRef = useRef(false);
   const dismantleStartRef = useRef<number | null>(null);
   const dismantleRafRef = useRef(0);
+
+  const resetMissionToTop = useCallback(() => {
+    cancelAnimationFrame(dismantleRafRef.current);
+    dismantleRafRef.current = 0;
+    dismantleStartRef.current = null;
+    manualDismantleRef.current = false;
+    dismantleProgressRef.current = 0;
+    dismantleTimelineRef.current = 0;
+    scrubDismantleRef.current = 0;
+    progressRef.current = 0;
+    lastUiProgressRef.current = 0;
+    pointerRef.current.x = 0;
+    pointerRef.current.y = 0;
+
+    setUiProgress(0);
+    setFreeExplore(false);
+    setShowDismantleButton(false);
+    setManualDismantle(false);
+    setAutoDismantle(false);
+    setScrubDismantle(0);
+
+    const root = rootRef.current;
+    root?.style.setProperty('--pointer-x', '0');
+    root?.style.setProperty('--pointer-y', '0');
+    root?.removeAttribute('data-cursor-active');
+    root?.removeAttribute('data-cursor-pressed');
+
+    if (window.scrollX !== 0 || window.scrollY !== 0) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+  }, []);
+
+  // A Next.js route transition can carry the previous page's document scroll
+  // into Home. That stale Y value used to reach syncScrollProgress first,
+  // putting the camera, hero copy, teardown state, and controls into a later
+  // mission phase. Reset before paint for plain `/` visits. Explicit
+  // `/#section` links remain valid and keep their intended anchor position.
+  useLayoutEffect(() => {
+    if (window.location.hash) return undefined;
+
+    const previousRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = 'manual';
+    let frame = 0;
+
+    const restoreInitialMission = () => {
+      if (window.location.pathname !== '/' || window.location.hash) return;
+      resetMissionToTop();
+    };
+
+    restoreInitialMission();
+    frame = window.requestAnimationFrame(restoreInitialMission);
+    window.addEventListener('pageshow', restoreInitialMission);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('pageshow', restoreInitialMission);
+      window.history.scrollRestoration = previousRestoration;
+    };
+  }, [resetMissionToTop]);
+
+  // Browser/Next scroll restoration can run a frame after the page mounts.
+  // Keep the unscoped Home entry at its canonical first frame until the
+  // loading curtain has left; hash-based mission entry points are excluded.
+  useEffect(() => {
+    if (!loaderVisible || window.location.hash) return undefined;
+    let frame = 0;
+    const holdInitialMission = () => {
+      if (window.location.pathname !== '/' || window.location.hash) return;
+      resetMissionToTop();
+      frame = window.requestAnimationFrame(holdInitialMission);
+    };
+    frame = window.requestAnimationFrame(holdInitialMission);
+    return () => window.cancelAnimationFrame(frame);
+  }, [loaderVisible, resetMissionToTop]);
 
   const triggerDismantle = useCallback(() => {
     if (manualDismantleRef.current) return;

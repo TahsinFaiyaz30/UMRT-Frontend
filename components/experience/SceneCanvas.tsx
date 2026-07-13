@@ -25,9 +25,8 @@ import type { ModelRigHandle } from './ModelRig';
  * Mars colour, so the page reads as fully loaded with no flicker.
  *
  * - WebGL2 with ACES Filmic tone mapping
- * - Adaptive DPR + quality via PerformanceMonitor
- * - `frameloop="demand"` until first user interaction (saves battery
- *   and stops the GPU running while the user is sitting still).
+ * - Capability-selected quality with a bounded, stable render DPR
+ * - Continuous rendering for the atmospheric and soil simulations
  */
 export function SceneCanvas({
   progressRef,
