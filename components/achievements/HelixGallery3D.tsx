@@ -1,12 +1,21 @@
 'use client';
 
-import { useRef, useMemo, useEffect, useState, Suspense } from 'react';
+import {
+  useRef,
+  useMemo,
+  useEffect,
+  useState,
+  Suspense,
+} from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Edges, Html, Stars, useTexture } from '@react-three/drei';
-import { EffectComposer, Bloom, BrightnessContrast, Vignette } from '@react-three/postprocessing';
+import { EffectComposer, Bloom, BrightnessContrast, SMAA, Vignette } from '@react-three/postprocessing';
+import type { EffectComposer as EffectComposerImpl } from 'postprocessing';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { detectQuality, dprFor } from '@/lib/performance';
+import { disposeRenderer } from '@/lib/threeDisposal';
 
 /* ================================================================== *
  *  GSAP ScrollTrigger                                                 *
@@ -284,6 +293,12 @@ const SOLAR_DATA: PlanetData[] = [
   { name: 'PLUTO',   textureMap: '/textures/plutomap1k.jpg', size: 0.15, moons: [{ name: 'CHARON', dist: 0.5, size: 0.05, speed: 1.5 }] },
 ];
 
+const GALLERY_TEXTURE_URLS = [
+  '/textures/starfield.png',
+  '/textures/moonmap1k.jpg',
+  ...SOLAR_DATA.map((planet) => planet.textureMap),
+];
+
 function Moon({ moon }: { moon: MoonData }) {
   const orbitRef = useRef<THREE.Group>(null);
   const timeOffset = useMemo(() => Math.random() * 100, []);
@@ -503,18 +518,24 @@ function HelixGroup() {
 /* ================================================================== *
  *  HTML Overlay                                                       *
  * ================================================================== */
-function Overlay() {
+function Overlay({ active }: { active: boolean }) {
   const [scrollPct, setScrollPct] = useState(0);
 
   useEffect(() => {
+    if (!active) return undefined;
     let raf: number;
+    let lastPercentage = -1;
     const update = () => {
-      setScrollPct(Math.round(scroll.current * 100));
+      const nextPercentage = Math.round(scroll.current * 100);
+      if (nextPercentage !== lastPercentage) {
+        lastPercentage = nextPercentage;
+        setScrollPct(nextPercentage);
+      }
       raf = requestAnimationFrame(update);
     };
     raf = requestAnimationFrame(update);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [active]);
 
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-6 sm:p-10">
@@ -549,11 +570,33 @@ function Overlay() {
   );
 }
 
+function GalleryPostProcessing() {
+  const composerRef = useRef<EffectComposerImpl | null>(null);
+
+  useEffect(() => {
+    const composer = composerRef.current;
+    return () => composer?.dispose();
+  }, []);
+
+  return (
+    <EffectComposer ref={composerRef} multisampling={0}>
+      <Bloom luminanceThreshold={1.2} mipmapBlur intensity={1.5} />
+      <BrightnessContrast brightness={0.05} contrast={0.3} />
+      <Vignette eskil={false} offset={0.1} darkness={1.1} />
+      <SMAA />
+    </EffectComposer>
+  );
+}
+
 /* ================================================================== *
  *  Main Component                                                     *
  * ================================================================== */
 export default function HelixGallery3D() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const [canvasActive, setCanvasActive] = useState(false);
+  const quality = useMemo(() => detectQuality(), []);
+  const dprMax = useMemo(() => dprFor(quality), [quality]);
 
   useEffect(() => {
     scroll.target = 0;
@@ -571,6 +614,25 @@ export default function HelixGallery3D() {
     return () => trigger.kill();
   }, []);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => setCanvasActive(entry.isIntersecting),
+      { rootMargin: '25% 0px' },
+    );
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => () => {
+    GALLERY_TEXTURE_URLS.forEach((url) => useTexture.clear(url));
+    disposeRenderer(rendererRef.current);
+    rendererRef.current = null;
+    scroll.target = 0;
+    scroll.current = 0;
+  }, []);
+
   return (
     <section
       ref={containerRef}
@@ -582,10 +644,12 @@ export default function HelixGallery3D() {
         className="sticky top-0 h-screen w-full overflow-hidden"
         style={{ background: 'black', zIndex: 10 }}
       >
-        <Overlay />
+        <Overlay active={canvasActive} />
 
         <Canvas
           shadows
+          dpr={[1, dprMax]}
+          frameloop={canvasActive ? 'always' : 'never'}
           camera={{
             position: [0, 2, 16],
             fov: 40,
@@ -593,24 +657,25 @@ export default function HelixGallery3D() {
             far: 300,
           }}
           gl={{
-            antialias: true,
+            antialias: false,
+            powerPreference: 'high-performance',
             toneMapping: THREE.ACESFilmicToneMapping,
             toneMappingExposure: 1.0,
             alpha: false,
           }}
           style={{ position: 'absolute', inset: 0 }}
+          onCreated={(state) => {
+            rendererRef.current = state.gl;
+          }}
         >
           <Suspense fallback={null}>
             <Environment />
             <Skydome />
             <HelixGroup />
 
-            {/* Cinematic Post-Processing Pipeline */}
-            <EffectComposer>
-              <Bloom luminanceThreshold={1.2} mipmapBlur intensity={1.5} />
-              <BrightnessContrast brightness={0.05} contrast={0.3} />
-              <Vignette eskil={false} offset={0.1} darkness={1.1} />
-            </EffectComposer>
+            {/* SMAA preserves clean edges without the multi-hundred-MB
+                8x multisampled post-processing target. */}
+            <GalleryPostProcessing />
           </Suspense>
         </Canvas>
       </div>

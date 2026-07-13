@@ -16,6 +16,12 @@ import {
   useSolarCalibrationSettings,
   type SolarLightingValues,
 } from '@/lib/solarCalibration';
+import { disposeTexture } from '@/lib/threeDisposal';
+
+const GROUND_TEXTURES: string[] = [
+  '/textures/mars-ground/albedo.jpg',
+  '/textures/mars-ground/normal.png',
+];
 
 export const HeroScene = forwardRef<
   ModelRigHandle,
@@ -485,10 +491,7 @@ function CinematicGround({
   groundRef: RefObject<THREE.Mesh | null>;
 }) {
   const { gl } = useThree();
-  const [albedo, normal] = useTexture([
-    '/textures/mars-ground/albedo.jpg',
-    '/textures/mars-ground/normal.png',
-  ]);
+  const [albedo, normal] = useTexture(GROUND_TEXTURES);
 
   useEffect(() => {
     const anisotropy = Math.min(12, gl.capabilities.getMaxAnisotropy());
@@ -552,6 +555,22 @@ function CinematicGround({
     plane.computeBoundingSphere();
     return plane;
   }, [quality]);
+
+  useEffect(() => () => {
+    const meta = surfaceGeometry.userData.surfaceMeta as Record<string, unknown> | undefined;
+    if (meta) {
+      Object.keys(meta).forEach((key) => delete meta[key]);
+      delete surfaceGeometry.userData.surfaceMeta;
+    }
+    surfaceGeometry.dispose();
+  }, [surfaceGeometry]);
+
+  useEffect(() => () => {
+    const disposed = new Set<THREE.Texture>();
+    disposeTexture(albedo, disposed);
+    disposeTexture(normal, disposed);
+    useTexture.clear(GROUND_TEXTURES);
+  }, [albedo, normal]);
 
   return (
     <mesh
@@ -701,6 +720,8 @@ const HORIZON_ROCKS: Array<[number, number, number, number]> = [
 function HorizonForms() {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const geometry = useMemo(() => new THREE.DodecahedronGeometry(1, 1), []);
+
+  useEffect(() => () => geometry.dispose(), [geometry]);
 
   useEffect(() => {
     if (!meshRef.current) return;
@@ -898,6 +919,8 @@ function DustField({
     buffer.setAttribute('aTone', new THREE.BufferAttribute(tones, 1));
     return buffer;
   }, [count]);
+
+  useEffect(() => () => geometry.dispose(), [geometry]);
 
   useEffect(() => {
     updateDustSolarUniforms(

@@ -1,12 +1,14 @@
 'use client';
 
-import { Suspense, useMemo, useRef } from 'react';
+import { Suspense, useEffect, useMemo, useRef } from 'react';
 import type { RefObject } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { PerspectiveCamera } from '@react-three/drei';
+import { PerspectiveCamera, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Group } from 'three';
 import { detectQuality, dprFor, type Quality, getReducedMotion } from '@/lib/performance';
+import { modelConfig } from '@/lib/modelConfig';
+import { disposeObjectResources, disposeRenderer } from '@/lib/threeDisposal';
 import { HeroScene } from './HeroScene';
 import { ScrollDirector } from './ScrollDirector';
 import { FreeExploreControls } from './FreeExploreControls';
@@ -51,9 +53,15 @@ export function SceneCanvas({
   const quality = useMemo<Quality>(() => detectQuality(), []);
   const cameraGroupRef = useRef<Group | null>(null);
   const rigRef = useRef<ModelRigHandle | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
 
   const dprMax = useMemo(() => dprFor(quality), [quality]);
   const prefersReduced = reduceMotion || getReducedMotion();
+
+  useEffect(() => () => {
+    disposeRenderer(rendererRef.current);
+    rendererRef.current = null;
+  }, []);
 
   return (
     <Canvas
@@ -72,6 +80,7 @@ export function SceneCanvas({
       flat={false}
       onCreated={(state) => {
         const gl = state.gl;
+        rendererRef.current = gl;
         gl.sortObjects = true;
         gl.toneMapping = THREE.ACESFilmicToneMapping;
         gl.toneMappingExposure = 1.18;
@@ -92,6 +101,7 @@ export function SceneCanvas({
           which paints the same Mars background — no visible flash between
           "first paint" and "GLB ready". */}
       <Suspense fallback={<MinimalPlaceholder />}>
+        <ModelResourceLifecycle />
         <HeroScene
           ref={rigRef as unknown as RefObject<ModelRigHandle>}
           quality={quality}
@@ -113,6 +123,22 @@ export function SceneCanvas({
       <object3D ref={cameraGroupRef} />
     </Canvas>
   );
+}
+
+/** Keep the shared GLTF alive for scene swaps, then release its cache on route exit. */
+function ModelResourceLifecycle() {
+  const gltf = useGLTF(modelConfig.mainPath);
+
+  useEffect(() => () => {
+    disposeObjectResources(gltf.scene, {
+      geometries: true,
+      materials: true,
+      textures: true,
+    });
+    useGLTF.clear(modelConfig.mainPath);
+  }, [gltf.scene]);
+
+  return null;
 }
 
 function SceneReadySignal({ onReady }: { onReady?: () => void }) {

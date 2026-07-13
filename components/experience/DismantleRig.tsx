@@ -15,6 +15,7 @@ import {
   type MaterialDef,
 } from '@/lib/teardownConfig';
 import { modelConfig } from '@/lib/modelConfig';
+import { disposeMaterials, disposeObjectResources } from '@/lib/threeDisposal';
 
 /**
  * IN-PLACE rover teardown that lives inside the main Mars scene.
@@ -360,6 +361,10 @@ export function DismantleRig({
     return out;
   }, []);
 
+  useEffect(() => () => {
+    Object.values(mats).forEach((material) => material.dispose());
+  }, [mats]);
+
   useEffect(() => {
     if (initializedRef.current) return;
     const root = rootRef.current;
@@ -382,6 +387,12 @@ export function DismantleRig({
       mesh.layers.enable(1);
       const label = mesh.name.split('__')[0];
       if (!teardownMotions[label]) return;
+      // The GLTF loader cache owns the source materials. Each temporary
+      // teardown gets independent clones so it can release shader programs
+      // without mutating or invalidating the assembled rover.
+      mesh.material = Array.isArray(mesh.material)
+        ? mesh.material.map((material) => material.clone())
+        : mesh.material.clone();
       // Boost env map intensity on the rover's own materials so they
       // sit nicely alongside the procedural internals.
       const matArr = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -423,6 +434,34 @@ export function DismantleRig({
     const internals = buildInternals(mats);
     for (const g of internals) root.add(g);
     internalsRef.current = internals;
+
+    return () => {
+      // External meshes share GLTF geometry but own their cloned materials.
+      semParts.forEach((group) => {
+        group.traverse((object) => {
+          const mesh = object as THREE.Mesh;
+          if (mesh.isMesh) disposeMaterials(mesh.material, false);
+        });
+        root.remove(group);
+        group.clear();
+      });
+
+      // The internal modules are entirely procedural and own both sides of
+      // every GPU allocation.
+      internals.forEach((group) => {
+        disposeObjectResources(group, {
+          geometries: true,
+          materials: true,
+          textures: false,
+        });
+        root.remove(group);
+        group.clear();
+      });
+
+      semanticPartsRef.current = [];
+      internalsRef.current = [];
+      initializedRef.current = false;
+    };
   }, [gltf, mats]);
 
   // Per-frame animation. `t` is the 0..1 progress of the 6 s teardown.

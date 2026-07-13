@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import type { Group } from 'three';
 import { MeshStandardMaterial } from 'three';
@@ -52,6 +52,12 @@ export function ProxyRover({
     () => new MeshStandardMaterial({ color: metalColor, roughness: 0.4, metalness: 0.6 }),
     [metalColor],
   );
+
+  useEffect(() => () => {
+    bodyMaterial.dispose();
+    accentMaterial.dispose();
+    metalMaterial.dispose();
+  }, [accentMaterial, bodyMaterial, metalMaterial]);
 
   return (
     <group ref={root} position={[0, 0, 0]}>

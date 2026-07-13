@@ -712,6 +712,19 @@ export function SoilInteraction({
     return geometry;
   }, []);
 
+  useEffect(() => () => {
+    dustGeometry.dispose();
+    pointerSamples.current.length = 0;
+    particles.current.length = 0;
+    coarseGrains.current.length = 0;
+    albedoTextureRef.current = null;
+    albedoSamplerRef.current = null;
+    roverOccluderRef.current = null;
+    roverRigRef.current = null;
+    positionRowUpdates.current = null;
+    normalRowUpdates.current = null;
+  }, [dustGeometry]);
+
   useLayoutEffect(() => {
     const mesh = coarseGrainsRef.current;
     if (!mesh) return;
