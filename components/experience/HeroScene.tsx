@@ -31,6 +31,19 @@ const TERRAIN_SEGMENTS: Record<Quality, number> = {
   high: 704,
 };
 
+// The visible/deformable terrain needs its dense grid for close interaction,
+// but a directional shadow only resolves world-scale silhouettes. Reusing the
+// million-triangle interaction mesh as a shadow caster caused a large GPU
+// spike on every sun, rover, teardown, or soil update.
+const TERRAIN_SHADOW_SEGMENTS: Record<Quality, number> = {
+  low: 64,
+  medium: 96,
+  high: 128,
+};
+
+const AUTO_SUN_SHADOW_UPDATE_INTERVAL_MS = 500;
+const MANUAL_SUN_SHADOW_SETTLE_MS = 120;
+
 type TerrainHeightResource = {
   consumers: number;
   promise: Promise<Float32Array>;
@@ -285,6 +298,7 @@ export const HeroScene = forwardRef<
       <CalibratedSun
         solar={solar}
         quality={quality}
+        automatic={solarSettings.autoSunCycle}
         sunPositionRef={liveSunPositionRef}
         sunDaylightRef={liveSunDaylightRef}
         sunRevisionRef={liveSunRevisionRef}
@@ -786,6 +800,43 @@ function CinematicGround({
     return plane;
   }, [baseHeights, quality]);
 
+  const shadowGeometry = useMemo(() => {
+    const size = 112;
+    const sourceSegments = TERRAIN_SEGMENTS[quality];
+    const shadowSegments = TERRAIN_SHADOW_SEGMENTS[quality];
+    const plane = new THREE.PlaneGeometry(size, size, shadowSegments, shadowSegments);
+    const position = plane.getAttribute('position') as THREE.BufferAttribute;
+
+    // Bilinear sampling preserves the dense terrain's broad silhouette while
+    // removing sub-pixel tessellation that a shadow map cannot display.
+    for (let index = 0; index < position.count; index += 1) {
+      const sourceX = (position.getX(index) / size + 0.5) * sourceSegments;
+      const sourceY = (0.5 - position.getY(index) / size) * sourceSegments;
+      const x0 = Math.max(0, Math.min(sourceSegments, Math.floor(sourceX)));
+      const y0 = Math.max(0, Math.min(sourceSegments, Math.floor(sourceY)));
+      const x1 = Math.min(sourceSegments, x0 + 1);
+      const y1 = Math.min(sourceSegments, y0 + 1);
+      const tx = sourceX - x0;
+      const ty = sourceY - y0;
+      const stride = sourceSegments + 1;
+      const top = THREE.MathUtils.lerp(
+        baseHeights[y0 * stride + x0],
+        baseHeights[y0 * stride + x1],
+        tx,
+      );
+      const bottom = THREE.MathUtils.lerp(
+        baseHeights[y1 * stride + x0],
+        baseHeights[y1 * stride + x1],
+        tx,
+      );
+      position.setZ(index, THREE.MathUtils.lerp(top, bottom, ty));
+    }
+
+    plane.computeBoundingBox();
+    plane.computeBoundingSphere();
+    return plane;
+  }, [baseHeights, quality]);
+
   useEffect(() => () => {
     const meta = surfaceGeometry.userData.surfaceMeta as Record<string, unknown> | undefined;
     if (meta) {
@@ -795,6 +846,8 @@ function CinematicGround({
     surfaceGeometry.dispose();
   }, [surfaceGeometry]);
 
+  useEffect(() => () => shadowGeometry.dispose(), [shadowGeometry]);
+
   useEffect(() => () => {
     const disposed = new Set<THREE.Texture>();
     disposeTexture(albedo, disposed);
@@ -803,38 +856,53 @@ function CinematicGround({
   }, [albedo, normal]);
 
   return (
-    <mesh
-      ref={groundRef}
-      name="mars-ground-surface"
-      geometry={surfaceGeometry}
-      rotation={[-Math.PI / 2, 0, 0]}
-      position={[0, -0.079, 0]}
-      castShadow
-      receiveShadow
-      frustumCulled={false}
-    >
-      <meshStandardMaterial
-        map={albedo}
-        normalMap={normal}
-        normalScale={GROUND_NORMAL_SCALE}
-        vertexColors
-        roughness={1}
-        metalness={0}
-        envMapIntensity={0.06}
-      />
-    </mesh>
+    <>
+      <mesh
+        ref={groundRef}
+        name="mars-ground-surface"
+        geometry={surfaceGeometry}
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, -0.079, 0]}
+        receiveShadow
+        frustumCulled={false}
+      >
+        <meshStandardMaterial
+          map={albedo}
+          normalMap={normal}
+          normalScale={GROUND_NORMAL_SCALE}
+          vertexColors
+          roughness={1}
+          metalness={0}
+          envMapIntensity={0.06}
+        />
+      </mesh>
+      <mesh
+        name="mars-ground-shadow-caster"
+        geometry={shadowGeometry}
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, -0.079, 0]}
+        castShadow
+        frustumCulled={false}
+      >
+        {/* Invisible in the colour pass; Three still uses its compact depth
+            geometry in the directional-light shadow pass. */}
+        <meshBasicMaterial colorWrite={false} depthWrite={false} />
+      </mesh>
+    </>
   );
 }
 
 function CalibratedSun({
   solar,
   quality,
+  automatic,
   sunPositionRef,
   sunDaylightRef,
   sunRevisionRef,
 }: {
   solar: SolarLightingValues;
   quality: Quality;
+  automatic: boolean;
   sunPositionRef: RefObject<readonly [number, number, number]>;
   sunDaylightRef: RefObject<number>;
   sunRevisionRef: RefObject<number>;
@@ -845,6 +913,9 @@ function CalibratedSun({
   const glowMaterialRef = useRef<THREE.SpriteMaterial>(null);
   const coreMaterialRef = useRef<THREE.SpriteMaterial>(null);
   const appliedSunRevisionRef = useRef(-1);
+  const pendingShadowRevisionRef = useRef(-1);
+  const lastShadowUpdateRef = useRef(Number.NEGATIVE_INFINITY);
+  const lastSunRevisionTimeRef = useRef(Number.NEGATIVE_INFINITY);
   const glowTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
@@ -872,8 +943,11 @@ function CalibratedSun({
   }, [solar]);
 
   useFrame((state) => {
+    const now = performance.now();
     if (appliedSunRevisionRef.current !== sunRevisionRef.current) {
       appliedSunRevisionRef.current = sunRevisionRef.current;
+      pendingShadowRevisionRef.current = sunRevisionRef.current;
+      lastSunRevisionTimeRef.current = now;
       const sunPosition = sunPositionRef.current;
       const daylight = sunDaylightRef.current;
       lightRef.current?.position.set(...sunPosition);
@@ -888,7 +962,16 @@ function CalibratedSun({
           (0.72 + solar.glow * 0.14) * visualStrength,
         ) * daylight;
       }
-      state.gl.shadowMap.needsUpdate = true;
+    }
+    if (pendingShadowRevisionRef.current >= 0) {
+      const shadowReady = automatic
+        ? now - lastShadowUpdateRef.current >= AUTO_SUN_SHADOW_UPDATE_INTERVAL_MS
+        : now - lastSunRevisionTimeRef.current >= MANUAL_SUN_SHADOW_SETTLE_MS;
+      if (shadowReady) {
+        pendingShadowRevisionRef.current = -1;
+        lastShadowUpdateRef.current = now;
+        state.gl.shadowMap.needsUpdate = true;
+      }
     }
     if (!glowRef.current) return;
     const pulse = 1 + Math.sin(state.clock.elapsedTime * 0.38) * 0.018;

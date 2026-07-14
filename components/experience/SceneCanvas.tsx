@@ -6,13 +6,14 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PerspectiveCamera, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Group } from 'three';
-import { detectQuality, dprFor, type Quality, getReducedMotion } from '@/lib/performance';
+import { detectQuality, type Quality, getReducedMotion } from '@/lib/performance';
 import { modelConfig } from '@/lib/modelConfig';
 import { disposeObjectResources } from '@/lib/threeDisposal';
 import {
   HybridFrameGovernor,
   WebGLRendererLifecycle,
 } from '@/components/performance/HybridFrameGovernor';
+import { useResponsiveDpr } from '@/components/performance/useResponsiveDpr';
 import { HeroScene } from './HeroScene';
 import { ScrollDirector } from './ScrollDirector';
 import { FreeExploreControls } from './FreeExploreControls';
@@ -27,8 +28,8 @@ import type { ModelRigHandle } from './ModelRig';
  * it owns the GLB load via `useGLTF` (with `useGLTF.preload()` at
  * module scope on ModelRig) so the network fetch starts during JS
  * parse, not after any "ready" signal. While GLB parses, the R3F
- * `<Suspense>` renders `MinimalPlaceholder` which paints the same
- * Mars colour. Once resources resolve, the complete scene is shader-warmed
+ * `<Suspense>` leaves the existing Mars canvas background visible. Once
+ * resources resolve, the complete scene is shader-warmed
  * behind the existing loader before its first full draw, so there is no
  * reduced-detail intermediate frame or shader-compile freeze.
  *
@@ -61,7 +62,7 @@ export function SceneCanvas({
   const rigRef = useRef<ModelRigHandle | null>(null);
   const shaderReadyRef = useRef(false);
 
-  const dprMax = useMemo(() => dprFor(quality), [quality]);
+  const dprMax = useResponsiveDpr(quality);
   const prefersReduced = reduceMotion || getReducedMotion();
 
   return (
@@ -110,11 +111,10 @@ export function SceneCanvas({
         onUpdate={(camera) => camera.layers.enable(1)}
       />
 
-      {/* Live HeroScene is mounted immediately. While the GLB inside
-          <HeroScene> is parsing, R3F <Suspense> renders <MinimalPlaceholder>
-          which paints the same Mars background — no visible flash between
-          "first paint" and "GLB ready". */}
-      <Suspense fallback={<MinimalPlaceholder />}>
+      {/* Live HeroScene is mounted immediately. While its resources parse,
+          keep the existing Mars canvas background visible without inserting
+          temporary geometry into the final composition. */}
+      <Suspense fallback={null}>
         <ModelResourceLifecycle />
         <HeroScene
           ref={rigRef as unknown as RefObject<ModelRigHandle>}
@@ -260,39 +260,4 @@ function SceneReadySignal({
   });
 
   return null;
-}
-
-// ---------------------------------------------------------------------
-// MinimalPlaceholder
-//
-// Ultra-cheap first-paint scene. Same lighting direction + background
-// as the live HeroScene so the transition to the real scene is invisible.
-// One slowly-spinning cube gives the GPU something to render even on
-// hybrid-loop frames that begin before useGLTF resolves.
-// ---------------------------------------------------------------------
-function MinimalPlaceholder() {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useFrame((_, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.4;
-      meshRef.current.rotation.x += delta * 0.15;
-    }
-  });
-
-  return (
-    <group>
-      <ambientLight intensity={0.5} color={'#ffb16b'} />
-      <directionalLight position={[5, 8, 4]} intensity={2.2} color={'#fff1d2'} />
-      <mesh ref={meshRef} position={[0, 0, 0]}>
-        <boxGeometry args={[0.7, 0.7, 0.7]} />
-        <meshStandardMaterial
-          color={'#ff5a1f'}
-          roughness={0.7}
-          emissive={'#3a1408'}
-          emissiveIntensity={0.25}
-        />
-      </mesh>
-    </group>
-  );
 }

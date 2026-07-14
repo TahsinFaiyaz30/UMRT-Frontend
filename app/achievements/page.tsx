@@ -8,7 +8,7 @@ import { PremiumNavbar } from '@/components/navbar';
 
 /**
  * HelixGallery3D — 3D scroll-driven helix timeline/gallery.
- * Dynamic import with ssr:false because it uses WebGL + GSAP ScrollTrigger.
+ * Dynamic import with ssr:false because it uses WebGL and browser observers.
  */
 const HelixGallery3D = dynamic(
   () => import('@/components/achievements/HelixGallery3D'),

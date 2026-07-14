@@ -116,20 +116,21 @@ export default function MarsExperience() {
     };
   }, [resetMissionToTop]);
 
-  // Browser/Next scroll restoration can run a frame after the page mounts.
-  // Keep the unscoped Home entry at its canonical first frame until the
-  // loading curtain has left; hash-based mission entry points are excluded.
+  // Browser/Next scroll restoration can run after the page mounts. Correct a
+  // stale position when its scroll event arrives instead of repeating the full
+  // mission reset on every display frame while the loading curtain is visible.
   useEffect(() => {
     if (!loaderVisible || window.location.hash) return undefined;
-    let frame = 0;
-    const holdInitialMission = () => {
+    const holdInitialScroll = () => {
       if (window.location.pathname !== '/' || window.location.hash) return;
-      resetMissionToTop();
-      frame = window.requestAnimationFrame(holdInitialMission);
+      if (window.scrollX !== 0 || window.scrollY !== 0) {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      }
     };
-    frame = window.requestAnimationFrame(holdInitialMission);
-    return () => window.cancelAnimationFrame(frame);
-  }, [loaderVisible, resetMissionToTop]);
+    holdInitialScroll();
+    window.addEventListener('scroll', holdInitialScroll, { passive: true });
+    return () => window.removeEventListener('scroll', holdInitialScroll);
+  }, [loaderVisible]);
 
   const triggerDismantle = useCallback(() => {
     if (manualDismantleRef.current) return;

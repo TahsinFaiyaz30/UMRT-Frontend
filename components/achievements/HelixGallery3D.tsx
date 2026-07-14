@@ -14,21 +14,13 @@ import { Edges, useTexture } from '@react-three/drei';
 import { EffectComposer, Bloom, BrightnessContrast, SMAA, Vignette } from '@react-three/postprocessing';
 import type { EffectComposer as EffectComposerImpl } from 'postprocessing';
 import * as THREE from 'three';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { detectQuality, dprFor } from '@/lib/performance';
+import { detectQuality } from '@/lib/performance';
 import { disposeTexture } from '@/lib/threeDisposal';
 import {
   HybridFrameGovernor,
   WebGLRendererLifecycle,
 } from '@/components/performance/HybridFrameGovernor';
-
-/* ================================================================== *
- *  GSAP ScrollTrigger                                                 *
- * ================================================================== */
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
-}
+import { useResponsiveDpr } from '@/components/performance/useResponsiveDpr';
 
 /* ================================================================== *
  *  Gallery Data                                                       *
@@ -835,23 +827,36 @@ export default function HelixGallery3D() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const unmountTimerRef = useRef<number | null>(null);
   const quality = useMemo(() => detectQuality(), []);
-  const dprMax = useMemo(() => dprFor(quality), [quality]);
+  const dprMax = useResponsiveDpr(quality);
 
   useEffect(() => {
+    if (!canvasMounted) return undefined;
+    const container = containerRef.current;
+    if (!container) return undefined;
     scroll.target = 0;
     scroll.current = 0;
+    let frame = 0;
 
-    const trigger = ScrollTrigger.create({
-      trigger: containerRef.current,
-      start: 'top top',
-      end: 'bottom bottom',
-      onUpdate: (self) => {
-        scroll.target = self.progress;
-      },
-    });
+    const updateProgress = () => {
+      frame = 0;
+      const bounds = container.getBoundingClientRect();
+      const travel = Math.max(1, bounds.height - window.innerHeight);
+      scroll.target = THREE.MathUtils.clamp(-bounds.top / travel, 0, 1);
+    };
+    const scheduleUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateProgress);
+    };
 
-    return () => trigger.kill();
-  }, []);
+    updateProgress();
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate, { passive: true });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', scheduleUpdate);
+      window.removeEventListener('resize', scheduleUpdate);
+    };
+  }, [canvasMounted]);
 
   useEffect(() => {
     const container = containerRef.current;

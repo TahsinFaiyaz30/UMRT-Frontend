@@ -3,8 +3,8 @@
 import dynamic from 'next/dynamic';
 import solarPanelStyles from '@/components/experience/SolarCalibrationPanel.module.css';
 
-// MarsExperience must run client-only because it boots WebGL + Lenis +
-// ScrollTrigger. The dynamic() import is required for ssr:false.
+// MarsExperience must run client-only because it boots WebGL, Lenis, and
+// browser lifecycle observers. The dynamic() import is required for ssr:false.
 //
 // The fallback below is what the user sees during the very first paint
 // (typically < 1 frame on warm devices, at most a couple of frames

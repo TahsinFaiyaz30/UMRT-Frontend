@@ -82,7 +82,14 @@ export function HybridFrameGovernor({
     // Scrolling changes both the DOM overlay and the WebGL camera. Keep those
     // layers on the same display-rate cadence until Lenis finishes its easing
     // tail; throttling only the canvas produces a visible old/new-frame flash.
-    const handleScroll = () => addEnergy(1);
+    const handleScroll = () => {
+      addEnergy(1);
+      // Scroll progress mutates the DOM overlay and the camera target in the
+      // same browser turn. Queue the canvas immediately so the compositor
+      // cannot paint a new overlay over the previous WebGL frame while the
+      // cadence governor waits for its next interval.
+      invalidate();
+    };
     const handleKeyDown = () => addEnergy(0.35);
     const handleFocus = () => {
       foreground = true;
@@ -133,7 +140,11 @@ export function HybridFrameGovernor({
               : energy >= 0.06
                 ? GENTLE_FRAME_INTERVAL_MS
                 : IDLE_FRAME_INTERVAL_MS;
-        if (!reduceMotion) {
+        if (!reduceMotion && energy < 0.72) {
+          // Never deliberately demote active scrolling/dragging below 60 FPS.
+          // A slow device already applies natural back-pressure by completing
+          // fewer frames; adding another 24/40 FPS cap here produced visible
+          // old/new-frame flashes exactly when the picture changed most.
           if (overload >= 0.65) interval = Math.max(interval, OVERLOAD_FRAME_INTERVAL_MS);
           else if (overload >= 0.25) interval = Math.max(interval, MODERATE_FRAME_INTERVAL_MS);
         }

@@ -19,17 +19,22 @@ export function MissionLoader({ ready, onComplete }: { ready: boolean; onComplet
     if (!ready) return undefined;
     let exitTimer = 0;
     let completeTimer = 0;
+    let cancelled = false;
     const minimumHold = Math.max(0, 1250 - (Date.now() - startedAt.current));
 
     Promise.all([
       document.fonts?.ready ?? Promise.resolve(),
       new Promise<void>((resolve) => { exitTimer = window.setTimeout(resolve, minimumHold); }),
     ]).then(() => {
+      if (cancelled) return;
       setExiting(true);
-      completeTimer = window.setTimeout(onComplete, 880);
+      completeTimer = window.setTimeout(() => {
+        if (!cancelled) onComplete();
+      }, 880);
     });
 
     return () => {
+      cancelled = true;
       window.clearTimeout(exitTimer);
       window.clearTimeout(completeTimer);
     };

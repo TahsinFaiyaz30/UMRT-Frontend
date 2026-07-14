@@ -1,7 +1,7 @@
 'use client';
 
 import { useFrame, useThree } from '@react-three/fiber';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import type { Group, PerspectiveCamera } from 'three';
 import * as THREE from 'three';
 import { modelConfig } from '@/lib/modelConfig';
@@ -32,6 +32,11 @@ const CAMERA_PATH: CameraKeyframe[] = [
   { at: 0.84, position: [-0.25, 2.45, 8.2], target: [0, 0.9, 0.1], fov: 36 },
   { at: 0.92, position: [5.15, 1.7, 6.85], target: [0, 0.82, 0], fov: 33 },
 ];
+
+// The 28 m shadow camera spans about 0.014 world units per texel at 2048 px.
+// Accumulate sub-texel movement and refresh only once it can affect a shadow.
+const SHADOW_CASTER_MOVEMENT_EPSILON = 0.006;
+const SHADOW_SETTLE_MS = 120;
 
 function easeInOut(value: number) {
   const x = clamp(value);
@@ -75,16 +80,48 @@ export function ScrollDirector({
     next: CAMERA_PATH[1],
     local: 0,
   }), []);
+  const shadowedModelOffset = useRef(Number.NaN);
+  const shadowMovementAt = useRef(Number.NEGATIVE_INFINITY);
+  const shadowUpdatePending = useRef(false);
 
-  useFrame((_, delta) => {
+  const positionRig = (progress: number, now: number) => {
+    const rig = rigRef.current;
+    if (!rig) return;
+    const offset = modelOffsetXAt(progress);
+    rig.setOffsetX(offset);
+    const group = rig.group;
+    if (!group) return;
+    const yMoved = Math.abs(group.position.y - modelConfig.basePosition[1]) > 0.0001;
+    group.position.y = modelConfig.basePosition[1];
+    const offsetChanged = (
+      !Number.isFinite(shadowedModelOffset.current)
+      || Math.abs(offset - shadowedModelOffset.current) >= SHADOW_CASTER_MOVEMENT_EPSILON
+    );
+    const firstPosition = !Number.isFinite(shadowedModelOffset.current);
+    if (offsetChanged || yMoved) {
+      shadowedModelOffset.current = offset;
+      shadowMovementAt.current = now;
+      shadowUpdatePending.current = true;
+    }
+
+    // During eased scrolling the rover can move a fraction every frame. Wait
+    // for that motion to settle, then refresh once; repeatedly redrawing the
+    // entire shadow map while the camera is moving creates visible frame
+    // spikes. The initial position remains immediate.
+    if (
+      shadowUpdatePending.current
+      && (firstPosition || now - shadowMovementAt.current >= SHADOW_SETTLE_MS)
+    ) {
+      shadowUpdatePending.current = false;
+      gl.shadowMap.needsUpdate = true;
+    }
+  };
+
+  useFrame((state, delta) => {
     const progress = clamp(progressRef.current ?? 0);
     if (progress >= phases[phases.length - 1].start) {
       scene.userData.freeExploreActive = true;
-      if (rigRef.current) {
-        rigRef.current.setOffsetX(modelOffsetXAt(progress));
-        const freeGroup = rigRef.current.group;
-        if (freeGroup) freeGroup.position.y = modelConfig.basePosition[1];
-      }
+      positionRig(progress, state.clock.elapsedTime * 1_000);
       return;
     }
     scene.userData.freeExploreActive = false;
@@ -131,13 +168,7 @@ export function ScrollDirector({
       cameraObject.updateProjectionMatrix();
     }
 
-    if (rigRef.current) {
-      rigRef.current.setOffsetX(modelOffsetXAt(progress));
-      const group = rigRef.current.group;
-      if (group) {
-        group.position.y = modelConfig.basePosition[1];
-      }
-    }
+    positionRig(progress, state.clock.elapsedTime * 1_000);
 
     gl.toneMappingExposure = 1.16;
   });

@@ -2131,7 +2131,6 @@ export function SoilInteraction({
       const position = geometry.getAttribute('position') as THREE.BufferAttribute;
       if (meta && meta.segments === pendingPositionRows.segments) {
         uploadAttributeRows(position, pendingPositionRows);
-        gl.shadowMap.needsUpdate = true;
       }
       resetAttributeRowUpdates(pendingPositionRows);
     }
@@ -2430,7 +2429,6 @@ export function SoilInteraction({
       }
       if (matrixChanged) {
         coarseMesh.instanceMatrix.needsUpdate = true;
-        gl.shadowMap.needsUpdate = true;
       }
       if (colorChanged && coarseMesh.instanceColor) coarseMesh.instanceColor.needsUpdate = true;
     }
@@ -2452,10 +2450,11 @@ export function SoilInteraction({
           blending={THREE.NormalBlending}
         />
       </points>
+      {/* Tiny moving grains are lit and receive shadows, but do not cast into
+          the full-scene map; doing so forced a costly map rebuild every frame. */}
       <instancedMesh
         ref={coarseGrainsRef}
         args={[undefined, undefined, MAX_COARSE_GRAINS]}
-        castShadow
         receiveShadow
         frustumCulled={false}
       >
