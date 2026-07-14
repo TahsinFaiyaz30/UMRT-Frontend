@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, use, useEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Environment, Lightformer, useTexture } from '@react-three/drei';
@@ -25,7 +25,97 @@ const GROUND_TEXTURES: string[] = [
   '/textures/mars-ground/normal.png',
 ];
 
+const TERRAIN_SEGMENTS: Record<Quality, number> = {
+  low: 400,
+  medium: 560,
+  high: 704,
+};
+
+type TerrainHeightResource = {
+  consumers: number;
+  promise: Promise<Float32Array>;
+  retirementTimer: number | null;
+};
+
+const terrainHeightResources = new Map<Quality, TerrainHeightResource>();
+const serverTerrainHeightResource: TerrainHeightResource = {
+  consumers: 0,
+  promise: new Promise<Float32Array>(() => {}),
+  retirementTimer: null,
+};
+
+function retireTerrainHeightResource(
+  quality: Quality,
+  resource: TerrainHeightResource,
+  delay: number,
+) {
+  if (resource.retirementTimer !== null) window.clearTimeout(resource.retirementTimer);
+  resource.retirementTimer = window.setTimeout(() => {
+    resource.retirementTimer = null;
+    if (resource.consumers === 0 && terrainHeightResources.get(quality) === resource) {
+      terrainHeightResources.delete(quality);
+    }
+  }, delay);
+}
+
+function getTerrainHeightResource(quality: Quality) {
+  if (typeof window === 'undefined') return serverTerrainHeightResource;
+  const cached = terrainHeightResources.get(quality);
+  if (cached) return cached;
+
+  const segments = TERRAIN_SEGMENTS[quality];
+  const expectedSamples = (segments + 1) ** 2;
+  const resource: TerrainHeightResource = {
+    consumers: 0,
+    retirementTimer: null,
+    promise: Promise.resolve(new Float32Array()),
+  };
+  resource.promise = fetch(`/terrain/mars-heights-${quality}.f32`, { cache: 'force-cache' })
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error(`Unable to load ${quality} terrain heights (${response.status})`);
+      }
+      const buffer = await response.arrayBuffer();
+      if (buffer.byteLength !== expectedSamples * Float32Array.BYTES_PER_ELEMENT) {
+        throw new Error(`Invalid ${quality} terrain height data (${buffer.byteLength} bytes)`);
+      }
+      const heights = new Float32Array(buffer);
+      // A render abandoned while suspended has no effect cleanup. Bound that
+      // edge case so a route change during cold load cannot retain this array.
+      retireTerrainHeightResource(quality, resource, 10_000);
+      return heights;
+    })
+    .catch((error) => {
+      if (terrainHeightResources.get(quality) === resource) {
+        terrainHeightResources.delete(quality);
+      }
+      throw error;
+    });
+  terrainHeightResources.set(quality, resource);
+  return resource;
+}
+
+function useTerrainHeights(quality: Quality) {
+  const resource = getTerrainHeightResource(quality);
+  const heights = use(resource.promise);
+
+  useEffect(() => {
+    if (resource.retirementTimer !== null) {
+      window.clearTimeout(resource.retirementTimer);
+      resource.retirementTimer = null;
+    }
+    resource.consumers += 1;
+    return () => {
+      resource.consumers = Math.max(0, resource.consumers - 1);
+      if (resource.consumers === 0) retireTerrainHeightResource(quality, resource, 0);
+    };
+  }, [quality, resource]);
+
+  return heights;
+}
+
 const AUTO_SUN_UPDATE_INTERVAL_MS = 100;
+const TEARDOWN_REUSE_WINDOW_MS = 900;
 const GROUND_NORMAL_SCALE = new THREE.Vector2(1.08, 1.08);
 
 export const HeroScene = forwardRef<
@@ -40,7 +130,10 @@ export const HeroScene = forwardRef<
   { quality, dismantleProgressRef, dismantleTimelineRef, dismantleActive },
   ref,
 ) {
-  const { scene } = useThree();
+  // Begin the height-data request alongside the already-preloaded rover GLB.
+  // CinematicGround consumes the same resource below once its textures resolve.
+  getTerrainHeightResource(quality);
+  const { gl, scene } = useThree();
   const groundRef = useRef<THREE.Mesh>(null);
   const ambientLightRef = useRef<THREE.AmbientLight>(null);
   const hemisphereLightRef = useRef<THREE.HemisphereLight>(null);
@@ -83,6 +176,12 @@ export const HeroScene = forwardRef<
   useEffect(() => () => {
     scene.environmentIntensity = 1;
   }, [scene]);
+
+  useEffect(() => {
+    // Swapping between the assembled and teardown rigs changes the set of
+    // shadow casters even when their animation progress is exactly zero.
+    gl.shadowMap.needsUpdate = true;
+  }, [dismantleActive, gl]);
 
   useFrame(() => {
     const livePosition = liveSunPositionRef.current;
@@ -134,7 +233,10 @@ export const HeroScene = forwardRef<
       return undefined;
     }
     if (!dismantleMounted) return undefined;
-    const timeout = window.setTimeout(() => setDismantleMounted(false), 4_000);
+    const timeout = window.setTimeout(
+      () => setDismantleMounted(false),
+      TEARDOWN_REUSE_WINDOW_MS,
+    );
     return () => window.clearTimeout(timeout);
   }, [dismantleActive, dismantleMounted]);
 
@@ -621,6 +723,7 @@ function CinematicGround({
 }) {
   const { gl } = useThree();
   const [albedo, normal] = useTexture(GROUND_TEXTURES);
+  const baseHeights = useTerrainHeights(quality);
 
   useEffect(() => {
     const anisotropy = Math.min(12, gl.capabilities.getMaxAnisotropy());
@@ -649,11 +752,10 @@ function CinematicGround({
     const size = 112;
     // Scale tessellation with the 112 m overscan so the deformation grid
     // retains approximately the original 86 m surface's spatial resolution.
-    const segments = quality === 'low' ? 400 : quality === 'medium' ? 560 : 704;
+    const segments = TERRAIN_SEGMENTS[quality];
     const plane = new THREE.PlaneGeometry(size, size, segments, segments);
     const position = plane.attributes.position;
     const colors = new Float32Array(position.count * 3);
-    const baseHeights = new Float32Array(position.count);
     const deformations = new Float32Array(position.count);
     const low = new THREE.Color(TERRAIN_LOW_COLOR);
     const high = new THREE.Color(TERRAIN_HIGH_COLOR);
@@ -663,9 +765,8 @@ function CinematicGround({
       const x = position.getX(index);
       const y = position.getY(index);
       const distance = Math.sqrt(x * x + y * y);
-      const height = terrainHeight(x, y);
+      const height = baseHeights[index];
       position.setZ(index, height);
-      baseHeights[index] = height;
 
       const microVariation = (Math.sin(x * 2.9) + Math.cos(y * 3.3)) * 0.035;
       const colorMix = THREE.MathUtils.clamp(0.2 + height * 0.58 + distance / 82 + microVariation, 0, 1);
@@ -683,7 +784,7 @@ function CinematicGround({
     plane.computeBoundingBox();
     plane.computeBoundingSphere();
     return plane;
-  }, [quality]);
+  }, [baseHeights, quality]);
 
   useEffect(() => () => {
     const meta = surfaceGeometry.userData.surfaceMeta as Record<string, unknown> | undefined;
@@ -787,6 +888,7 @@ function CalibratedSun({
           (0.72 + solar.glow * 0.14) * visualStrength,
         ) * daylight;
       }
+      state.gl.shadowMap.needsUpdate = true;
     }
     if (!glowRef.current) return;
     const pulse = 1 + Math.sin(state.clock.elapsedTime * 0.38) * 0.018;

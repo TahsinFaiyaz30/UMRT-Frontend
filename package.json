@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm run generate:terrain",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate:terrain": "node scripts/generate-terrain-heights.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

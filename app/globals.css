@@ -112,6 +112,8 @@ button {
 }
 
 .mission-atmosphere {
+  --pointer-x: 0;
+  --pointer-y: 0;
   position: fixed;
   inset: 0;
   z-index: 1;
@@ -121,7 +123,9 @@ button {
 
 .mission-grain {
   position: absolute;
-  inset: -50%;
+  /* The drift keyframes move by at most 4%. Eight percent is enough overscan
+     to cover every edge without rasterizing a four-viewport texture. */
+  inset: -8%;
   opacity: 0.08;
   background-image:
     radial-gradient(circle at 17% 23%, white 0 0.45px, transparent 0.7px),
@@ -176,9 +180,11 @@ button {
 }
 
 .mission-custom-cursor {
+  --cursor-x: 50vw;
+  --cursor-y: 50vh;
   position: fixed;
-  top: var(--cursor-y);
-  left: var(--cursor-x);
+  top: 0;
+  left: 0;
   z-index: 200;
   width: 18px;
   height: 18px;
@@ -187,9 +193,10 @@ button {
   box-shadow: 0 0 18px rgba(216, 255, 79, 0.2);
   opacity: 0;
   pointer-events: none;
+  translate: var(--cursor-x) var(--cursor-y);
   transform: translate(-50%, -50%) scale(0.72);
   transition: width 160ms ease, height 160ms ease, border-color 160ms ease, opacity 120ms ease, transform 120ms ease;
-  will-change: top, left, transform;
+  will-change: translate, transform;
 }
 
 .mission-custom-cursor::before,
@@ -526,6 +533,10 @@ button {
     calc((0.5 - var(--chapter-progress)) * 54px),
     0
   ) scale(var(--chapter-zoom)) rotateX(calc(var(--chapter-depth) * -5deg));
+}
+
+.mission-chapter[data-active='true'] .mission-chapter-copy,
+.mission-chapter[data-active='true'] .mission-free-copy {
   will-change: transform, opacity;
 }
 

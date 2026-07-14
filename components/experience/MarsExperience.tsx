@@ -31,6 +31,7 @@ const smooth = (value: number) => {
 
 export default function MarsExperience() {
   const rootRef = useRef<HTMLDivElement>(null);
+  const cursorRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
   const pointerRef = useRef({ x: 0, y: 0 });
   const lastUiProgressRef = useRef(-1);
@@ -74,8 +75,11 @@ export default function MarsExperience() {
     setScrubDismantle(0);
 
     const root = rootRef.current;
-    root?.style.setProperty('--pointer-x', '0');
-    root?.style.setProperty('--pointer-y', '0');
+    const atmosphere = root?.querySelector<HTMLElement>('.mission-atmosphere');
+    atmosphere?.style.setProperty('--pointer-x', '0');
+    atmosphere?.style.setProperty('--pointer-y', '0');
+    cursorRef.current?.style.setProperty('--cursor-x', '50vw');
+    cursorRef.current?.style.setProperty('--cursor-y', '50vh');
     root?.removeAttribute('data-cursor-active');
     root?.removeAttribute('data-cursor-pressed');
 
@@ -238,16 +242,23 @@ export default function MarsExperience() {
     let pointerUiFrame = 0;
     let latestClientX = 0;
     let latestClientY = 0;
+    const root = rootRef.current;
+    const cursor = cursorRef.current;
+    const atmosphere = root?.querySelector<HTMLElement>('.mission-atmosphere');
 
     const flushPointerUi = () => {
       pointerUiFrame = 0;
-      const root = rootRef.current;
-      if (!root) return;
-      root.style.setProperty('--pointer-x', pointerRef.current.x.toFixed(3));
-      root.style.setProperty('--pointer-y', pointerRef.current.y.toFixed(3));
-      root.style.setProperty('--cursor-x', `${latestClientX}px`);
-      root.style.setProperty('--cursor-y', `${latestClientY}px`);
-      root.setAttribute('data-cursor-active', 'true');
+      if (!root || !cursor || !atmosphere) return;
+      // Keep high-frequency custom properties on the three elements that
+      // consume them. Writing inherited variables on the experience root
+      // invalidated styles for the entire page on every pointer frame.
+      atmosphere.style.setProperty('--pointer-x', pointerRef.current.x.toFixed(3));
+      atmosphere.style.setProperty('--pointer-y', pointerRef.current.y.toFixed(3));
+      cursor.style.setProperty('--cursor-x', `${latestClientX}px`);
+      cursor.style.setProperty('--cursor-y', `${latestClientY}px`);
+      if (!root.hasAttribute('data-cursor-active')) {
+        root.setAttribute('data-cursor-active', 'true');
+      }
     };
 
     const onPointerMove = (event: PointerEvent) => {
@@ -264,11 +275,11 @@ export default function MarsExperience() {
         window.cancelAnimationFrame(pointerUiFrame);
         pointerUiFrame = 0;
       }
-      rootRef.current?.removeAttribute('data-cursor-active');
-      rootRef.current?.removeAttribute('data-cursor-pressed');
+      root?.removeAttribute('data-cursor-active');
+      root?.removeAttribute('data-cursor-pressed');
     };
-    const onPointerDown = () => rootRef.current?.setAttribute('data-cursor-pressed', 'true');
-    const onPointerUp = () => rootRef.current?.removeAttribute('data-cursor-pressed');
+    const onPointerDown = () => root?.setAttribute('data-cursor-pressed', 'true');
+    const onPointerUp = () => root?.removeAttribute('data-cursor-pressed');
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     window.addEventListener('pointerdown', onPointerDown, { passive: true });
     window.addEventListener('pointerup', onPointerUp, { passive: true });
@@ -413,7 +424,7 @@ export default function MarsExperience() {
 
   return (
     <div ref={rootRef} className="mission-experience">
-      <div className="mission-custom-cursor" aria-hidden="true"><i /><b /><span>SURFACE / TRACE</span></div>
+      <div ref={cursorRef} className="mission-custom-cursor" aria-hidden="true"><i /><b /><span>SURFACE / TRACE</span></div>
       {loaderVisible && <MissionLoader ready={sceneReady} onComplete={completeLoader} />}
       <PremiumNavbar />
       {!loaderVisible && <SolarCalibrationPanel />}

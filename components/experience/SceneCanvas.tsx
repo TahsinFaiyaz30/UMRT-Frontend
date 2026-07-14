@@ -21,14 +21,16 @@ import type { ModelRigHandle } from './ModelRig';
 /**
  * R3F Canvas + scene root.
  *
- * NO staged loader. The Canvas paints the live Mars background colour
+ * No component-quality staging. The Canvas paints the live Mars background colour
  * (set both via `style.background` and `gl.setClearColor`) on the very
  * first frame. Inside the Canvas we render `HeroScene` immediately —
  * it owns the GLB load via `useGLTF` (with `useGLTF.preload()` at
  * module scope on ModelRig) so the network fetch starts during JS
  * parse, not after any "ready" signal. While GLB parses, the R3F
  * `<Suspense>` renders `MinimalPlaceholder` which paints the same
- * Mars colour, so the page reads as fully loaded with no flicker.
+ * Mars colour. Once resources resolve, the complete scene is shader-warmed
+ * behind the existing loader before its first full draw, so there is no
+ * reduced-detail intermediate frame or shader-compile freeze.
  *
  * - WebGL2 with ACES Filmic tone mapping
  * - Capability-selected quality with a bounded, stable render DPR
@@ -57,6 +59,7 @@ export function SceneCanvas({
   const quality = useMemo<Quality>(() => detectQuality(), []);
   const cameraGroupRef = useRef<Group | null>(null);
   const rigRef = useRef<ModelRigHandle | null>(null);
+  const shaderReadyRef = useRef(false);
 
   const dprMax = useMemo(() => dprFor(quality), [quality]);
   const prefersReduced = reduceMotion || getReducedMotion();
@@ -78,10 +81,22 @@ export function SceneCanvas({
       flat={false}
       onCreated={(state) => {
         const gl = state.gl;
+        // Three's production default still synchronously asks WebGL for every
+        // program/shader info log on first use. On Chromium this forces the
+        // driver to finish the whole scene's parallel shader compilation in a
+        // single multi-second task. All custom shaders remain checked in dev;
+        // skip only that diagnostic readback in the tested production build.
+        if (process.env.NODE_ENV === 'production') gl.debug.checkShaderErrors = false;
         gl.sortObjects = true;
         gl.toneMapping = THREE.ACESFilmicToneMapping;
         gl.toneMappingExposure = 1.18;
         gl.setClearColor('#080302', 1);
+        // Camera motion does not change a directional light's world-space
+        // shadow map. Re-render it only when the sun, terrain, or a shadow-
+        // casting model actually moves; the relevant scene components set
+        // needsUpdate at those exact moments.
+        gl.shadowMap.autoUpdate = false;
+        gl.shadowMap.needsUpdate = true;
       }}
     >
       <HybridFrameGovernor forceActive={dismantleActive} reduceMotion={prefersReduced} />
@@ -108,6 +123,7 @@ export function SceneCanvas({
           dismantleTimelineRef={dismantleTimelineRef}
           dismantleActive={dismantleActive}
         />
+        <AsyncShaderWarmup readyRef={shaderReadyRef} />
         <ScrollDirector
           progressRef={progressRef}
           pointerRef={pointerRef}
@@ -116,7 +132,7 @@ export function SceneCanvas({
           reduceMotion={prefersReduced}
         />
         <FreeExploreControls progressRef={progressRef} />
-        <SceneReadySignal onReady={onReady} />
+        <SceneReadySignal shaderReadyRef={shaderReadyRef} onReady={onReady} />
       </Suspense>
 
       <object3D ref={cameraGroupRef} />
@@ -140,12 +156,103 @@ function ModelResourceLifecycle() {
   return null;
 }
 
-function SceneReadySignal({ onReady }: { onReady?: () => void }) {
+function AsyncShaderWarmup({ readyRef }: { readyRef: RefObject<boolean> }) {
+  const { gl, scene, camera, invalidate } = useThree();
+  const startedRef = useRef(false);
+  const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    cancelledRef.current = false;
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, []);
+
+  // A positive render priority takes over R3F's automatic render. The first
+  // frame starts KHR_parallel_shader_compile without drawing; later requested
+  // frames use the normal renderer after all programs report ready.
+  useFrame(() => {
+    if (readyRef.current) {
+      gl.render(scene, camera);
+      return;
+    }
+    if (startedRef.current) return;
+    startedRef.current = true;
+    void compileShadersInBatches(gl, scene, camera, () => cancelledRef.current).then(
+      (completed) => {
+        if (!completed) return;
+        if (cancelledRef.current) return;
+        readyRef.current = true;
+        invalidate();
+      },
+      () => {
+        // Unsupported/broken extensions must never strand the loading screen;
+        // fall back to the browser's normal first-render compilation path.
+        if (cancelledRef.current) return;
+        readyRef.current = true;
+        invalidate();
+      },
+    );
+  }, 1);
+
+  return null;
+}
+
+async function compileShadersInBatches(
+  gl: THREE.WebGLRenderer,
+  scene: THREE.Scene,
+  camera: THREE.Camera,
+  cancelled: () => boolean,
+) {
+  const renderables: THREE.Object3D[] = [];
+  scene.traverseVisible((object) => {
+    if (
+      object instanceof THREE.Mesh
+      || object instanceof THREE.Points
+      || object instanceof THREE.Line
+      || object instanceof THREE.Sprite
+    ) {
+      // A shallow clone preserves material, geometry, morph/skinning and
+      // instancing flags without reparenting or duplicating heavyweight data.
+      renderables.push(object.clone(false));
+    }
+  });
+
+  const batch = new THREE.Group();
+  for (const renderable of renderables) {
+    if (cancelled()) return false;
+    batch.add(renderable);
+    const programsBefore = gl.info.programs?.length ?? 0;
+    await gl.compileAsync(batch, camera, scene);
+    batch.clear();
+
+    // Cached material variants finish immediately. Yield only when this
+    // object introduced a new GPU program, preventing ANGLE from launching
+    // the entire compiler pool in one high-usage burst.
+    if ((gl.info.programs?.length ?? 0) > programsBefore) {
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 24));
+    }
+  }
+
+  if (cancelled()) return false;
+  // Confirm every variant is ready; this is normally an immediate cache hit.
+  await gl.compileAsync(scene, camera);
+  return !cancelled();
+}
+
+function SceneReadySignal({
+  shaderReadyRef,
+  onReady,
+}: {
+  shaderReadyRef: RefObject<boolean>;
+  onReady?: () => void;
+}) {
   const frames = useRef(0);
   const fired = useRef(false);
 
   useFrame(() => {
     if (fired.current) return;
+    if (!shaderReadyRef.current) return;
     frames.current += 1;
     if (frames.current < 3) return;
     fired.current = true;

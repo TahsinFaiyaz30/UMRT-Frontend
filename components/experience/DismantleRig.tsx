@@ -56,6 +56,7 @@ type InternalGroup = THREE.Group & {
     rot: THREE.Euler;
     start: number;
     end: number;
+    renderMeshes: THREE.Mesh[];
   };
 };
 
@@ -202,6 +203,7 @@ function buildInternals(
       rot: new THREE.Euler(...def.rot),
       start: def.start,
       end: def.end,
+      renderMeshes: [],
     };
     groups.push(g);
     return g;
@@ -328,20 +330,48 @@ function buildInternals(
     g.clear();
     sourceGeometries.forEach((geometry) => geometry.dispose());
 
-    geometriesByMaterial.forEach((geometries, sourceMaterial) => {
+    const mergedByMaterial: THREE.BufferGeometry[] = [];
+    const mergedMaterials: THREE.MeshStandardMaterial[] = [];
+    for (const [sourceMaterial, geometries] of geometriesByMaterial) {
       const merged = mergeGeometries(geometries, false);
       geometries.forEach((geometry) => geometry.dispose());
-      if (!merged) return;
+      if (!merged) continue;
 
       const material = sourceMaterial.clone();
       material.transparent = true;
       material.opacity = 0;
       material.depthWrite = false;
       material.needsUpdate = true;
-      const mesh = new THREE.Mesh(merged, material);
+      mergedByMaterial.push(merged);
+      mergedMaterials.push(material);
+    }
+
+    // Material groups preserve the same palette and draw order while one
+    // combined geometry gives each moving module a single set of GPU vertex
+    // buffers. The previous mesh-per-material layout allocated several copies
+    // of position/normal/UV/index buffers for every module.
+    const combined = mergedByMaterial.length > 1
+      ? mergeGeometries(mergedByMaterial, true)
+      : mergedByMaterial[0];
+    if (combined) {
+      if (mergedByMaterial.length > 1) {
+        mergedByMaterial.forEach((geometry) => geometry.dispose());
+      }
+      const material = mergedMaterials.length === 1 ? mergedMaterials[0] : mergedMaterials;
+      const mesh = new THREE.Mesh(combined, material);
       mesh.layers.enable(1);
       g.add(mesh);
-    });
+      g.userData.renderMeshes.push(mesh);
+    } else {
+      // Attribute incompatibility is not expected for the procedural shapes,
+      // but retaining the already-merged material buckets is a safe fallback.
+      for (let index = 0; index < mergedByMaterial.length; index += 1) {
+        const mesh = new THREE.Mesh(mergedByMaterial[index], mergedMaterials[index]);
+        mesh.layers.enable(1);
+        g.add(mesh);
+        g.userData.renderMeshes.push(mesh);
+      }
+    }
   }
 
   return groups;
@@ -364,6 +394,8 @@ export function DismantleRig({
   const semanticPartsRef = useRef<SemanticGroup[]>([]);
   const internalsRef = useRef<InternalGroup[]>([]);
   const initializedRef = useRef(false);
+  const previousShadowProgressRef = useRef(-1);
+  const previousShadowTimelineRef = useRef(-1);
 
   // Materials — initialized once. Same palette as the original V4
   // teardown, configured for the "balanced" quality preset (envMap
@@ -492,9 +524,17 @@ export function DismantleRig({
   }, [gltf, mats]);
 
   // Per-frame animation. `t` is the 0..1 progress of the 6 s teardown.
-  useFrame(() => {
+  useFrame((state) => {
     const t = Math.max(0, Math.min(1, progressRef.current ?? 0));
     const timelineT = Math.max(0, Math.min(1, timelineRef?.current ?? t));
+    if (
+      Math.abs(t - previousShadowProgressRef.current) > 0.00001
+      || Math.abs(timelineT - previousShadowTimelineRef.current) > 0.00001
+    ) {
+      previousShadowProgressRef.current = t;
+      previousShadowTimelineRef.current = timelineT;
+      state.gl.shadowMap.needsUpdate = true;
+    }
 
     // -------- LIFT (jump → HOVER → drop) on the whole rig --------
     // Behaviour:
@@ -556,9 +596,7 @@ export function DismantleRig({
       const fadeStart = Math.max(0.46, u.start - 0.14);
       const fadeEnd = u.start + 0.1;
       const fade = smooth(localT(t, fadeStart, fadeEnd));
-      g.traverse((o) => {
-        const mesh = o as THREE.Mesh;
-        if (!mesh.isMesh) return;
+      for (const mesh of u.renderMeshes) {
         const mat = mesh.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[];
         if (Array.isArray(mat)) {
           for (const m of mat) {
@@ -570,7 +608,7 @@ export function DismantleRig({
           mat.depthWrite = fade > 0.7;
         }
         mesh.visible = fade > 0.01;
-      });
+      }
     }
   });
 

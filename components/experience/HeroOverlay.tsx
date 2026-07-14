@@ -186,6 +186,7 @@ export function HeroOverlay({ progress }: { loading?: boolean; progress: number 
           key={chapter.id}
           id={chapter.id}
           data-phase={chapter.id}
+          data-active={phase.name === chapter.id ? 'true' : undefined}
           className={`mission-chapter mission-chapter-${chapter.align} mission-chapter-${chapter.id}`}
           style={chapterStyle(chapter.id, progress)}
         >
@@ -219,6 +220,7 @@ export function HeroOverlay({ progress }: { loading?: boolean; progress: number 
       <section
         id="free_explore_unlock"
         data-phase="free_explore_unlock"
+        data-active={phase.name === 'free_explore_unlock' ? 'true' : undefined}
         className="mission-chapter mission-chapter-free"
         style={chapterStyle('free_explore_unlock', progress)}
       >

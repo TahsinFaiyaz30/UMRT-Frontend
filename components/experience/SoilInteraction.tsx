@@ -9,6 +9,18 @@ import type { Quality } from '@/lib/performance';
 const MAX_DUST = 1400;
 const MAX_COARSE_GRAINS = 96;
 const IDLE_REANCHOR_MS = 140;
+const DUST_FLOATS_PER_PARTICLE = 15;
+const DUST_ATTRIBUTE_OFFSET = {
+  position: 0,
+  size: 3,
+  alpha: 4,
+  seed: 5,
+  profile: 6,
+  stretch: 7,
+  rotation: 8,
+  color: 9,
+  flow: 12,
+} as const;
 
 // The deformation grid is expressed in metres. Keep the source term in real
 // mass units so pointer event frequency cannot manufacture matter. These are
@@ -241,6 +253,17 @@ function emptyPointerSample(): PointerSample {
   };
 }
 
+function copyPointerSample(target: PointerSample, source: PointerSample) {
+  target.ndcX = source.ndcX;
+  target.ndcY = source.ndcY;
+  target.screenX = source.screenX;
+  target.screenY = source.screenY;
+  target.timestamp = source.timestamp;
+  target.inside = source.inside;
+  target.blocked = source.blocked;
+  target.buttons = source.buttons;
+}
+
 type DustParticle = {
   activeListIndex: number;
   profile: number;
@@ -396,7 +419,7 @@ function uploadAttributeRows(
   // of rows in one frame; issuing hundreds of bufferSubData commands makes the
   // browser/GPU command queue balloon. Collapse that exceptional case into a
   // single bounding upload so command memory stays bounded.
-  const maximumPreciseRanges = 16;
+  const maximumPreciseRanges = 4;
   if (updates.touchedCount <= maximumPreciseRanges) {
     for (let index = 0; index < updates.touchedCount; index += 1) {
       const row = updates.touchedRows[index];
@@ -610,7 +633,9 @@ export function SoilInteraction({
   const dustIndex = useRef(0);
   const coarseGrainIndex = useRef(0);
   const activeDustCount = useRef(0);
-  const activeDustIndices = useRef<number[]>([]);
+  // A fixed-size sparse set avoids growing/shrinking a JavaScript array while
+  // dust is continuously emitted and retired.
+  const activeDustIndices = useRef(new Int32Array(MAX_DUST));
   const activeGrainCount = useRef(0);
   const surfaceActive = useRef(false);
   const surfaceDirty = useRef(false);
@@ -756,38 +781,57 @@ export function SoilInteraction({
     distance: 0,
   }), []);
 
-  const dustGeometry = useMemo(() => {
+  const dustRenderData = useMemo(() => {
     const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(MAX_DUST * 3);
-    const sizes = new Float32Array(MAX_DUST);
-    const alphas = new Float32Array(MAX_DUST);
-    const seeds = new Float32Array(MAX_DUST);
-    const profiles = new Float32Array(MAX_DUST);
-    const stretches = new Float32Array(MAX_DUST);
-    const rotations = new Float32Array(MAX_DUST);
-    const colors = new Float32Array(MAX_DUST * 3);
-    const flows = new Float32Array(MAX_DUST * 3);
-    positions.fill(-999);
-    stretches.fill(1);
+    // These fields change together every frame. Keeping them in one dynamic
+    // interleaved buffer turns nine WebGL uploads into one without changing
+    // any shader input or visual value.
+    const array = new Float32Array(MAX_DUST * DUST_FLOATS_PER_PARTICLE);
     for (let index = 0; index < MAX_DUST; index += 1) {
-      flows[index * 3] = 1;
+      const offset = index * DUST_FLOATS_PER_PARTICLE;
+      array[offset + DUST_ATTRIBUTE_OFFSET.position] = -999;
+      array[offset + DUST_ATTRIBUTE_OFFSET.position + 1] = -999;
+      array[offset + DUST_ATTRIBUTE_OFFSET.position + 2] = -999;
+      array[offset + DUST_ATTRIBUTE_OFFSET.stretch] = 1;
+      array[offset + DUST_ATTRIBUTE_OFFSET.flow] = 1;
     }
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage));
-    geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1).setUsage(THREE.DynamicDrawUsage));
-    geometry.setAttribute('aAlpha', new THREE.BufferAttribute(alphas, 1).setUsage(THREE.DynamicDrawUsage));
-    geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1).setUsage(THREE.DynamicDrawUsage));
-    geometry.setAttribute('aProfile', new THREE.BufferAttribute(profiles, 1).setUsage(THREE.DynamicDrawUsage));
-    geometry.setAttribute('aStretch', new THREE.BufferAttribute(stretches, 1).setUsage(THREE.DynamicDrawUsage));
-    geometry.setAttribute('aRotation', new THREE.BufferAttribute(rotations, 1).setUsage(THREE.DynamicDrawUsage));
-    geometry.setAttribute('aColor', new THREE.BufferAttribute(colors, 3).setUsage(THREE.DynamicDrawUsage));
-    geometry.setAttribute('aFlow', new THREE.BufferAttribute(flows, 3).setUsage(THREE.DynamicDrawUsage));
-    return geometry;
+    const buffer = new THREE.InterleavedBuffer(array, DUST_FLOATS_PER_PARTICLE);
+    buffer.setUsage(THREE.DynamicDrawUsage);
+    geometry.setAttribute('position', new THREE.InterleavedBufferAttribute(
+      buffer, 3, DUST_ATTRIBUTE_OFFSET.position,
+    ));
+    geometry.setAttribute('aSize', new THREE.InterleavedBufferAttribute(
+      buffer, 1, DUST_ATTRIBUTE_OFFSET.size,
+    ));
+    geometry.setAttribute('aAlpha', new THREE.InterleavedBufferAttribute(
+      buffer, 1, DUST_ATTRIBUTE_OFFSET.alpha,
+    ));
+    geometry.setAttribute('aSeed', new THREE.InterleavedBufferAttribute(
+      buffer, 1, DUST_ATTRIBUTE_OFFSET.seed,
+    ));
+    geometry.setAttribute('aProfile', new THREE.InterleavedBufferAttribute(
+      buffer, 1, DUST_ATTRIBUTE_OFFSET.profile,
+    ));
+    geometry.setAttribute('aStretch', new THREE.InterleavedBufferAttribute(
+      buffer, 1, DUST_ATTRIBUTE_OFFSET.stretch,
+    ));
+    geometry.setAttribute('aRotation', new THREE.InterleavedBufferAttribute(
+      buffer, 1, DUST_ATTRIBUTE_OFFSET.rotation,
+    ));
+    geometry.setAttribute('aColor', new THREE.InterleavedBufferAttribute(
+      buffer, 3, DUST_ATTRIBUTE_OFFSET.color,
+    ));
+    geometry.setAttribute('aFlow', new THREE.InterleavedBufferAttribute(
+      buffer, 3, DUST_ATTRIBUTE_OFFSET.flow,
+    ));
+    return { geometry, buffer };
   }, []);
+  const dustGeometry = dustRenderData.geometry;
+  const dustInterleavedBuffer = dustRenderData.buffer;
 
   useEffect(() => () => {
     dustGeometry.dispose();
     pointerSamples.current.length = 0;
-    activeDustIndices.current.length = 0;
     activeDustCount.current = 0;
     particles.current.length = 0;
     coarseGrains.current.length = 0;
@@ -871,8 +915,19 @@ export function SoilInteraction({
           queuedTail.screenY = screenY;
           queuedTail.timestamp = sample.timeStamp;
         } else {
-          const queuedSample = pointerSamplePool.current[queuedSamples.length]
-            ?? emptyPointerSample();
+          if (queuedSamples.length >= MAX_QUEUED_POINTER_SAMPLES) {
+            // Keep the oldest endpoint and every second sample, copying values
+            // back into the fixed pool. High-polling mice can now produce an
+            // arbitrarily long burst without allocating fallback objects.
+            const retainedCount = MAX_QUEUED_POINTER_SAMPLES / 2;
+            for (let index = 1; index < retainedCount; index += 1) {
+              const pooledSample = pointerSamplePool.current[index];
+              copyPointerSample(pooledSample, queuedSamples[index * 2]);
+              queuedSamples[index] = pooledSample;
+            }
+            queuedSamples.length = retainedCount;
+          }
+          const queuedSample = pointerSamplePool.current[queuedSamples.length];
           queuedSample.ndcX = ndcX;
           queuedSample.ndcY = ndcY;
           queuedSample.screenX = screenX;
@@ -1531,9 +1586,10 @@ export function SoilInteraction({
         break;
       }
       if (!particle) break;
-      particle.activeListIndex = activeDustIndices.current.length;
-      activeDustIndices.current.push(particleIndex);
-      activeDustCount.current += 1;
+      const activeListIndex = activeDustCount.current;
+      particle.activeListIndex = activeListIndex;
+      activeDustIndices.current[activeListIndex] = particleIndex;
+      activeDustCount.current = activeListIndex + 1;
       spawnedCount += 1;
       // Suspended profile represents the optically dominant <20 µm fines;
       // the surface sheet represents the 20–100 µm short-suspension fraction.
@@ -1858,15 +1914,16 @@ export function SoilInteraction({
   const deactivateDustParticle = (particleIndex: number, particle: DustParticle) => {
     const activeIndices = activeDustIndices.current;
     const listIndex = particle.activeListIndex;
-    if (listIndex < 0 || listIndex >= activeIndices.length) return;
-    const lastParticleIndex = activeIndices[activeIndices.length - 1];
-    activeIndices.pop();
-    if (listIndex < activeIndices.length) {
+    const activeCount = activeDustCount.current;
+    if (listIndex < 0 || listIndex >= activeCount) return;
+    const nextActiveCount = activeCount - 1;
+    const lastParticleIndex = activeIndices[nextActiveCount];
+    if (listIndex < nextActiveCount) {
       activeIndices[listIndex] = lastParticleIndex;
       particles.current[lastParticleIndex].activeListIndex = listIndex;
     }
     particle.activeListIndex = -1;
-    activeDustCount.current = activeIndices.length;
+    activeDustCount.current = nextActiveCount;
   };
 
   useFrame((state, delta) => {
@@ -2074,6 +2131,7 @@ export function SoilInteraction({
       const position = geometry.getAttribute('position') as THREE.BufferAttribute;
       if (meta && meta.segments === pendingPositionRows.segments) {
         uploadAttributeRows(position, pendingPositionRows);
+        gl.shadowMap.needsUpdate = true;
       }
       resetAttributeRowUpdates(pendingPositionRows);
     }
@@ -2122,15 +2180,7 @@ export function SoilInteraction({
       lastNormalUpdate.current = state.clock.elapsedTime;
     }
 
-    const positions = dustGeometry.getAttribute('position') as THREE.BufferAttribute;
-    const sizes = dustGeometry.getAttribute('aSize') as THREE.BufferAttribute;
-    const alphas = dustGeometry.getAttribute('aAlpha') as THREE.BufferAttribute;
-    const seeds = dustGeometry.getAttribute('aSeed') as THREE.BufferAttribute;
-    const profiles = dustGeometry.getAttribute('aProfile') as THREE.BufferAttribute;
-    const stretches = dustGeometry.getAttribute('aStretch') as THREE.BufferAttribute;
-    const rotations = dustGeometry.getAttribute('aRotation') as THREE.BufferAttribute;
-    const colors = dustGeometry.getAttribute('aColor') as THREE.BufferAttribute;
-    const flows = dustGeometry.getAttribute('aFlow') as THREE.BufferAttribute;
+    const dustArray = dustInterleavedBuffer.array as Float32Array;
     const frameStep = Math.min(delta, 0.04);
     dustUniforms.uTime.value = state.clock.elapsedTime;
     const liveDustUniforms = dustMaterialRef.current?.uniforms;
@@ -2139,18 +2189,21 @@ export function SoilInteraction({
     if (activeDustCount.current > 0) {
       let dustChanged = false;
       const activeIndices = activeDustIndices.current;
-      for (let activeIndex = activeIndices.length - 1; activeIndex >= 0; activeIndex -= 1) {
+      for (let activeIndex = activeDustCount.current - 1; activeIndex >= 0; activeIndex -= 1) {
         const index = activeIndices[activeIndex];
+        const attributeOffset = index * DUST_FLOATS_PER_PARTICLE;
         const particle = particles.current[index];
         particle.life -= frameStep;
         if (particle.life <= 0) {
           particle.life = 0;
           particle.massKg = 0;
           deactivateDustParticle(index, particle);
-          positions.setXYZ(index, 0, -999, 0);
-          sizes.setX(index, 0);
-          alphas.setX(index, 0);
-          stretches.setX(index, 1);
+          dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.position] = 0;
+          dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.position + 1] = -999;
+          dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.position + 2] = 0;
+          dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.size] = 0;
+          dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.alpha] = 0;
+          dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.stretch] = 1;
           dustChanged = true;
           continue;
         }
@@ -2254,10 +2307,12 @@ export function SoilInteraction({
           particle.life = 0;
           particle.massKg = 0;
           deactivateDustParticle(index, particle);
-          positions.setXYZ(index, 0, -999, 0);
-          sizes.setX(index, 0);
-          alphas.setX(index, 0);
-          stretches.setX(index, 1);
+          dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.position] = 0;
+          dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.position + 1] = -999;
+          dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.position + 2] = 0;
+          dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.size] = 0;
+          dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.alpha] = 0;
+          dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.stretch] = 1;
           dustChanged = true;
           continue;
         }
@@ -2269,32 +2324,25 @@ export function SoilInteraction({
           0,
           suspendedFine ? 0.07 : 0.04,
         );
-        positions.setXYZ(index, particle.position.x, particle.position.y, particle.position.z);
-        sizes.setX(index, particleSize);
-        alphas.setX(index, centreOpticalDepth * birthRamp);
-        seeds.setX(index, particle.seed);
-        profiles.setX(index, particle.profile);
-        stretches.setX(index, currentStretch);
-        rotations.setX(index, particle.rotation);
-        colors.setXYZ(index, particle.color.r, particle.color.g, particle.color.b);
-        flows.setXYZ(
-          index,
-          particle.velocity.x,
-          particle.velocity.y,
-          particle.velocity.z,
-        );
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.position] = particle.position.x;
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.position + 1] = particle.position.y;
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.position + 2] = particle.position.z;
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.size] = particleSize;
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.alpha] = centreOpticalDepth * birthRamp;
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.seed] = particle.seed;
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.profile] = particle.profile;
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.stretch] = currentStretch;
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.rotation] = particle.rotation;
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.color] = particle.color.r;
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.color + 1] = particle.color.g;
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.color + 2] = particle.color.b;
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.flow] = particle.velocity.x;
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.flow + 1] = particle.velocity.y;
+        dustArray[attributeOffset + DUST_ATTRIBUTE_OFFSET.flow + 2] = particle.velocity.z;
         dustChanged = true;
       }
       if (dustChanged) {
-        positions.needsUpdate = true;
-        sizes.needsUpdate = true;
-        alphas.needsUpdate = true;
-        seeds.needsUpdate = true;
-        profiles.needsUpdate = true;
-        stretches.needsUpdate = true;
-        rotations.needsUpdate = true;
-        colors.needsUpdate = true;
-        flows.needsUpdate = true;
+        dustInterleavedBuffer.needsUpdate = true;
       }
     }
 
@@ -2302,8 +2350,10 @@ export function SoilInteraction({
     if (coarseMesh && activeGrainCount.current > 0) {
       let colorChanged = false;
       let matrixChanged = false;
-      coarseGrains.current.forEach((grain, index) => {
-        if (grain.life <= 0) return;
+      const grains = coarseGrains.current;
+      for (let index = 0; index < grains.length; index += 1) {
+        const grain = grains[index];
+        if (grain.life <= 0) continue;
         grain.life -= frameStep;
         // Nonlinear Earth-air drag for an irregular mineral grain. Exponential
         // coupling over the frame is the stable integral of the instantaneous
@@ -2377,8 +2427,11 @@ export function SoilInteraction({
         grainTransform.updateMatrix();
         coarseMesh.setMatrixAt(index, grainTransform.matrix);
         matrixChanged = true;
-      });
-      if (matrixChanged) coarseMesh.instanceMatrix.needsUpdate = true;
+      }
+      if (matrixChanged) {
+        coarseMesh.instanceMatrix.needsUpdate = true;
+        gl.shadowMap.needsUpdate = true;
+      }
       if (colorChanged && coarseMesh.instanceColor) coarseMesh.instanceColor.needsUpdate = true;
     }
 
