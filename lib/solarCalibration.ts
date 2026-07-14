@@ -222,16 +222,16 @@ export function solarPositionFromSettings(
 /** Mean length of a Martian solar day (sol), in terrestrial seconds. */
 export const MARS_SOL_DURATION_SECONDS = 88_775.244;
 
-/** Website playback speed: one complete Martian sol every eight minutes. */
-export const MARS_AUTO_SOL_DURATION_SECONDS = 480;
+/** Website playback speed: one complete Martian sol every sixteen minutes. */
+export const MARS_AUTO_SOL_DURATION_SECONDS = 960;
 
 /**
- * A non-repeating companion period for the elevation sweep. Its irrational
- * ratio to the azimuth cycle prevents the same azimuth/elevation pairs from
- * looping, so the automatic calibration eventually samples the whole sky.
+ * The marker completes two azimuth orbits during each compressed sol. This
+ * covers every compass bearing while elevation slowly spirals inward toward
+ * the zenith, outward through sunset, below the horizon, and back to dawn.
  */
-export const MARS_AUTO_ELEVATION_DURATION_SECONDS = MARS_AUTO_SOL_DURATION_SECONDS
-  * ((1 + Math.sqrt(5)) / 2);
+export const MARS_AUTO_AZIMUTH_ORBIT_DURATION_SECONDS = 480;
+export const MARS_AUTO_ELEVATION_DURATION_SECONDS = MARS_AUTO_SOL_DURATION_SECONDS;
 
 export type MarsSunCoordinates = {
   azimuth: number;
@@ -248,13 +248,18 @@ type MutableMarsSunCoordinates = {
 const RADIANS_PER_DEGREE = Math.PI / 180;
 const MARS_AUTO_INITIAL_AZIMUTH = -166;
 const MARS_AUTO_INITIAL_ELEVATION = 13;
-// Preserve the requested opening position and begin on the descending half of
-// the elevation sweep, so the initial movement still reads as sunset.
-const MARS_AUTO_INITIAL_ELEVATION_PHASE = Math.PI - Math.asin(
-  (MARS_AUTO_INITIAL_ELEVATION - 45) / 45,
-);
-// The readout retains a familiar 24-hour compressed-sol clock.
-const MARS_AUTO_INITIAL_PHASE = 0.5420321012919584;
+const MARS_AUTO_MINIMUM_ELEVATION = -30;
+const MARS_AUTO_MAXIMUM_ELEVATION = 90;
+const MARS_AUTO_ELEVATION_RANGE = MARS_AUTO_MAXIMUM_ELEVATION
+  - MARS_AUTO_MINIMUM_ELEVATION;
+// A triangular radial sweep gives the joystick a constant inward/outward
+// velocity. Unlike a sine crest, it does not visually stall near EL 90°.
+const MARS_AUTO_INITIAL_ELEVATION_PHASE = (
+  (MARS_AUTO_INITIAL_ELEVATION - MARS_AUTO_MINIMUM_ELEVATION)
+    / MARS_AUTO_ELEVATION_RANGE
+) / 2;
+// The opening 13° elevation now reads as early morning instead of sunset.
+const MARS_AUTO_INITIAL_LOCAL_TIME_HOURS = 5;
 const MARS_TWILIGHT_START_SINE = Math.sin(-6 * RADIANS_PER_DEGREE);
 const MARS_FULL_DAYLIGHT_SINE = Math.sin(2 * RADIANS_PER_DEGREE);
 let marsAutoCycleEpochMilliseconds: number | undefined;
@@ -262,11 +267,13 @@ let marsAutoCycleEpochMilliseconds: number | undefined;
 const positiveModulo = (value: number, divisor: number) => ((value % divisor) + divisor) % divisor;
 
 /**
- * Calculate an allocation-free full-hemisphere calibration sweep. No single
- * fixed point on Mars can physically observe every azimuth/elevation pair, so
- * automatic calibration deliberately uses independent, smoothly moving axes.
- * Their irrational period ratio makes the path dense instead of repeating one
- * circle, while the eight-minute azimuth cadence keeps the motion restrained.
+ * Calculate an allocation-free spiral across the complete calibration sky.
+ * Azimuth keeps orbiting at a restrained eight-minute cadence while elevation
+ * completes one continuous sixteen-minute day/night sweep. Positive elevation
+ * moves the joystick inward to the zenith; it reverses immediately at center
+ * and spirals outward at a constant radial rate. Negative elevation keeps the
+ * marker at the outer horizon while the physical light continues below the
+ * terrain for night.
  */
 export function automaticMarsSunCoordinatesAt(
   timestampMilliseconds: number,
@@ -277,19 +284,30 @@ export function automaticMarsSunCoordinatesAt(
   }
 
   const elapsedSeconds = Math.max(0, timestampMilliseconds - marsAutoCycleEpochMilliseconds) / 1_000;
-  const phase = positiveModulo(
-    MARS_AUTO_INITIAL_PHASE + elapsedSeconds / MARS_AUTO_SOL_DURATION_SECONDS,
+  const solPhase = positiveModulo(
+    MARS_AUTO_INITIAL_LOCAL_TIME_HOURS / 24
+      + elapsedSeconds / MARS_AUTO_SOL_DURATION_SECONDS,
     1,
   );
-  const elevationPhase = MARS_AUTO_INITIAL_ELEVATION_PHASE
-    + elapsedSeconds / MARS_AUTO_ELEVATION_DURATION_SECONDS * Math.PI * 2;
+  const elevationPhase = positiveModulo(
+    MARS_AUTO_INITIAL_ELEVATION_PHASE
+      + elapsedSeconds / MARS_AUTO_ELEVATION_DURATION_SECONDS,
+    1,
+  );
+  const elevationSweep = 1 - Math.abs(elevationPhase * 2 - 1);
 
   out.azimuth = positiveModulo(
-    MARS_AUTO_INITIAL_AZIMUTH + elapsedSeconds / MARS_AUTO_SOL_DURATION_SECONDS * 360 + 180,
+    MARS_AUTO_INITIAL_AZIMUTH
+      + elapsedSeconds / MARS_AUTO_AZIMUTH_ORBIT_DURATION_SECONDS * 360
+      + 180,
     360,
   ) - 180;
-  out.elevation = clamp(45 + Math.sin(elevationPhase) * 45, 0, 90);
-  out.localSolarTimeHours = phase * 24;
+  out.elevation = clamp(
+    MARS_AUTO_MINIMUM_ELEVATION + elevationSweep * MARS_AUTO_ELEVATION_RANGE,
+    MARS_AUTO_MINIMUM_ELEVATION,
+    MARS_AUTO_MAXIMUM_ELEVATION,
+  );
+  out.localSolarTimeHours = solPhase * 24;
   return out;
 }
 

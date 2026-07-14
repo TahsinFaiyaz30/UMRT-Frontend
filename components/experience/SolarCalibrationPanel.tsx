@@ -108,7 +108,7 @@ export function SolarCalibrationPanel({
   const [automaticPosition, setAutomaticPosition] = useState<MarsSunCoordinates>({
     azimuth: DEFAULT_SOLAR_CALIBRATION.azimuth,
     elevation: DEFAULT_SOLAR_CALIBRATION.elevation,
-    localSolarTimeHours: 6,
+    localSolarTimeHours: 5,
   });
   const activePointer = useRef<number | null>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
