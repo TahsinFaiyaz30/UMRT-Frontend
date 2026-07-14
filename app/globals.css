@@ -1023,33 +1023,19 @@ html[data-mission-loading='true'] body {
   text-decoration: none;
 }
 
-.umrt-brand-mark {
-  position: relative;
-  width: 34px;
-  height: 34px;
-  border: 1px solid rgba(216, 255, 79, 0.4);
-  border-radius: 50%;
+.umrt-brand-logo {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.42));
+  transition: filter 220ms ease, transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.umrt-brand-mark::before,
-.umrt-brand-mark::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-}
-
-.umrt-brand-mark::before {
-  inset: 7px;
-  border: 1px solid var(--solar);
-}
-
-.umrt-brand-mark::after {
-  top: 3px;
-  left: 15px;
-  width: 4px;
-  height: 4px;
-  background: var(--signal);
-  box-shadow: 0 24px 0 var(--solar);
+.umrt-brand:hover .umrt-brand-logo,
+.umrt-brand:focus-visible .umrt-brand-logo {
+  filter: drop-shadow(0 5px 14px rgba(242, 143, 30, 0.24));
+  transform: rotate(-3deg) scale(1.04);
 }
 
 .umrt-brand-copy {

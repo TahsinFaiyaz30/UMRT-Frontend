@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 const links = [
@@ -36,7 +37,15 @@ export function PremiumNavbar() {
     <header className="umrt-nav" data-scrolled={scrolled} data-open={open}>
       <div className="umrt-nav-inner">
         <Link prefetch={false} href="/" className="umrt-brand" aria-label="UMRT home" onClick={() => setOpen(false)}>
-          <span className="umrt-brand-mark" aria-hidden="true" />
+          <Image
+            className="umrt-brand-logo"
+            src="/umrt_logo.png"
+            alt=""
+            width={44}
+            height={44}
+            sizes="44px"
+            priority
+          />
           <span className="umrt-brand-copy">
             <strong>UMRT</strong>
             <small>UIU MARS ROVER TEAM</small>
