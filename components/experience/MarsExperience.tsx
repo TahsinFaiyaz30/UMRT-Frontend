@@ -263,6 +263,7 @@ export default function MarsExperience() {
     };
 
     const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') return;
       const x = (event.clientX / Math.max(1, window.innerWidth) - 0.5) * 2;
       const y = (event.clientY / Math.max(1, window.innerHeight) - 0.5) * 2;
       pointerRef.current.x += (x - pointerRef.current.x) * 0.28;
@@ -279,8 +280,20 @@ export default function MarsExperience() {
       root?.removeAttribute('data-cursor-active');
       root?.removeAttribute('data-cursor-pressed');
     };
-    const onPointerDown = () => root?.setAttribute('data-cursor-pressed', 'true');
-    const onPointerUp = () => root?.removeAttribute('data-cursor-pressed');
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') {
+        pointerRef.current.x = 0;
+        pointerRef.current.y = 0;
+        atmosphere?.style.setProperty('--pointer-x', '0');
+        atmosphere?.style.setProperty('--pointer-y', '0');
+        onPointerLeave();
+        return;
+      }
+      root?.setAttribute('data-cursor-pressed', 'true');
+    };
+    const onPointerUp = (event: PointerEvent) => {
+      if (event.pointerType !== 'touch') root?.removeAttribute('data-cursor-pressed');
+    };
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     window.addEventListener('pointerdown', onPointerDown, { passive: true });
     window.addEventListener('pointerup', onPointerUp, { passive: true });
@@ -396,15 +409,13 @@ export default function MarsExperience() {
   useEffect(() => {
     const shell = rootRef.current?.querySelector<HTMLElement>('.mission-canvas');
     if (!shell) return undefined;
-    const keepWheelInLab = (event: WheelEvent) => {
-      const progress = progressRef.current;
-      if (progress >= 0.952 && progress < 0.988) {
-        event.preventDefault();
+    const keepConsumedOrbitWheelOutOfPage = (event: WheelEvent) => {
+      if (progressRef.current >= FREE_EXPLORE_START && event.defaultPrevented) {
         event.stopPropagation();
       }
     };
-    shell.addEventListener('wheel', keepWheelInLab, { passive: false });
-    return () => shell.removeEventListener('wheel', keepWheelInLab);
+    shell.addEventListener('wheel', keepConsumedOrbitWheelOutOfPage, { passive: true });
+    return () => shell.removeEventListener('wheel', keepConsumedOrbitWheelOutOfPage);
   }, []);
 
   useEffect(() => () => cancelAnimationFrame(dismantleRafRef.current), []);
