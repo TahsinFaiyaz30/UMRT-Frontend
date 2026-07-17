@@ -1,33 +1,33 @@
 import type { Metadata } from 'next';
-import { CertificatesArchive } from '@/components/certificates/CertificatesArchive';
+import { CertificateValidator } from '@/components/certificates/CertificateValidator';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { PremiumNavbar } from '@/components/navbar';
 
 const description =
-  'Explore the UIU Mars Rover Team certificate archive, with official competition and engineering records arriving soon.';
+  'Verify an official UIU Mars Rover Team certificate by certificate ID or recipient name.';
 
 export const metadata: Metadata = {
-  title: 'Certificates // UIU Mars Rover Team',
+  title: 'Certificate Verification // UIU Mars Rover Team',
   description,
   openGraph: {
-    title: 'Certificates // UIU Mars Rover Team',
+    title: 'Certificate Verification // UIU Mars Rover Team',
     description,
     url: '/certificates',
     type: 'website',
     images: [
       {
-        url: '/og.png',
-        width: 1732,
+        url: '/certificate-verification-og.png',
+        width: 1731,
         height: 909,
-        alt: 'UIU Mars Rover Team certificate archive',
+        alt: 'Verify the record — UIU Mars Rover Team certificate registry',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Certificates // UIU Mars Rover Team',
+    title: 'Certificate Verification // UIU Mars Rover Team',
     description,
-    images: ['/og.png'],
+    images: ['/certificate-verification-og.png'],
   },
 };
 
@@ -36,7 +36,7 @@ export default function CertificatesPage() {
     <>
       <PremiumNavbar />
       <main>
-        <CertificatesArchive />
+        <CertificateValidator />
         <SiteFooter />
       </main>
     </>
