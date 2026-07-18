@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-17",
+  "issuer": {
+    "name": "UIU Mars Rover Team",
+    "shortName": "UMRT",
+    "location": "Dhaka, Bangladesh"
+  },
+  "certificates": [
+    {
+      "id": "UMRT-CERT-2025-001",
+      "recipient": {
+        "name": "Arafat Rahman",
+        "aliases": []
+      },
+      "title": "Certificate of Contribution",
+      "program": "University Rover Challenge 2025",
+      "role": "Autonomous Navigation Subsystem",
+      "issuedOn": "2025-06-30",
+      "status": "valid",
+      "description": "Recognized for engineering contribution to UMRT's autonomous navigation and field-readiness program."
+    },
+    {
+      "id": "UMRT-CERT-2025-002",
+      "recipient": {
+        "name": "Nusrat Jahan",
+        "aliases": ["Nusrat Jahan Nishi"]
+      },
+      "title": "Certificate of Technical Excellence",
+      "program": "Mars Rover Development Program 2025",
+      "role": "Science Payload and Analysis",
+      "issuedOn": "2025-07-12",
+      "status": "valid",
+      "description": "Awarded for technical excellence in science payload integration, testing, and mission analysis."
+    },
+    {
+      "id": "UMRT-CERT-2025-003",
+      "recipient": {
+        "name": "Mahin Ahmed",
+        "aliases": []
+      },
+      "title": "Certificate of Participation",
+      "program": "UMRT Field Systems Workshop 2025",
+      "role": "Mechanical Design and Fabrication",
+      "issuedOn": "2025-08-18",
+      "status": "valid",
+      "description": "Awarded for active participation in rover fabrication, integration, and field testing."
+    },
+    {
+      "id": "UMRT-CERT-2025-004",
+      "recipient": {
+        "name": "Rafia Islam",
+        "aliases": []
+      },
+      "title": "Certificate of Leadership",
+      "program": "UMRT Mission Operations 2025",
+      "role": "Mission Operations Lead",
+      "issuedOn": "2025-09-04",
+      "status": "valid",
+      "description": "Recognized for leadership across mission planning, team coordination, and field operations."
+    },
+    {
+      "id": "UMRT-CERT-2025-005",
+      "recipient": {
+        "name": "Sakib Hasan",
+        "aliases": ["Md. Sakib Hasan"]
+      },
+      "title": "Certificate of Contribution",
+      "program": "Mars Rover Development Program 2025",
+      "role": "Software and Autonomy",
+      "issuedOn": "2025-10-22",
+      "status": "valid",
+      "description": "Recognized for software engineering contributions to rover autonomy and mission-control tooling."
+    },
+    {
+      "id": "UMRT-CERT-2026-001",
+      "recipient": {
+        "name": "Arafat Rahman",
+        "aliases": []
+      },
+      "title": "Certificate of Field Readiness",
+      "program": "UMRT Rover Qualification 2026",
+      "role": "Autonomous Navigation Subsystem",
+      "issuedOn": "2026-02-15",
+      "status": "valid",
+      "description": "Awarded for successful completion of the team's 2026 rover qualification and field-readiness cycle."
+    }
+  ]
+}

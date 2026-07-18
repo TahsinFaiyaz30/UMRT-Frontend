@@ -70,7 +70,7 @@ export function PremiumNavbar() {
             <div className="umrt-nav-hover-column">
               <span>THE MISSION</span>
               <Link prefetch={false} href="/achievements"><b>Competition archive</b><small>Eight milestones across five seasons.</small></Link>
-              <Link prefetch={false} href="/certificates"><b>Certificate vault</b><small>Official records, distinctions, and mission credentials.</small></Link>
+              <Link prefetch={false} href="/certificates"><b>Certificate verification</b><small>Validate a credential by recipient name or certificate ID.</small></Link>
               <Link prefetch={false} href="/#final_recenter"><b>System teardown</b><small>Inspect the rover by subsystem.</small></Link>
               <Link prefetch={false} href="/#free_explore_unlock"><b>Free 3D lab</b><small>Orbit, pan, zoom, and control the explosion.</small></Link>
             </div>
