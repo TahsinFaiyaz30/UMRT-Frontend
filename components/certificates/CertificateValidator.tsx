@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  useEffect,
   useRef,
   useState,
   type FormEvent,
@@ -23,6 +24,23 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', {
 
 function formatDate(value: string) {
   return dateFormatter.format(new Date(`${value}T00:00:00Z`));
+}
+
+function getResultAnnouncement(result: CertificateLookupResult | null) {
+  if (!result) return '';
+  if (result.kind === 'empty') return 'Enter a name or certificate ID to run verification.';
+  if (result.kind === 'not-found') {
+    return `Certificate not found for ${result.query}. Check the value and try again.`;
+  }
+
+  const validRecords = result.records.filter((record) => record.status === 'valid').length;
+  if (validRecords === result.records.length) {
+    return result.records.length === 1
+      ? `Certificate verified for ${result.records[0].recipient.name}.`
+      : `${result.records.length} certificates verified for ${result.records[0].recipient.name}.`;
+  }
+
+  return 'A certificate record was found, but its registry status requires review.';
 }
 
 function ResultCard({ record, index }: { record: CertificateRecord; index: number }) {
@@ -97,7 +115,9 @@ function RegistryResponse({ result }: { result: CertificateLookupResult | null }
           <b />
         </div>
         <p>Registry standing by</p>
-        <h2>Awaiting a credential.</h2>
+        <h2 id="certificate-result-heading">
+          Awaiting a credential.
+        </h2>
         <span>Enter one exact certificate ID or recipient name to begin the verification sequence.</span>
       </div>
     );
@@ -105,11 +125,13 @@ function RegistryResponse({ result }: { result: CertificateLookupResult | null }
 
   if (result.kind === 'empty') {
     return (
-      <div className={styles.errorState} role="alert">
+      <div className={styles.errorState}>
         <span className={styles.errorCode}>INPUT / 00</span>
         <div className={styles.errorMark} aria-hidden="true">!</div>
         <p>Verification paused</p>
-        <h2>Enter a name or certificate ID.</h2>
+        <h2 id="certificate-result-heading">
+          Enter a name or certificate ID.
+        </h2>
         <span>The registry needs one exact value before it can run a validation check.</span>
       </div>
     );
@@ -117,11 +139,13 @@ function RegistryResponse({ result }: { result: CertificateLookupResult | null }
 
   if (result.kind === 'not-found') {
     return (
-      <div className={styles.errorState} role="alert">
+      <div className={styles.errorState}>
         <span className={styles.errorCode}>NO MATCH / 404</span>
         <div className={styles.errorMark} aria-hidden="true">×</div>
         <p>Registry response</p>
-        <h2>Certificate not found.</h2>
+        <h2 id="certificate-result-heading">
+          Certificate not found.
+        </h2>
         <span>
           No certificate matches “{result.query}”. Check the spelling or enter the complete
           certificate ID and try again.
@@ -138,7 +162,7 @@ function RegistryResponse({ result }: { result: CertificateLookupResult | null }
       <header className={styles.foundHeader}>
         <div>
           <p>{allValid ? 'Registry response / verified' : 'Registry response / review required'}</p>
-          <h2>
+          <h2 id="certificate-result-heading">
             {allValid
               ? resultCount === 1
                 ? 'Certificate verified.'
@@ -162,10 +186,35 @@ function RegistryResponse({ result }: { result: CertificateLookupResult | null }
 
 export function CertificateValidator() {
   const pageRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const responseRef = useRef<HTMLElement>(null);
   const pointerFrame = useRef(0);
   const pointerPosition = useRef({ x: 0, y: 0 });
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<CertificateLookupResult | null>(null);
+
+  useEffect(() => {
+    if (!result) return undefined;
+    if (result.kind === 'empty') {
+      inputRef.current?.focus();
+      return undefined;
+    }
+    if (!window.matchMedia('(max-width: 820px)').matches) return undefined;
+
+    const frame = window.requestAnimationFrame(() => {
+      const panel = responseRef.current;
+      if (!panel) return;
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      panel.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [result]);
+
+  useEffect(() => () => {
+    if (pointerFrame.current) window.cancelAnimationFrame(pointerFrame.current);
+  }, []);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -203,6 +252,14 @@ export function CertificateValidator() {
   const activeRecords = certificateRegistry.certificates.filter(
     (certificate) => certificate.status === 'valid',
   ).length;
+  const responseState = !result
+    ? 'idle'
+    : result.kind !== 'found'
+      ? 'error'
+      : result.records.every((record) => record.status === 'valid')
+        ? 'valid'
+        : 'review';
+  const resultAnnouncement = getResultAnnouncement(result);
 
   return (
     <div
@@ -246,7 +303,7 @@ export function CertificateValidator() {
           </header>
 
           <div className={styles.console}>
-            <div className={styles.searchPanel}>
+            <div className={styles.searchPanel} data-state={responseState}>
               <div className={styles.panelHeader}>
                 <span>01 / Submit credential</span>
                 <span>Exact match protocol</span>
@@ -257,6 +314,7 @@ export function CertificateValidator() {
                 <div className={styles.inputShell}>
                   <span aria-hidden="true">⌕</span>
                   <input
+                    ref={inputRef}
                     id="certificate-query"
                     name="certificate-query"
                     type="search"
@@ -267,7 +325,9 @@ export function CertificateValidator() {
                     }}
                     placeholder="UMRT-CERT-2025-001 or Arafat Rahman"
                     aria-describedby="certificate-query-hint"
+                    aria-invalid={responseState === 'error'}
                     autoComplete="off"
+                    maxLength={120}
                     spellCheck={false}
                   />
                 </div>
@@ -297,15 +357,19 @@ export function CertificateValidator() {
             </div>
 
             <section
+              ref={responseRef}
               className={styles.responsePanel}
+              data-state={responseState}
               aria-label="Certificate verification result"
-              aria-live="polite"
-              aria-atomic="true"
+              aria-labelledby="certificate-result-heading"
             >
               <div className={styles.panelHeader}>
                 <span>02 / Registry response</span>
                 <span>{result ? 'Sequence complete' : 'Listening'}</span>
               </div>
+              <p className={styles.srOnly} role="status" aria-live="polite">
+                {resultAnnouncement}
+              </p>
               <RegistryResponse result={result} />
             </section>
           </div>

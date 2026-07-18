@@ -27,6 +27,69 @@ type CertificateRegistry = {
   certificates: CertificateRecord[];
 };
 
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function assertNonEmptyString(value: unknown, field: string): asserts value is string {
+  if (typeof value !== 'string' || !value.trim()) {
+    throw new Error(`Invalid certificate registry field: ${field}`);
+  }
+}
+
+function assertIsoDate(value: unknown, field: string): asserts value is string {
+  assertNonEmptyString(value, field);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error(`Invalid certificate registry date: ${field}`);
+  }
+
+  const parsed = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) {
+    throw new Error(`Invalid certificate registry date: ${field}`);
+  }
+}
+
+function assertCertificateRegistry(value: unknown): asserts value is CertificateRegistry {
+  if (!isObject(value) || value.schemaVersion !== 1) {
+    throw new Error('Unsupported certificate registry schema');
+  }
+  assertIsoDate(value.updatedAt, 'updatedAt');
+
+  if (!isObject(value.issuer)) throw new Error('Invalid certificate registry issuer');
+  assertNonEmptyString(value.issuer.name, 'issuer.name');
+  assertNonEmptyString(value.issuer.shortName, 'issuer.shortName');
+  assertNonEmptyString(value.issuer.location, 'issuer.location');
+
+  if (!Array.isArray(value.certificates)) {
+    throw new Error('Invalid certificate registry certificates collection');
+  }
+
+  value.certificates.forEach((certificate, index) => {
+    const prefix = `certificates[${index}]`;
+    if (!isObject(certificate)) throw new Error(`Invalid certificate registry record: ${prefix}`);
+    assertNonEmptyString(certificate.id, `${prefix}.id`);
+    assertNonEmptyString(certificate.title, `${prefix}.title`);
+    assertNonEmptyString(certificate.program, `${prefix}.program`);
+    assertNonEmptyString(certificate.role, `${prefix}.role`);
+    assertIsoDate(certificate.issuedOn, `${prefix}.issuedOn`);
+    assertNonEmptyString(certificate.description, `${prefix}.description`);
+
+    if (certificate.status !== 'valid' && certificate.status !== 'revoked') {
+      throw new Error(`Invalid certificate registry status: ${prefix}.status`);
+    }
+    if (!isObject(certificate.recipient)) {
+      throw new Error(`Invalid certificate registry recipient: ${prefix}.recipient`);
+    }
+    assertNonEmptyString(certificate.recipient.name, `${prefix}.recipient.name`);
+    if (!Array.isArray(certificate.recipient.aliases)) {
+      throw new Error(`Invalid certificate registry aliases: ${prefix}.recipient.aliases`);
+    }
+    certificate.recipient.aliases.forEach((alias, aliasIndex) => {
+      assertNonEmptyString(alias, `${prefix}.recipient.aliases[${aliasIndex}]`);
+    });
+  });
+}
+
 export type CertificateLookupResult =
   | { kind: 'empty' }
   | { kind: 'not-found'; query: string }
@@ -37,7 +100,9 @@ export type CertificateLookupResult =
       records: CertificateRecord[];
     };
 
-export const certificateRegistry = registryData as CertificateRegistry;
+const rawRegistry: unknown = registryData;
+assertCertificateRegistry(rawRegistry);
+export const certificateRegistry = rawRegistry;
 
 function normalizeShared(value: string) {
   return value.normalize('NFKC').trim().replace(/\s+/g, ' ');
@@ -64,9 +129,10 @@ for (const record of certificateRegistry.certificates) {
   }
   idIndex.set(normalizedId, record);
 
-  const names = new Set([record.recipient.name, ...record.recipient.aliases]);
-  for (const name of names) {
-    const normalizedName = normalizeName(name);
+  const normalizedNames = new Set(
+    [record.recipient.name, ...record.recipient.aliases].map(normalizeName),
+  );
+  for (const normalizedName of normalizedNames) {
     const matches = nameIndex.get(normalizedName) ?? [];
     matches.push(record);
     nameIndex.set(normalizedName, matches);

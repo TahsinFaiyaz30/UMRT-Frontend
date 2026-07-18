@@ -266,6 +266,11 @@
   box-shadow: 0 0 18px rgba(255, 90, 31, 0.6);
 }
 
+.responsePanel[data-state='valid']::before {
+  background: var(--signal);
+  box-shadow: 0 0 18px rgba(216, 255, 79, 0.6);
+}
+
 .panelHeader {
   display: flex;
   justify-content: space-between;
@@ -273,7 +278,7 @@
   padding: 16px 18px;
   border-bottom: 1px solid rgba(242, 239, 232, 0.09);
   color: rgba(242, 239, 232, 0.42);
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.2em;
   line-height: 1.5;
@@ -281,8 +286,18 @@
 }
 
 .panelHeader span:last-child {
-  color: rgba(216, 255, 79, 0.72);
+  color: rgba(242, 239, 232, 0.42);
   text-align: right;
+}
+
+.searchPanel .panelHeader span:last-child,
+.responsePanel[data-state='valid'] .panelHeader span:last-child {
+  color: rgba(216, 255, 79, 0.78);
+}
+
+.responsePanel[data-state='error'] .panelHeader span:last-child,
+.responsePanel[data-state='review'] .panelHeader span:last-child {
+  color: rgba(255, 90, 31, 0.82);
 }
 
 .form {
@@ -314,6 +329,16 @@
   box-shadow: 0 0 0 3px rgba(216, 255, 79, 0.08), 0 0 30px rgba(216, 255, 79, 0.06);
 }
 
+.searchPanel[data-state='error'] .inputShell {
+  border-color: rgba(255, 90, 31, 0.72);
+  background: rgba(255, 90, 31, 0.035);
+  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.07);
+}
+
+.searchPanel[data-state='valid'] .inputShell {
+  border-color: rgba(216, 255, 79, 0.48);
+}
+
 .inputShell > span {
   display: grid;
   width: 52px;
@@ -336,7 +361,7 @@
   background: transparent;
   color: var(--paper);
   font: inherit;
-  font-size: clamp(12px, 0.9vw, 14px);
+  font-size: clamp(14px, 0.9vw, 16px);
   letter-spacing: 0.02em;
 }
 
@@ -353,7 +378,7 @@
   min-height: 34px;
   margin: 12px 0 18px;
   color: rgba(242, 239, 232, 0.39);
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.7;
 }
 
@@ -420,7 +445,7 @@
 .details dt {
   margin-bottom: 7px;
   color: rgba(242, 239, 232, 0.34);
-  font-size: 6px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.16em;
   line-height: 1.4;
@@ -431,13 +456,27 @@
   margin: 0;
   overflow: hidden;
   color: rgba(242, 239, 232, 0.75);
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1.45;
   text-overflow: ellipsis;
 }
 
 .responsePanel {
   min-height: 590px;
+  scroll-margin-top: 92px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
 }
 
 .idleState,
@@ -527,6 +566,7 @@
   color: rgba(242, 239, 232, 0.45);
   font-size: 11px;
   line-height: 1.8;
+  overflow-wrap: anywhere;
 }
 
 .errorState {
@@ -541,7 +581,7 @@
   top: 22px;
   right: 24px;
   color: rgba(255, 90, 31, 0.55);
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
@@ -582,7 +622,7 @@
 .foundHeader p {
   margin: 0 0 11px;
   color: var(--signal);
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -593,7 +633,7 @@
   padding: 9px 11px;
   border: 1px solid rgba(216, 255, 79, 0.18);
   color: rgba(216, 255, 79, 0.72);
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.14em;
   line-height: 1.4;
   text-transform: uppercase;
@@ -694,7 +734,7 @@
 .credentialHeader p {
   margin: 0 0 6px;
   color: var(--signal);
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.17em;
   text-transform: uppercase;
 }
@@ -720,7 +760,7 @@
   padding: 18px 22px;
   border-bottom: 1px solid rgba(242, 239, 232, 0.08);
   color: rgba(242, 239, 232, 0.54);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.75;
 }
 
@@ -749,7 +789,7 @@
 .details dd {
   margin: 0;
   color: rgba(242, 239, 232, 0.82);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
@@ -776,7 +816,7 @@
   gap: 18px;
   padding: 13px 20px;
   color: rgba(242, 239, 232, 0.28);
-  font-size: 6px;
+  font-size: 8px;
   letter-spacing: 0.15em;
   line-height: 1.5;
   text-transform: uppercase;
@@ -789,7 +829,7 @@
   align-items: center;
   margin-top: 18px;
   color: rgba(242, 239, 232, 0.33);
-  font-size: 7px;
+  font-size: 8px;
   letter-spacing: 0.17em;
   line-height: 1.5;
   text-transform: uppercase;
@@ -960,7 +1000,7 @@
 
   .kicker {
     margin-bottom: 19px;
-    font-size: 7px;
+    font-size: 8px;
   }
 
   .intro h1 {
@@ -981,7 +1021,7 @@
 
   .panelHeader {
     padding: 14px;
-    font-size: 6px;
+    font-size: 8px;
   }
 
   .form {
@@ -995,11 +1035,11 @@
   .inputShell input {
     height: 58px;
     padding: 0 14px;
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .hint {
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .registryReadout {
