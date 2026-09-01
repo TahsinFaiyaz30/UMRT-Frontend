@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import type { RefObject } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { PerspectiveCamera, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Group } from 'three';
@@ -13,6 +13,7 @@ import {
   HybridFrameGovernor,
   WebGLRendererLifecycle,
 } from '@/components/performance/HybridFrameGovernor';
+import { AsyncShaderWarmup, SceneRenderLoop } from '@/components/performance/AsyncShaderWarmup';
 import { useResponsiveDpr } from '@/components/performance/useResponsiveDpr';
 import { HeroScene } from './HeroScene';
 import { ScrollDirector } from './ScrollDirector';
@@ -44,6 +45,7 @@ export function SceneCanvas({
   dismantleProgressRef,
   dismantleTimelineRef,
   dismantleActive,
+  suspended = false,
   onReady,
 }: {
   progressRef: RefObject<number>;
@@ -55,6 +57,11 @@ export function SceneCanvas({
   dismantleTimelineRef: RefObject<number>;
   /** True while the teardown scene is mounted (during the 6 s window). */
   dismantleActive: boolean;
+  /**
+   * Stop rendering while the canvas is fully occluded. The context and every
+   * compiled program stay alive, so returning to the mission costs nothing.
+   */
+  suspended?: boolean;
   onReady?: () => void;
 }) {
   const quality = useMemo<Quality>(() => detectQuality(), []);
@@ -100,8 +107,15 @@ export function SceneCanvas({
         gl.shadowMap.needsUpdate = true;
       }}
     >
-      <HybridFrameGovernor forceActive={dismantleActive} reduceMotion={prefersReduced} />
+      <HybridFrameGovernor
+        forceActive={dismantleActive}
+        reduceMotion={prefersReduced}
+        suspended={suspended}
+      />
       <WebGLRendererLifecycle />
+      {/* Outside the Suspense boundary on purpose: this is what keeps drawing
+          while anything below re-suspends. */}
+      <SceneRenderLoop readyRef={shaderReadyRef} />
       <PerspectiveCamera
         makeDefault
         position={[5.45, 1.55, 7.0]}
@@ -154,90 +168,6 @@ function ModelResourceLifecycle() {
   }, [gltf.scene]);
 
   return null;
-}
-
-function AsyncShaderWarmup({ readyRef }: { readyRef: RefObject<boolean> }) {
-  const { gl, scene, camera, invalidate } = useThree();
-  const startedRef = useRef(false);
-  const cancelledRef = useRef(false);
-
-  useEffect(() => {
-    cancelledRef.current = false;
-    return () => {
-      cancelledRef.current = true;
-    };
-  }, []);
-
-  // A positive render priority takes over R3F's automatic render. The first
-  // frame starts KHR_parallel_shader_compile without drawing; later requested
-  // frames use the normal renderer after all programs report ready.
-  useFrame(() => {
-    if (readyRef.current) {
-      gl.render(scene, camera);
-      return;
-    }
-    if (startedRef.current) return;
-    startedRef.current = true;
-    void compileShadersInBatches(gl, scene, camera, () => cancelledRef.current).then(
-      (completed) => {
-        if (!completed) return;
-        if (cancelledRef.current) return;
-        readyRef.current = true;
-        invalidate();
-      },
-      () => {
-        // Unsupported/broken extensions must never strand the loading screen;
-        // fall back to the browser's normal first-render compilation path.
-        if (cancelledRef.current) return;
-        readyRef.current = true;
-        invalidate();
-      },
-    );
-  }, 1);
-
-  return null;
-}
-
-async function compileShadersInBatches(
-  gl: THREE.WebGLRenderer,
-  scene: THREE.Scene,
-  camera: THREE.Camera,
-  cancelled: () => boolean,
-) {
-  const renderables: THREE.Object3D[] = [];
-  scene.traverseVisible((object) => {
-    if (
-      object instanceof THREE.Mesh
-      || object instanceof THREE.Points
-      || object instanceof THREE.Line
-      || object instanceof THREE.Sprite
-    ) {
-      // A shallow clone preserves material, geometry, morph/skinning and
-      // instancing flags without reparenting or duplicating heavyweight data.
-      renderables.push(object.clone(false));
-    }
-  });
-
-  const batch = new THREE.Group();
-  for (const renderable of renderables) {
-    if (cancelled()) return false;
-    batch.add(renderable);
-    const programsBefore = gl.info.programs?.length ?? 0;
-    await gl.compileAsync(batch, camera, scene);
-    batch.clear();
-
-    // Cached material variants finish immediately. Yield only when this
-    // object introduced a new GPU program, preventing ANGLE from launching
-    // the entire compiler pool in one high-usage burst.
-    if ((gl.info.programs?.length ?? 0) > programsBefore) {
-      await new Promise<void>((resolve) => window.setTimeout(resolve, 24));
-    }
-  }
-
-  if (cancelled()) return false;
-  // Confirm every variant is ready; this is normally an immediate cache hit.
-  await gl.compileAsync(scene, camera);
-  return !cancelled();
 }
 
 function SceneReadySignal({

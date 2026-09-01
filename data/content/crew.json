@@ -1,0 +1,296 @@
+{
+  "schemaVersion": 1,
+  "revision": "a97f46f3d520",
+  "resource": "crew",
+  "generated": "scripts/build-media-library.mjs — edit `roster` in scripts/media-sources.mjs",
+  "records": [
+    {
+      "id": "abid-hossain",
+      "name": "Abid Hossain",
+      "role": "Mentor",
+      "unit": null,
+      "rank": 0,
+      "portrait": "crew-abid-hossain",
+      "card": "crew-card-abid-hossain"
+    },
+    {
+      "id": "saif-al-saad",
+      "name": "Saif Al Saad",
+      "role": "Team Lead",
+      "unit": null,
+      "rank": 1,
+      "portrait": "crew-saif-al-saad",
+      "card": "crew-card-saif-al-saad"
+    },
+    {
+      "id": "sheikh-shakib",
+      "name": "Sheikh Shakib",
+      "role": "Co-Team Lead",
+      "unit": null,
+      "rank": 1,
+      "portrait": "crew-sheikh-shakib",
+      "card": "crew-card-sheikh-shakib"
+    },
+    {
+      "id": "mosfiqur-rahman",
+      "name": "Mosfiqur Rahman",
+      "role": "Senior Lead",
+      "unit": null,
+      "rank": 2,
+      "portrait": "crew-mosfiqur-rahman",
+      "card": "crew-card-mosfiqur-rahman"
+    },
+    {
+      "id": "nadim-hossain",
+      "name": "Nadim Hossain",
+      "role": "Sub-Team Lead",
+      "unit": "Media and Branding",
+      "rank": 1,
+      "portrait": "crew-nadim-hossain",
+      "card": "crew-card-nadim-hossain"
+    },
+    {
+      "id": "salman-kabir",
+      "name": "Salman Kabir",
+      "role": "Sub-Team Lead",
+      "unit": "Autonomous Team",
+      "rank": 1,
+      "portrait": "crew-salman-kabir",
+      "card": "crew-card-salman-kabir"
+    },
+    {
+      "id": "sabbir-ahmed",
+      "name": "Sabbir Ahmed",
+      "role": "Sub-Team Lead",
+      "unit": "Aerial and Communication Team",
+      "rank": 1,
+      "portrait": "crew-sabbir-ahmed",
+      "card": "crew-card-sabbir-ahmed"
+    },
+    {
+      "id": "ayesha-sayma",
+      "name": "Ayesha Sayma",
+      "role": "Sub-Team Lead",
+      "unit": "Science Team",
+      "rank": 1,
+      "portrait": "crew-ayesha-sayma",
+      "card": "crew-card-ayesha-sayma"
+    },
+    {
+      "id": "siam-ibne-sarwar",
+      "name": "Siam Ibne Sarwar",
+      "role": "Sub-Team Lead",
+      "unit": "Mechanical Team",
+      "rank": 1,
+      "portrait": "crew-siam-ibne-sarwar",
+      "card": "crew-card-siam-ibne-sarwar"
+    },
+    {
+      "id": "mahin-hasan-upol",
+      "name": "Mahin Hasan Upol",
+      "role": "Member",
+      "unit": "Autonomous Team",
+      "rank": 4,
+      "portrait": "crew-mahin-hasan-upol",
+      "card": "crew-card-mahin-hasan-upol"
+    },
+    {
+      "id": "talha-jubayer",
+      "name": "Talha Jubayer",
+      "role": "Member",
+      "unit": "Autonomous Team",
+      "rank": 4,
+      "portrait": "crew-talha-jubayer",
+      "card": "crew-card-talha-jubayer"
+    },
+    {
+      "id": "muhutasim-sadik",
+      "name": "Muhutasim Sadik",
+      "role": "Member",
+      "unit": "Autonomous Team",
+      "rank": 4,
+      "portrait": "crew-muhutasim-sadik",
+      "card": "crew-card-muhutasim-sadik"
+    },
+    {
+      "id": "shahriar-siyam",
+      "name": "Shahriar Siyam",
+      "role": "Member",
+      "unit": "Autonomous Team",
+      "rank": 4,
+      "portrait": "crew-shahriar-siyam",
+      "card": "crew-card-shahriar-siyam"
+    },
+    {
+      "id": "bakhtiar-fahim",
+      "name": "Bakhtiar Fahim",
+      "role": "Member",
+      "unit": "Autonomous Team",
+      "rank": 4,
+      "portrait": "crew-bakhtiar-fahim",
+      "card": "crew-card-bakhtiar-fahim"
+    },
+    {
+      "id": "arman-hossain",
+      "name": "Arman Hossain",
+      "role": "Member",
+      "unit": "Autonomous Team",
+      "rank": 4,
+      "portrait": "crew-arman-hossain",
+      "card": "crew-card-arman-hossain"
+    },
+    {
+      "id": "marina-montaz",
+      "name": "Marina Montaz",
+      "role": "Member",
+      "unit": "Media and Branding",
+      "rank": 4,
+      "portrait": "crew-marina-montaz",
+      "card": "crew-card-marina-montaz"
+    },
+    {
+      "id": "zihad-shariar",
+      "name": "Zihad Shariar",
+      "role": "Member",
+      "unit": "Media and Branding",
+      "rank": 4,
+      "portrait": "crew-zihad-shariar",
+      "card": "crew-card-zihad-shariar"
+    },
+    {
+      "id": "riad-hossen",
+      "name": "Riad Hossen",
+      "role": "Member",
+      "unit": "Mechanical Team",
+      "rank": 4,
+      "portrait": "crew-riad-hossen",
+      "card": "crew-card-riad-hossen"
+    },
+    {
+      "id": "nazmuz-sakib",
+      "name": "Nazmuz Sakib",
+      "role": "Member",
+      "unit": "Mechanical Team",
+      "rank": 4,
+      "portrait": "crew-nazmuz-sakib",
+      "card": "crew-card-nazmuz-sakib"
+    },
+    {
+      "id": "miraz-al-hyder",
+      "name": "Miraz Al Hyder",
+      "role": "Member",
+      "unit": "Mechanical Team",
+      "rank": 4,
+      "portrait": "crew-miraz-al-hyder",
+      "card": "crew-card-miraz-al-hyder"
+    },
+    {
+      "id": "alif-nebir",
+      "name": "Alif Nebir",
+      "role": "Member",
+      "unit": "Mechanical Team",
+      "rank": 4,
+      "portrait": "crew-alif-nebir",
+      "card": "crew-card-alif-nebir"
+    },
+    {
+      "id": "mimtiage-hemal",
+      "name": "Mimtiage Hemal",
+      "role": "Member",
+      "unit": "Mechanical Team",
+      "rank": 4,
+      "portrait": "crew-mimtiage-hemal",
+      "card": "crew-card-mimtiage-hemal"
+    },
+    {
+      "id": "adipta-shaha",
+      "name": "Adipta Shaha",
+      "role": "Member",
+      "unit": "Logistics",
+      "rank": 4,
+      "portrait": "crew-adipta-shaha",
+      "card": "crew-card-adipta-shaha"
+    },
+    {
+      "id": "shanjida-shopna",
+      "name": "Shanjida Shopna",
+      "role": "Member",
+      "unit": "Science Team",
+      "rank": 4,
+      "portrait": "crew-shanjida-shopna",
+      "card": "crew-card-shanjida-shopna"
+    },
+    {
+      "id": "nowshin-faria",
+      "name": "Nowshin Faria",
+      "role": "Member",
+      "unit": "Science Team",
+      "rank": 4,
+      "portrait": "crew-nowshin-faria",
+      "card": "crew-card-nowshin-faria"
+    },
+    {
+      "id": "epshita-sara",
+      "name": "Epshita Sara",
+      "role": "Member",
+      "unit": "Science Team",
+      "rank": 4,
+      "portrait": "crew-epshita-sara",
+      "card": "crew-card-epshita-sara"
+    },
+    {
+      "id": "syed-thuha",
+      "name": "Syed Thuha",
+      "role": "Member",
+      "unit": "Electrical Team",
+      "rank": 4,
+      "portrait": "crew-syed-thuha",
+      "card": "crew-card-syed-thuha"
+    },
+    {
+      "id": "sabik-sifat",
+      "name": "Sabik Sifat",
+      "role": "Member",
+      "unit": "Electrical Team",
+      "rank": 4,
+      "portrait": "crew-sabik-sifat",
+      "card": "crew-card-sabik-sifat"
+    },
+    {
+      "id": "partha-podder",
+      "name": "Partha Podder",
+      "role": "Member",
+      "unit": "Electrical Team",
+      "rank": 4,
+      "portrait": "crew-partha-podder",
+      "card": "crew-card-partha-podder"
+    },
+    {
+      "id": "abir-saba",
+      "name": "Abir Saba",
+      "role": "Member",
+      "unit": "Autonomous Team",
+      "rank": 4,
+      "portrait": "crew-abir-saba",
+      "card": "crew-card-abir-saba"
+    },
+    {
+      "id": "abrar-adib",
+      "name": "Abrar Adib",
+      "role": "Member",
+      "unit": "Media and Branding",
+      "rank": 4,
+      "portrait": "crew-abrar-adib",
+      "card": "crew-card-abrar-adib"
+    },
+    {
+      "id": "aninda-talukdar",
+      "name": "Aninda Talukdar",
+      "role": "Member",
+      "unit": "Aerial and Communication Team",
+      "rank": 4,
+      "portrait": "crew-aninda-talukdar",
+      "card": "crew-card-aninda-talukdar"
+    }
+  ]
+}

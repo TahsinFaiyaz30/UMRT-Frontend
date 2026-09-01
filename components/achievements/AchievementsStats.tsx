@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useContentRecords } from '@/lib/content';
 import styles from './AchievementsIntro.module.css';
 
 interface StatItem {
@@ -9,13 +10,6 @@ interface StatItem {
   suffix: string;
   code: string;
 }
-
-const stats: StatItem[] = [
-  { label: 'Competitions', value: 15, suffix: '+', code: 'FIELD / 01' },
-  { label: 'Awards Won', value: 8, suffix: '', code: 'MERIT / 02' },
-  { label: 'Team Members', value: 50, suffix: '+', code: 'CREW / 03' },
-  { label: 'Years Active', value: 5, suffix: '', code: 'TIME / 04' },
-];
 
 function usePausableCounter(target: number, active: boolean, duration = 1_500) {
   const [count, setCount] = useState(0);
@@ -78,6 +72,37 @@ export default function AchievementsStats() {
   const sectionRef = useRef<HTMLElement>(null);
   const [active, setActive] = useState(false);
   const [revealed, setRevealed] = useState(false);
+
+  // Every figure below is derived from the archive itself, so adding a record
+  // or a crew member updates the counters without anyone editing this file.
+  const { records: archive, total: archiveTotal } = useContentRecords('achievements');
+  const { total: crewTotal } = useContentRecords('crew');
+  const { total: eventTotal } = useContentRecords('events');
+
+  const stats = useMemo<StatItem[]>(() => {
+    const years = archive
+      .map((record) => Number(record.year))
+      .filter((year) => Number.isFinite(year));
+    const earliest = years.length ? Math.min(...years) : new Date().getUTCFullYear();
+    const awards = archive.filter(
+      (record) => record.category === 'Award'
+        || record.category === 'Field result'
+        || record.category === 'Autonomy',
+    ).length;
+
+    return [
+      { label: 'Archived Records', value: archiveTotal ?? archive.length, suffix: '', code: 'FIELD / 01' },
+      { label: 'Results & Awards', value: awards, suffix: '', code: 'MERIT / 02' },
+      { label: 'Crew', value: crewTotal ?? 0, suffix: '', code: 'CREW / 03' },
+      {
+        label: 'Years Active',
+        value: Math.max(1, new Date().getUTCFullYear() - earliest + 1),
+        suffix: '',
+        code: 'TIME / 04',
+      },
+      { label: 'Public Deployments', value: eventTotal ?? 0, suffix: '', code: 'FIELD / 05' },
+    ];
+  }, [archive, archiveTotal, crewTotal, eventTotal]);
 
   useEffect(() => {
     const section = sectionRef.current;

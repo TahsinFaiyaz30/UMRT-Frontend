@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "revision": "evt-2026-09-02",
+  "resource": "events",
+  "records": [
+    {
+      "id": "iut-rover-summit-2026",
+      "name": "IUT Rover Summit",
+      "date": "2026-07-11",
+      "year": "2026",
+      "venue": "Islamic University of Technology, Gazipur",
+      "kind": "summit",
+      "summary": "The crew took the platform and the podium story to the IUT Rover Summit, joining the panel discussion on 11 July and keeping an open bench beside the stage all day.",
+      "media": [
+        "iut26-crew-rover",
+        "iut26-panel-speaker",
+        "iut26-panel-stage",
+        "iut26-award"
+      ],
+      "stats": [
+        {
+          "label": "Crew deployed",
+          "value": "16"
+        },
+        {
+          "label": "Format",
+          "value": "Panel + open bench"
+        }
+      ]
+    },
+    {
+      "id": "ieee-bangladesh-2026",
+      "name": "IEEE Bangladesh Showcase",
+      "date": "2026-06-13",
+      "year": "2026",
+      "venue": "Dhaka",
+      "kind": "exhibition",
+      "summary": "The platform opened up for the IEEE Bangladesh community — instrument deck, ground station, and control loop explained end to end.",
+      "media": [
+        "ieeb26-stand"
+      ],
+      "stats": [
+        {
+          "label": "Format",
+          "value": "Open bench"
+        }
+      ]
+    },
+    {
+      "id": "campus-return-2026",
+      "name": "Campus Return",
+      "date": "2026-06-07",
+      "year": "2026",
+      "venue": "United International University, Dhaka",
+      "kind": "campus",
+      "summary": "United International University honoured the team on its return from the podium — garlands, a commemorative plaque unveiled by every hand at once, and several hundred students recording it.",
+      "media": [
+        "uiu26-welcome-crowd",
+        "uiu26-garlands",
+        "uiu26-stars-unveiling",
+        "uiu26-stars-hands",
+        "uiu26-stars-confetti",
+        "uiu26-stars-close",
+        "uiu26-stars-stage",
+        "uiu26-stars-wide",
+        "uiu26-stars-after"
+      ],
+      "stats": [
+        {
+          "label": "Turnout",
+          "value": "Campus-wide"
+        },
+        {
+          "label": "Occasion",
+          "value": "3rd worldwide"
+        }
+      ]
+    },
+    {
+      "id": "urc-2026",
+      "name": "University Rover Challenge 2026",
+      "date": "2026-05-31",
+      "year": "2026",
+      "venue": "URC field site",
+      "kind": "competition",
+      "summary": "Third place worldwide and the Best Autonomous System recognition — the first Asian team to reach the URC podium in the competition's twenty-year history.",
+      "media": [
+        "urc26-team-banner",
+        "urc26-podium-announcement",
+        "urc26-butte-celebration",
+        "urc26-butte-group",
+        "urc26-flag-plain",
+        "urc26-banner-group",
+        "urc26-banner-wide",
+        "urc26-team-rovers",
+        "urc26-teams-lineup",
+        "urc26-rover-field",
+        "urc26-service-task"
+      ],
+      "stats": [
+        {
+          "label": "Result",
+          "value": "3rd worldwide"
+        },
+        {
+          "label": "Recognition",
+          "value": "Best autonomy"
+        }
+      ]
+    },
+    {
+      "id": "bear-summit-2026",
+      "name": "Bear Summit",
+      "date": "2026-05-04",
+      "year": "2026",
+      "venue": "Dhaka",
+      "kind": "summit",
+      "summary": "A full exhibition build-out where the platform spent the weekend being touched, questioned and photographed by a public that had never stood next to a rover.",
+      "media": [
+        "bear26-visitor-child",
+        "bear26-record-banner",
+        "bear26-stand-a",
+        "bear26-stand-b",
+        "bear26-stand-c",
+        "bear26-hall"
+      ],
+      "stats": [
+        {
+          "label": "Format",
+          "value": "Public exhibition"
+        }
+      ]
+    },
+    {
+      "id": "udayan-science-carnival-2026",
+      "name": "Udayan Science Carnival",
+      "date": "2026-04-09",
+      "year": "2026",
+      "venue": "Udayan School, Dhaka",
+      "kind": "festival",
+      "summary": "UMRT represented United International University at the Udayan Science Carnival, driving the rover through a courtyard of school students who mostly wanted to know whether it could go to Mars.",
+      "media": [
+        "udayan26-students",
+        "udayan26-courtyard",
+        "udayan26-reach",
+        "udayan26-demo",
+        "udayan26-group"
+      ],
+      "stats": [
+        {
+          "label": "Audience",
+          "value": "School students"
+        }
+      ]
+    }
+  ]
+}

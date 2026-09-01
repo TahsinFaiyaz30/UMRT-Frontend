@@ -1,0 +1,624 @@
+/*
+ * Post-mission sections on the home page.
+ *
+ * The rover canvas is `position: fixed` behind the whole document, so every
+ * section here is opaque and sits in its own stacking context above it. The
+ * palette, monospaced eyebrow type and hairline rules follow the archive
+ * page so the two routes read as one system.
+ */
+
+.missionEnd {
+  /* Zero-height marker. MarsExperience measures the rover timeline up to
+     this point; everything below scrolls without advancing the mission. */
+  height: 0;
+}
+
+.appendix {
+  position: relative;
+  z-index: 30;
+  background: #050504;
+  color: var(--paper, #f2efe8);
+  isolation: isolate;
+}
+
+.section {
+  position: relative;
+  z-index: 1;
+  padding: clamp(72px, 11vh, 132px) 0;
+  border-top: 1px solid rgba(242, 239, 232, 0.09);
+}
+
+/*
+ * The grid lives on each section rather than on one full-height overlay.
+ *
+ * A masked pseudo-element spanning the whole appendix is a single composited
+ * layer thousands of pixels tall; the browser re-rasterises it while scrolling
+ * and can present the not-yet-painted tiles as blank. Per-section layers are
+ * roughly viewport-sized and cheap, and a plain top-to-bottom alpha fade gets
+ * the same look without a mask at all.
+ */
+.section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.55;
+  background-image:
+    linear-gradient(rgba(242, 239, 232, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(242, 239, 232, 0.028) 1px, transparent 1px);
+  background-size: 96px 96px;
+}
+
+.section:first-child {
+  border-top: 0;
+}
+
+.inner {
+  width: min(1320px, calc(100vw - clamp(24px, 6vw, 88px) * 2));
+  margin: 0 auto;
+}
+
+/* -------------------------------------------------------------------- */
+/* Shared section furniture                                             */
+/* -------------------------------------------------------------------- */
+
+.header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  align-items: end;
+  gap: clamp(24px, 4vw, 64px);
+  margin-bottom: clamp(36px, 5vw, 64px);
+}
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 20px;
+  color: rgba(242, 239, 232, 0.5);
+  font-family: var(--font-body), monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.kicker span {
+  padding: 3px 8px;
+  border: 1px solid rgba(255, 90, 31, 0.42);
+  color: var(--solar, #ff5a1f);
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(38px, 6.4vw, 88px);
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  line-height: 0.88;
+  text-transform: uppercase;
+}
+
+.heading span {
+  color: var(--solar, #ff5a1f);
+}
+
+.lede {
+  max-width: 46ch;
+  margin: 0;
+  color: rgba(242, 239, 232, 0.6);
+  font-family: var(--font-body), monospace;
+  font-size: 13px;
+  line-height: 1.72;
+}
+
+/* -------------------------------------------------------------------- */
+/* Surface record — horizontal filmstrip                                */
+/* -------------------------------------------------------------------- */
+
+.railShell {
+  position: relative;
+}
+
+.rail {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  /* The rail is its own scroll container; keep wheel/touch overscroll from
+     dragging the page timeline while the reader is inside it. */
+  overscroll-behavior-x: contain;
+}
+
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+.rail:focus-visible {
+  outline: 1px solid var(--signal, #d8ff4f);
+  outline-offset: 6px;
+}
+
+.frame {
+  position: relative;
+  flex: 0 0 clamp(268px, 32vw, 452px);
+  margin: 0;
+  scroll-snap-align: start;
+  border: 1px solid rgba(242, 239, 232, 0.13);
+  background: #0b0806;
+}
+
+.frame figcaption {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px 16px 16px;
+  border-top: 1px solid rgba(242, 239, 232, 0.1);
+}
+
+.frame figcaption span {
+  color: var(--solar, #ff5a1f);
+  font-family: var(--font-body), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.frame figcaption p {
+  margin: 0;
+  color: rgba(242, 239, 232, 0.58);
+  font-family: var(--font-body), monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.railControls {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 26px;
+}
+
+.railControls button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(242, 239, 232, 0.2);
+  background: transparent;
+  color: var(--paper, #f2efe8);
+  font-size: 16px;
+  cursor: pointer;
+  transition: border-color 200ms ease, background 200ms ease, color 200ms ease;
+}
+
+.railControls button:hover,
+.railControls button:focus-visible {
+  border-color: var(--signal, #d8ff4f);
+  background: rgba(216, 255, 79, 0.1);
+  color: var(--signal, #d8ff4f);
+}
+
+.railControls span {
+  color: rgba(242, 239, 232, 0.5);
+  font-family: var(--font-body), monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+}
+
+/* -------------------------------------------------------------------- */
+/* Transmission film                                                    */
+/* -------------------------------------------------------------------- */
+
+.filmStage {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(242, 239, 232, 0.14);
+  background: #0b0806;
+}
+
+.filmVideo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+
+.filmPlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 28px;
+  border: 1px solid rgba(216, 255, 79, 0.55);
+  background: rgba(7, 6, 4, 0.72);
+  backdrop-filter: blur(8px);
+  color: var(--paper, #f2efe8);
+  font-family: var(--font-body), monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: border-color 220ms ease, background 220ms ease, transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.filmPlay:hover,
+.filmPlay:focus-visible {
+  border-color: var(--signal, #d8ff4f);
+  background: rgba(7, 6, 4, 0.88);
+  transform: translate(-50%, -50%) scale(1.03);
+}
+
+.filmPlay i {
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 13px solid var(--signal, #d8ff4f);
+}
+
+.filmPlay b {
+  padding-left: 16px;
+  border-left: 1px solid rgba(242, 239, 232, 0.22);
+  color: rgba(242, 239, 232, 0.55);
+  font-weight: 500;
+}
+
+.filmMeta {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  left: 18px;
+  display: flex;
+  justify-content: space-between;
+  color: rgba(242, 239, 232, 0.46);
+  font-family: var(--font-body), monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+}
+
+/* -------------------------------------------------------------------- */
+/* Outreach log                                                         */
+/* -------------------------------------------------------------------- */
+
+.eventList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid rgba(242, 239, 232, 0.12);
+}
+
+.event {
+  border-bottom: 1px solid rgba(242, 239, 232, 0.12);
+}
+
+.eventHead {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr) 120px 110px 28px;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  padding: 26px 6px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 220ms ease, padding-left 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.eventHead:hover,
+.eventHead:focus-visible {
+  padding-left: 18px;
+  background: rgba(255, 90, 31, 0.05);
+}
+
+.eventDate,
+.eventKind,
+.eventCount {
+  color: rgba(242, 239, 232, 0.46);
+  font-family: var(--font-body), monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.eventKind {
+  color: var(--signal, #d8ff4f);
+}
+
+.eventName {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(20px, 2.4vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+}
+
+.eventHead i {
+  justify-self: end;
+  width: 13px;
+  height: 13px;
+  border-right: 1px solid var(--solar, #ff5a1f);
+  border-bottom: 1px solid var(--solar, #ff5a1f);
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.event[data-open='true'] .eventHead i {
+  transform: rotate(225deg) translate(-2px, -2px);
+}
+
+.eventPanel {
+  padding: 4px 6px 40px;
+}
+
+.eventBody {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(20px, 3vw, 44px);
+  align-items: start;
+}
+
+.eventLead {
+  border: 1px solid rgba(242, 239, 232, 0.13);
+}
+
+.eventCopy p {
+  margin: 0 0 16px;
+  color: rgba(242, 239, 232, 0.66);
+  font-family: var(--font-body), monospace;
+  font-size: 13px;
+  line-height: 1.74;
+}
+
+.eventVenue {
+  color: var(--solar, #ff5a1f) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.eventStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 32px;
+  margin: 24px 0 0;
+}
+
+.eventStats div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 14px;
+  border-left: 1px solid rgba(255, 90, 31, 0.42);
+}
+
+.eventStats dt {
+  color: rgba(242, 239, 232, 0.42);
+  font-family: var(--font-body), monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.eventStats dd {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.eventThumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.eventThumbs > * {
+  border: 1px solid rgba(242, 239, 232, 0.1);
+}
+
+/* -------------------------------------------------------------------- */
+/* Crew                                                                 */
+/* -------------------------------------------------------------------- */
+
+.crewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: clamp(14px, 1.6vw, 24px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.crewCard {
+  border: 1px solid rgba(242, 239, 232, 0.12);
+  background: #0a0705;
+  transition: border-color 240ms ease, transform 380ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.crewCard:hover {
+  border-color: rgba(216, 255, 79, 0.45);
+  transform: translateY(-4px);
+}
+
+.crewPortrait {
+  border-bottom: 1px solid rgba(242, 239, 232, 0.1);
+}
+
+.crewMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 16px 16px 18px;
+}
+
+.crewMeta strong {
+  font-family: var(--font-display), sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+.crewMeta span {
+  color: var(--solar, #ff5a1f);
+  font-family: var(--font-body), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.crewMeta em {
+  color: rgba(242, 239, 232, 0.42);
+  font-family: var(--font-body), monospace;
+  font-size: 10.5px;
+  font-style: normal;
+  letter-spacing: 0.1em;
+}
+
+.crewFoot {
+  display: flex;
+  gap: 12px;
+  margin: 30px 0 0;
+  color: rgba(242, 239, 232, 0.44);
+  font-family: var(--font-body), monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+}
+
+.crewFoot span {
+  color: var(--solar, #ff5a1f);
+}
+
+/* -------------------------------------------------------------------- */
+/* Partners                                                             */
+/* -------------------------------------------------------------------- */
+
+.partners {
+  padding: clamp(44px, 6vh, 72px) 0;
+}
+
+.partnersKicker {
+  margin: 0 0 26px;
+  color: rgba(242, 239, 232, 0.38);
+  font-family: var(--font-body), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.partnerRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(24px, 4vw, 68px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.partnerRow a,
+.partnerRow div {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.partnerMark {
+  width: 54px;
+  flex: 0 0 54px;
+  background: transparent;
+  filter: grayscale(1) brightness(1.6);
+  opacity: 0.7;
+  transition: filter 260ms ease, opacity 260ms ease;
+}
+
+.partnerRow a:hover .partnerMark,
+.partnerRow a:focus-visible .partnerMark {
+  filter: none;
+  opacity: 1;
+}
+
+.partnerRow span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.partnerRow strong {
+  font-family: var(--font-display), sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.partnerRow em {
+  color: rgba(242, 239, 232, 0.42);
+  font-family: var(--font-body), monospace;
+  font-size: 10.5px;
+  font-style: normal;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* -------------------------------------------------------------------- */
+/* Narrow viewports                                                     */
+/* -------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .header {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .eventHead {
+    grid-template-columns: minmax(0, 1fr) 24px;
+    grid-template-areas:
+      'date arrow'
+      'name name'
+      'kind kind';
+    gap: 8px;
+  }
+
+  .eventDate { grid-area: date; }
+  .eventName { grid-area: name; }
+  .eventKind { grid-area: kind; }
+  .eventCount { display: none; }
+  .eventHead i { grid-area: arrow; }
+
+  .eventBody {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .crewGrid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .filmPlay {
+    gap: 10px;
+    padding: 12px 18px;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crewCard,
+  .filmPlay,
+  .eventHead,
+  .eventHead i {
+    transition-duration: 1ms;
+  }
+}

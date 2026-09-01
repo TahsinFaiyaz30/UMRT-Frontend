@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { Quality } from '@/lib/performance';
@@ -9,8 +9,13 @@ export interface ProceduralSolarSystem3DProps {
   quality: Quality;
   active: boolean;
   reduceMotion: boolean;
-  topY: number;
-  bottomY: number;
+  /**
+   * Live archive position in card units, shared by reference with the helix
+   * so both read the same value inside a single frame.
+   */
+  archiveState: { position: number };
+  /** Vertical distance between two adjacent archive rows, in world units. */
+  cardYStep: number;
 }
 
 type PlanetDefinition = {
@@ -76,6 +81,38 @@ const SUN_FLOW_DEPTH_RADIUS = 0.34;
 const SYSTEM_TRAVEL_Y = 0.7;
 const SYSTEM_TRAVEL_Z = 1.05;
 const SYSTEM_TRAVEL_X = 0.18;
+
+/**
+ * Archive rows spanned by one Sun-to-Sun cycle. Twelve reproduces the body
+ * spacing the fixed eight-record layout used to produce, so the system reads
+ * exactly as before while now repeating without end.
+ */
+const CYCLE_ARCHIVE_ROWS = 12;
+const MIN_ROW_GAP = 0.12;
+/**
+ * Where the one and only Sun sits, at archive position zero. Positive lifts it
+ * above the opening record, so the reader descends away from the star rather
+ * than starting inside it.
+ */
+const SUN_ENTRY_OFFSET = 4.9;
+
+/**
+ * Once the Sun is far above, illumination settles onto this fixed direction
+ * instead of fading out. It is aimed close to where the Sun sits on entry, so
+ * the handover is a change of intensity rather than a swing of shadows.
+ */
+const DISTANT_STAR_DIRECTION = new THREE.Vector3(0.12, 0.94, 0.32).normalize();
+/** Irradiance of that fill, in the same units as the Sun's inverse-square term. */
+const DISTANT_STAR_LEVEL = 0.34;
+
+/**
+ * The periodic image of `offset` nearest to `focus`. This is what makes the
+ * system infinite: a body is never moved while it is on screen, only when it
+ * is most of a cycle away and therefore far outside the frustum.
+ */
+function nearestCycleImage(offset: number, focus: number, cycleHeight: number) {
+  return offset - cycleHeight * Math.round((offset - focus) / cycleHeight);
+}
 
 /*
  * The proportions are deliberately compressed so every body remains legible
@@ -207,6 +244,38 @@ const PLANET_VERTICAL_ENVELOPE_TOTAL = PLANET_VERTICAL_ENVELOPES.reduce(
   0,
 );
 
+const STAR_FIELD_GLSL = /* glsl */ `
+  uniform vec3 uSunA;
+  uniform vec3 uStarDirection;
+  uniform float uStarLevel;
+
+  /*
+   * There is exactly one sun, and it sits above the first record. The reader
+   * descends away from it while the planets keep coming, so its inverse-square
+   * contribution falls off and a fixed distant starlight takes over.
+   *
+   * Blending the two by irradiance makes that handover continuous: near the
+   * top the sun dominates completely and casts the terminator you would
+   * expect, and far below the light settles onto a constant direction instead
+   * of fading to black. Nothing here depends on depth, so the archive can run
+   * as deep as the data goes.
+   *
+   * Returns the light direction in .xyz and total irradiance in .w. 87.536 is
+   * 1100 / 4pi — stellar power after astronomical distances are compressed
+   * into the vertical gallery.
+   */
+  vec4 starField(vec3 worldPosition) {
+    vec3 toSun = uSunA - worldPosition;
+    float radiusSquared = max(dot(toSun, toSun), 1e-4);
+    float sunIrradiance = min(87.536 / radiusSquared, 1.35);
+    vec3 sunDirection = toSun * inversesqrt(radiusSquared);
+    vec3 direction = normalize(
+      sunDirection * sunIrradiance + uStarDirection * uStarLevel
+    );
+    return vec4(direction, min(1.35, sunIrradiance + uStarLevel));
+  }
+`;
+
 const SURFACE_VERTEX_SHADER = /* glsl */ `
   uniform float uRelief;
   uniform float uSeed;
@@ -271,10 +340,10 @@ const SURFACE_FRAGMENT_SHADER = /* glsl */ `
   uniform vec3 uColorA;
   uniform vec3 uColorB;
   uniform vec3 uColorC;
-  uniform vec3 uSunPosition;
   varying vec3 vLocalPosition;
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
+  ${STAR_FIELD_GLSL}
   ${NOISE_GLSL}
 
   vec3 surfaceColor(vec3 p) {
@@ -332,15 +401,11 @@ const SURFACE_FRAGMENT_SHADER = /* glsl */ `
 
   void main() {
     vec3 normal = normalize(vWorldNormal);
-    vec3 toSun = uSunPosition - vWorldPosition;
-    float sunDistance = max(length(toSun), .001);
-    vec3 lightDirection = toSun / sunDistance;
+    vec4 star = starField(vWorldPosition);
+    vec3 lightDirection = star.xyz;
+    float attenuation = star.w;
     vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
     float diffuse = max(dot(normal, lightDirection), 0.0);
-    // Compressed scene units, physically shaped inverse-square irradiance.
-    // The constant represents stellar power after scaling astronomical
-    // distances into the vertical gallery.
-    float attenuation = clamp(1100.0 / (12.56637 * sunDistance * sunDistance), .04, 1.35);
     vec3 halfDirection = normalize(lightDirection + viewDirection);
     float shininess = mix(9.0, 100.0, 1.0 - uRoughness);
     float specular = pow(max(dot(normal, halfDirection), 0.0), shininess) * uSpecular;
@@ -370,14 +435,14 @@ const SHELL_VERTEX_SHADER = /* glsl */ `
 
 const ATMOSPHERE_FRAGMENT_SHADER = /* glsl */ `
   uniform vec3 uColor;
-  uniform vec3 uSunPosition;
   uniform float uDensity;
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
+  ${STAR_FIELD_GLSL}
   void main() {
     vec3 normal = normalize(vWorldNormal);
     vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
-    vec3 lightDirection = normalize(uSunPosition - vWorldPosition);
+    vec3 lightDirection = starField(vWorldPosition).xyz;
     float limb = pow(1.0 - abs(dot(normal, viewDirection)), 2.15);
     float day = smoothstep(-.32, .78, dot(normal, lightDirection));
     float forwardScatter = pow(max(dot(viewDirection, -lightDirection), 0.0), 8.0);
@@ -395,10 +460,10 @@ const CLOUD_FRAGMENT_SHADER = /* glsl */ `
   uniform float uCoverage;
   uniform float uOpacity;
   uniform vec3 uColor;
-  uniform vec3 uSunPosition;
   varying vec3 vLocalPosition;
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
+  ${STAR_FIELD_GLSL}
   ${NOISE_GLSL}
   void main() {
     vec3 p = normalize(vLocalPosition);
@@ -406,7 +471,7 @@ const CLOUD_FRAGMENT_SHADER = /* glsl */ `
     float clouds = fbm(vec3(p.x * 7.0, p.y * 15.0, p.z * 7.0) + warp * 2.2);
     float mask = smoothstep(uCoverage, min(.98, uCoverage + .16), clouds);
     vec3 normal = normalize(vWorldNormal);
-    vec3 lightDirection = normalize(uSunPosition - vWorldPosition);
+    vec3 lightDirection = starField(vWorldPosition).xyz;
     float day = .14 + max(dot(normal, lightDirection), 0.0) * .92;
     float grazing = pow(1.0 - max(dot(normal, normalize(cameraPosition - vWorldPosition)), 0.0), 2.0);
     float alpha = mask * uOpacity * (1.0 - grazing * .24);
@@ -459,18 +524,18 @@ const CORONA_FRAGMENT_SHADER = /* glsl */ `
 `;
 
 const MOON_FRAGMENT_SHADER = /* glsl */ `
-  uniform vec3 uSunPosition;
   uniform vec3 uTint;
   varying vec3 vLocalPosition;
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
+  ${STAR_FIELD_GLSL}
   ${NOISE_GLSL}
   void main() {
     vec3 normal = normalize(vWorldNormal);
     float terrain = fbm(normalize(vLocalPosition) * 9.0);
     float pits = smoothstep(.7, .84, fbm(normalize(vLocalPosition) * 22.0));
     vec3 albedo = uTint * (.42 + terrain * .62 - pits * .25);
-    float light = max(dot(normal, normalize(uSunPosition - vWorldPosition)), 0.0);
+    float light = max(dot(normal, starField(vWorldPosition).xyz), 0.0);
     gl_FragColor = vec4(albedo * (.045 + light * .96), 1.0);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -492,7 +557,6 @@ const RING_VERTEX_SHADER = /* glsl */ `
 
 const RING_FRAGMENT_SHADER = /* glsl */ `
   uniform vec3 uColor;
-  uniform vec3 uSunPosition;
   uniform vec3 uPlanetPosition;
   uniform float uPlanetRadius;
   uniform float uRingKind;
@@ -501,6 +565,7 @@ const RING_FRAGMENT_SHADER = /* glsl */ `
   varying vec3 vRingPosition;
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
+  ${STAR_FIELD_GLSL}
 
   float hash21(vec2 p) {
     p = fract(p * vec2(123.34, 345.45));
@@ -581,12 +646,11 @@ const RING_FRAGMENT_SHADER = /* glsl */ `
     if (density < .008) discard;
 
     vec3 normal = normalize(vWorldNormal);
-    vec3 toSun = uSunPosition - vWorldPosition;
-    float sunDistance = max(length(toSun), .001);
-    vec3 lightDirection = toSun / sunDistance;
+    vec4 star = starField(vWorldPosition);
+    vec3 lightDirection = star.xyz;
     vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
     float incidence = abs(dot(normal, lightDirection));
-    float attenuation = clamp(1100.0 / (12.56637 * sunDistance * sunDistance), .04, 1.2);
+    float attenuation = min(star.w, 1.2);
     float shadow = planetOcclusion(lightDirection);
     float forwardScatter = pow(max(dot(viewDirection, -lightDirection), 0.0), 9.0);
     float backScatter = pow(max(dot(viewDirection, lightDirection), 0.0), 12.0);
@@ -764,7 +828,9 @@ function makeSurfaceMaterial(definition: PlanetDefinition) {
       uRoughness: { value: definition.roughness },
       uSpecular: { value: definition.specular },
       uRelief: { value: definition.relief },
-      uSunPosition: { value: new THREE.Vector3() },
+      uSunA: { value: new THREE.Vector3() },
+      uStarDirection: { value: DISTANT_STAR_DIRECTION.clone() },
+      uStarLevel: { value: DISTANT_STAR_LEVEL },
     },
   });
 }
@@ -779,7 +845,9 @@ function makeAtmosphereMaterial(definition: PlanetDefinition) {
     uniforms: {
       uColor: { value: new THREE.Color(atmosphere.color) },
       uDensity: { value: atmosphere.density },
-      uSunPosition: { value: new THREE.Vector3() },
+      uSunA: { value: new THREE.Vector3() },
+      uStarDirection: { value: DISTANT_STAR_DIRECTION.clone() },
+      uStarLevel: { value: DISTANT_STAR_LEVEL },
     },
     transparent: true,
     depthWrite: false,
@@ -801,7 +869,9 @@ function makeCloudMaterial(definition: PlanetDefinition) {
       uCoverage: { value: clouds.coverage },
       uOpacity: { value: clouds.opacity },
       uColor: { value: new THREE.Color(clouds.color) },
-      uSunPosition: { value: new THREE.Vector3() },
+      uSunA: { value: new THREE.Vector3() },
+      uStarDirection: { value: DISTANT_STAR_DIRECTION.clone() },
+      uStarLevel: { value: DISTANT_STAR_LEVEL },
     },
     transparent: true,
     depthWrite: false,
@@ -825,6 +895,8 @@ function localOrbitPosition(
     'rowY' | 'flowPhase' | 'flowRadius' | 'flowDepthRadius' | 'lateralRadius' | 'depthRadius'
   >,
   elapsed: number,
+  /** Wrapped row height for this frame; defaults to the unwrapped row. */
+  rowY: number = layout.rowY,
 ): [number, number, number] {
   const meanAnomaly = definition.initialAnomaly
     + elapsed * definition.orbitSpeed * LOCAL_ORBIT_SPEED_SCALE;
@@ -843,7 +915,7 @@ function localOrbitPosition(
     Math.cos(flowAngle) * layout.flowRadius
       + orbitX * cosLongitude
       - orbitZ * sinLongitude,
-    layout.rowY,
+    rowY,
     SYSTEM_Z
       + Math.sin(flowAngle) * layout.flowDepthRadius
       + orbitX * sinLongitude
@@ -980,12 +1052,12 @@ function PlanetMesh({
   );
 }
 
-export default function ProceduralSolarSystem3D({
+function ProceduralSolarSystem3D({
   quality,
   active,
   reduceMotion,
-  topY,
-  bottomY,
+  archiveState,
+  cardYStep,
 }: ProceduralSolarSystem3DProps) {
   const systemFlowRef = useRef<THREE.Group>(null);
   const sunRef = useRef<THREE.Group>(null);
@@ -995,31 +1067,36 @@ export default function ProceduralSolarSystem3D({
   const cloudRefs = useRef<Array<THREE.Mesh | null>>([]);
   const moonRefs = useRef(new Map<string, THREE.Group>());
   const elapsedRef = useRef(0);
-  const worldSunPosition = useMemo(() => new THREE.Vector3(), []);
+  const worldSunA = useMemo(() => new THREE.Vector3(), []);
   const worldPlanetPosition = useMemo(() => new THREE.Vector3(), []);
   const worldPlanetScale = useMemo(() => new THREE.Vector3(), []);
   const flowWorldOffset = useMemo(() => new THREE.Vector3(), []);
   const inverseParentQuaternion = useMemo(() => new THREE.Quaternion(), []);
   const baseSunRadius = quality === 'low' ? 1.72 : quality === 'medium' ? 1.94 : 2.12;
-  const verticalSpan = Math.max(0.1, topY - bottomY);
-  const reservedRowGap = Math.min(0.32, verticalSpan / (PLANETS.length * 4));
-  const naturalSunEnvelope = baseSunRadius * 1.27;
-  const naturalSystemDepth = naturalSunEnvelope + PLANET_VERTICAL_ENVELOPE_TOTAL * 2;
-  const scaleDenominator = Math.max(0.01, naturalSystemDepth - baseSunRadius * 0.58);
-  const systemScale = Math.min(
-    PREFERRED_SYSTEM_SCALE,
-    Math.max(
-      0.01,
-      (verticalSpan - reservedRowGap * PLANETS.length) / scaleDenominator,
-    ),
-  );
+
+  /*
+   * The archive is unbounded, so the system can no longer be fitted to a known
+   * span. One Mercury-to-Neptune run is laid out once and then repeats forever:
+   * every planet is drawn at whichever periodic image of its row sits nearest
+   * the reader, so there is always something alongside the record in view.
+   *
+   * The Sun is the exception. It is drawn once, above the opening record, and
+   * never wrapped — the reader descends away from it. The cycle is pinned to a
+   * whole number of archive rows so the planets keep step with the cards
+   * instead of drifting against them.
+   */
+  const systemScale = PREFERRED_SYSTEM_SCALE;
   const sunRadius = baseSunRadius * systemScale;
-  const sunY = topY + sunRadius * 0.58;
-  const sunEnvelope = naturalSunEnvelope * systemScale;
+  const sunEnvelope = baseSunRadius * 1.27 * systemScale;
   const planetEnvelopeTotal = PLANET_VERTICAL_ENVELOPE_TOTAL * systemScale;
+  const cycleHeight = CYCLE_ARCHIVE_ROWS * cardYStep;
+  // Nine gaps for eight planets: one between each adjacent pair, plus the wrap
+  // from Neptune back round to Mercury. The Sun's envelope is still reserved in
+  // the cycle even though only the first one is drawn, which leaves a clear
+  // stretch of space where each pass of the planets begins.
   const rowGap = Math.max(
-    0,
-    (sunY - bottomY - sunEnvelope - planetEnvelopeTotal * 2) / PLANETS.length,
+    MIN_ROW_GAP,
+    (cycleHeight - sunEnvelope * 2 - planetEnvelopeTotal * 2) / (PLANETS.length + 1),
   );
 
   const sphereWidthSegments = quality === 'high' ? 64 : quality === 'medium' ? 48 : 30;
@@ -1092,7 +1169,9 @@ export default function ProceduralSolarSystem3D({
     vertexShader: SHELL_VERTEX_SHADER,
     fragmentShader: MOON_FRAGMENT_SHADER,
     uniforms: {
-      uSunPosition: { value: new THREE.Vector3() },
+      uSunA: { value: new THREE.Vector3() },
+      uStarDirection: { value: DISTANT_STAR_DIRECTION.clone() },
+      uStarLevel: { value: DISTANT_STAR_LEVEL },
       uTint: { value: new THREE.Color('#aaa49a') },
     },
   }), []);
@@ -1105,7 +1184,9 @@ export default function ProceduralSolarSystem3D({
       uniforms: {
         uColor: { value: new THREE.Color(definition.rings.color) },
         uOpacity: { value: definition.rings.opacity },
-        uSunPosition: { value: new THREE.Vector3() },
+        uSunA: { value: new THREE.Vector3() },
+        uStarDirection: { value: DISTANT_STAR_DIRECTION.clone() },
+        uStarLevel: { value: DISTANT_STAR_LEVEL },
         uPlanetPosition: { value: new THREE.Vector3() },
         uPlanetRadius: { value: 1 },
         uRingKind: { value: definition.kind === 5 ? 0 : 1 },
@@ -1118,7 +1199,7 @@ export default function ProceduralSolarSystem3D({
   }), []);
 
   const layouts = useMemo<PlanetLayout[]>(() => {
-    let lowerEdge = sunY - sunEnvelope;
+    let lowerEdge = SUN_ENTRY_OFFSET - sunEnvelope;
 
     return PLANETS.map((definition, index) => {
       const envelope = PLANET_VERTICAL_ENVELOPES[index] * systemScale;
@@ -1138,7 +1219,7 @@ export default function ProceduralSolarSystem3D({
         basePosition: localOrbitPosition(definition, layout, 0),
       };
     });
-  }, [rowGap, sunEnvelope, sunY, systemScale]);
+  }, [rowGap, sunEnvelope, systemScale]);
 
   const disposableResources = useMemo<DisposableResource[]>(() => [
     sphereGeometry,
@@ -1201,15 +1282,29 @@ export default function ProceduralSolarSystem3D({
       flowRoot.position.copy(flowWorldOffset);
     }
 
+    /*
+     * The reader's depth in the archive, expressed in the same local units as
+     * the body rows. The helix parent lifts by `position * cardYStep`, so a
+     * body must sit at this local height to appear at camera level.
+     */
+    const focusY = -archiveState.position * cardYStep;
+
+    // One star, fixed above the opening record. It is never wrapped: the
+    // reader leaves it behind, and `starField` hands illumination over to a
+    // constant distant starlight as it recedes.
     if (sunRef.current) {
-      sunRef.current.position.set(...sunFlowPosition(sunY, elapsed));
+      sunRef.current.position.set(...sunFlowPosition(SUN_ENTRY_OFFSET, elapsed));
     }
 
     PLANETS.forEach((definition, index) => {
       const group = planetRefs.current[index];
       const surface = surfaceRefs.current[index];
       const cloud = cloudRefs.current[index];
-      if (group) group.position.set(...localOrbitPosition(definition, layouts[index], elapsed));
+      if (group) {
+        const layout = layouts[index];
+        const rowY = nearestCycleImage(layout.rowY, focusY, cycleHeight);
+        group.position.set(...localOrbitPosition(definition, layout, elapsed, rowY));
+      }
 
       if (shouldAnimate) {
         if (surface) surface.rotation.y += safeDelta * definition.rotationSpeed;
@@ -1232,13 +1327,19 @@ export default function ProceduralSolarSystem3D({
       entry.material.uniforms.uTime.value = elapsed * (1 + index * 0.17);
     });
 
-    if (sunRef.current) sunRef.current.getWorldPosition(worldSunPosition);
-    surfaceMaterials.forEach((material) => material.uniforms.uSunPosition.value.copy(worldSunPosition));
-    atmosphereMaterials.forEach((material) => material?.uniforms.uSunPosition.value.copy(worldSunPosition));
-    cloudMaterials.forEach((material) => material?.uniforms.uSunPosition.value.copy(worldSunPosition));
+    sunRef.current?.getWorldPosition(worldSunA);
+    surfaceMaterials.forEach((material) => {
+      material.uniforms.uSunA.value.copy(worldSunA);
+    });
+    atmosphereMaterials.forEach((material) => {
+      material?.uniforms.uSunA.value.copy(worldSunA);
+    });
+    cloudMaterials.forEach((material) => {
+      material?.uniforms.uSunA.value.copy(worldSunA);
+    });
     ringMaterials.forEach((material, index) => {
       if (!material) return;
-      material.uniforms.uSunPosition.value.copy(worldSunPosition);
+      material.uniforms.uSunA.value.copy(worldSunA);
       material.uniforms.uTime.value = elapsed;
       const planet = planetRefs.current[index];
       if (!planet) return;
@@ -1251,7 +1352,7 @@ export default function ProceduralSolarSystem3D({
         Math.abs(worldPlanetScale.z),
       );
     });
-    moonMaterial.uniforms.uSunPosition.value.copy(worldSunPosition);
+    moonMaterial.uniforms.uSunA.value.copy(worldSunA);
   });
 
   const setPlanetRef = (index: number, node: THREE.Group | null) => {
@@ -1277,7 +1378,27 @@ export default function ProceduralSolarSystem3D({
       position={[0, 0, SYSTEM_TRAVEL_Z]}
       name="procedural-three-dimensional-solar-system"
     >
-      <group ref={sunRef} position={sunFlowPosition(sunY, 0)} scale={sunRadius} name="Sun">
+      {/* Fill light for the standard-material scenery — the achievement cards
+          orbit the same axis and would otherwise darken with depth as the one
+          Sun recedes. Matches `uStarDirection` so shading agrees everywhere. */}
+      <directionalLight
+        color="#ffe0c0"
+        intensity={2.2}
+        position={[
+          DISTANT_STAR_DIRECTION.x * 60,
+          DISTANT_STAR_DIRECTION.y * 60,
+          DISTANT_STAR_DIRECTION.z * 60,
+        ]}
+      />
+
+      {/* Exactly one star, above the opening record. The reader descends away
+          from it; it is never repeated and never moved between cycles. */}
+      <group
+        ref={sunRef}
+        position={sunFlowPosition(SUN_ENTRY_OFFSET, 0)}
+        scale={sunRadius}
+        name="Sun"
+      >
         <pointLight
           color="#ffd0a0"
           intensity={quality === 'low' ? 9000 : 16000}
@@ -1336,3 +1457,11 @@ export default function ProceduralSolarSystem3D({
     </group>
   );
 }
+
+/**
+ * The archive re-renders whenever a card slot is recycled. None of that
+ * touches the system — it reads its position from a shared mutable object
+ * inside the frame loop — so memoising here keeps eight planets, their moons
+ * and two stars out of every one of those renders.
+ */
+export default memo(ProceduralSolarSystem3D);

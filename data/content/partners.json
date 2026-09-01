@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "revision": "prt-2026-09-01",
+  "resource": "partners",
+  "records": [
+    {
+      "id": "uiu",
+      "name": "United International University",
+      "shortName": "UIU",
+      "role": "Host institution",
+      "href": "https://www.uiu.ac.bd",
+      "mark": "mark-uiu"
+    },
+    {
+      "id": "cair",
+      "name": "Center for Advanced Intelligent Robotics",
+      "shortName": "CAIR",
+      "role": "Research partner",
+      "href": null,
+      "mark": "mark-cair"
+    },
+    {
+      "id": "umrt",
+      "name": "UIU Mars Rover Team",
+      "shortName": "UMRT",
+      "role": "Operating team",
+      "href": null,
+      "mark": "mark-umrt"
+    }
+  ]
+}

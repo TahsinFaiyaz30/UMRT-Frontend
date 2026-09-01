@@ -2,6 +2,8 @@
 
 import {
   createContext,
+  memo,
+  useCallback,
   useContext,
   useRef,
   useMemo,
@@ -17,42 +19,27 @@ import {
   HybridFrameGovernor,
   WebGLRendererLifecycle,
 } from '@/components/performance/HybridFrameGovernor';
+import { AsyncShaderWarmup, SceneRenderLoop } from '@/components/performance/AsyncShaderWarmup';
 import { useResponsiveDpr } from '@/components/performance/useResponsiveDpr';
+import { useContentCollection, type AchievementRecord, type MediaAsset } from '@/lib/content';
 import CosmicPhenomena3D from './CosmicPhenomena3D';
 import ProceduralSolarSystem3D from './ProceduralSolarSystem3D';
 import styles from './HelixGallery3D.module.css';
 
 /* ================================================================== *
- *  Gallery Data                                                       *
- * ================================================================== */
-interface GalleryItem {
-  year: string;
-  title: string;
-  description: string;
-  category: string;
-  metric: string;
-}
-
-const ITEMS: GalleryItem[] = [
-  { year: '2025', title: 'URC TOP 5', category: 'Field result', metric: 'TOP 05', description: 'After rigorous testing in harsh desert environments, the rover showcased advanced autonomous capability and secured a top-five finish.' },
-  { year: '2024', title: 'INNOVATION', category: 'Autonomy', metric: 'SLAM / 01', description: 'Recognized for real-time SLAM and obstacle avoidance that sharpened the rover\'s spatial awareness in uncertain terrain.' },
-  { year: '2024', title: 'URC TOP 10', category: 'Field result', metric: 'TOP 10', description: 'Mechanical reliability and precise manipulator control carried UMRT into the international top ten.' },
-  { year: '2023', title: 'ERC POLAND', category: 'International', metric: 'ERC / PL', description: 'UMRT entered the European Rover Challenge and completed complex maintenance tasks under severe time pressure.' },
-  { year: '2022', title: 'BEST ROOKIE', category: 'Award', metric: 'ROOKIE / 01', description: 'A robust suspension and determined debut earned the team the competition\'s Best Rookie distinction.' },
-  { year: '2022', title: 'URC QUAL', category: 'Qualification', metric: 'URC / GO', description: 'The team qualified for the University Rover Challenge for the first time after thousands of hours of design and manufacturing.' },
-  { year: '2021', title: 'PROTOTYPE', category: 'Engineering', metric: '6 × 6', description: 'The first six-wheel rocker-bogie prototype proved the drive system across demanding local terrain.' },
-  { year: '2020', title: 'FOUNDED', category: 'Origin', metric: 'T−00', description: 'UMRT formed around a shared mission: push student engineering beyond the road and toward planetary exploration.' },
-];
-
-/* ================================================================== *
  *  Helix Layout Constants                                             *
+ *                                                                     *
+ *  The archive is unbounded, so nothing here may depend on a record   *
+ *  count. Each record occupies one rung: a fixed angular step around  *
+ *  the helix and a fixed drop down it. Scrolling one record rotates   *
+ *  the structure by exactly one step and lifts it by exactly one      *
+ *  drop, which is what puts the next card in front of the camera.     *
  * ================================================================== */
-const N            = ITEMS.length;
 const HELIX_R      = 7.15;
-const HELIX_TURNS  = 1;             // number of full helical turns
-const HELIX_ANGLE  = Math.PI * 2 * HELIX_TURNS;
-const TOTAL_Y_DROP = 21.5;
-const Y_STEP       = TOTAL_Y_DROP / Math.max(1, N - 1);
+/** Records per full turn of the helix. */
+const CARDS_PER_TURN = 8;
+const ANGLE_STEP   = (Math.PI * 2) / CARDS_PER_TURN;
+const Y_STEP       = 21.5 / 7;
 
 const CARD_W       = 4.7;
 const CARD_H       = 2.86;
@@ -69,22 +56,39 @@ const FOCUS_LOCK_RADIUS = 0.045;
 // instead of pinning the first and last cards in their enlarged state at the
 // section boundaries.
 const EDGE_TRAVEL = 0.28;
-const ARCHIVE_POSITION_SPAN = Math.max(1, N - 1) + EDGE_TRAVEL * 2;
+
+/**
+ * Card slots recycled across the whole archive. Eleven covers well beyond the
+ * frustum at every viewport, so a slot is only ever re-pointed at a new record
+ * while it is off screen. This is the entire cost of the gallery: eleven
+ * meshes and eleven DOM cards, whether the archive holds eight records or
+ * eight thousand.
+ */
+const SLOT_COUNT = 11;
+/** Records to keep loaded ahead of the reader. */
+const PREFETCH_MARGIN = 6;
+/** Records fetched per page. */
+const PAGE_SIZE = 8;
 
 /* ================================================================== *
  *  Scroll Animation Constants                                         *
  * ================================================================== */
-const SCROLL_ROT       = ((N - 1) / N) * HELIX_ANGLE;  // Positive = right-to-left rotation
-const INITIAL_Y_OFFSET = -TOTAL_Y_DROP * 0.5;
-const TOTAL_LIFT       = TOTAL_Y_DROP;
 const SCROLL_DAMPING   = 7.5;
-const SOLAR_TOP_OVERSCAN = 3.4;
-const SOLAR_BOTTOM_OVERSCAN = 5.8;
+/** Matches the `.canvasFallback` opacity transition. */
+const VEIL_FADE_MS = 520;
+/** Scroll length granted to each record. */
+const SECTION_SVH_PER_RECORD = 88;
+const SECTION_SVH_PADDING = 96;
 
 /* ================================================================== *
  *  Shared scroll state                                                *
  * ================================================================== */
 const scroll = { target: 0, current: 0 };
+/**
+ * Live archive position in record units, shared by reference with the solar
+ * system so both layers read one value per frame instead of recomputing it.
+ */
+const archive = { position: 0 };
 
 type ProjectionRegistry = {
   cards: Map<number, THREE.Object3D>;
@@ -126,29 +130,41 @@ function smootherStep(value: number) {
   return x * x * x * (x * (x * 6 - 15) + 10);
 }
 
-function focusFor(index: number, progress: number) {
-  const distance = Math.abs(progress * (N - 1) - index);
+function focusFor(index: number, position: number) {
+  const distance = Math.abs(position - index);
   const acquireProgress = (
     FOCUS_ACQUIRE_RADIUS - distance
   ) / (FOCUS_ACQUIRE_RADIUS - FOCUS_LOCK_RADIUS);
   return smootherStep(acquireProgress);
 }
 
-function archivePositionForScroll(progress: number) {
-  return progress * ARCHIVE_POSITION_SPAN - EDGE_TRAVEL;
+/** Scroll travel, in record units, for an archive of `count` records. */
+function archiveSpan(count: number) {
+  return Math.max(1, count - 1) + EDGE_TRAVEL * 2;
 }
 
-function scrollProgressForChapter(index: number) {
-  return (index + EDGE_TRAVEL) / ARCHIVE_POSITION_SPAN;
+function archivePositionForScroll(progress: number, count: number) {
+  return progress * archiveSpan(count) - EDGE_TRAVEL;
 }
 
-function presentationProgress(progress: number, reduceMotion: boolean) {
-  const archivePosition = archivePositionForScroll(progress);
-  const outsideChapterRange = archivePosition < 0 || archivePosition > N - 1;
-  const presentedPosition = reduceMotion && !outsideChapterRange
-    ? Math.round(archivePosition)
-    : archivePosition;
-  return presentedPosition / Math.max(1, N - 1);
+function scrollProgressForChapter(index: number, count: number) {
+  return (index + EDGE_TRAVEL) / archiveSpan(count);
+}
+
+function presentedPosition(progress: number, count: number, reduceMotion: boolean) {
+  const position = archivePositionForScroll(progress, count);
+  const outsideChapterRange = position < 0 || position > count - 1;
+  return reduceMotion && !outsideChapterRange ? Math.round(position) : position;
+}
+
+/**
+ * Slot -> record index. Each slot owns one residue class modulo SLOT_COUNT and
+ * always takes the member of that class nearest the reader, so advancing one
+ * record re-points exactly one slot — the one that just left the window behind
+ * — rather than reshuffling all eleven.
+ */
+function recordIndexForSlot(slot: number, center: number) {
+  return slot + SLOT_COUNT * Math.round((center - slot) / SLOT_COUNT);
 }
 
 function helixRadiusFor(viewportWidth: number) {
@@ -276,19 +292,18 @@ function Skydome({
 }
 
 /* ================================================================== *
- *  Image Plane — Tangent to the cylinder surface                      *
- *                                                                     *
- *  In the reference image, the planes form a continuous ribbon.       *
- *  rotation.y = Math.atan2(x, z) makes them face directly outward.    *
+ *  Card slot — one recycled rung of the helix                         *
  * ================================================================== */
-function ImagePlane({
-  index,
+function CardSlot({
+  slot,
+  windowCenter,
+  recordCount,
   hovered,
-  reduceMotion,
 }: {
-  index: number;
+  slot: number;
+  windowCenter: number;
+  recordCount: number;
   hovered: boolean;
-  reduceMotion: boolean;
 }) {
   const registry = useContext(ProjectionRegistryContext);
   const groupRef = useRef<THREE.Group>(null);
@@ -298,43 +313,48 @@ function ImagePlane({
     group: THREE.Group | null;
     plate: THREE.Group | null;
     surface: THREE.MeshPhysicalMaterial | null;
-    progress: number;
+    position: number;
+    index: number;
     viewportWidth: number;
     hovered: boolean;
   }>({
     group: null,
     plate: null,
     surface: null,
-    progress: Number.NaN,
+    position: Number.NaN,
+    index: Number.NaN,
     viewportWidth: Number.NaN,
     hovered: !hovered,
   });
 
-  // 1. Calculate the angle around the Y axis
-  // Add Math.PI / 2 so the first item (index 0) starts perfectly facing the camera (z = R, x = 0)
-  const angle = (index / N) * HELIX_ANGLE + Math.PI / 2;
-  
-  // 2. Calculate X and Z for circular placement
-  const y = (TOTAL_Y_DROP / 2) - (index * Y_STEP);
-  const faceAngle = Math.atan2(Math.cos(angle), Math.sin(angle));
+  const index = recordIndexForSlot(slot, windowCenter);
+  const inRange = index >= 0 && index < recordCount;
 
   useFrame(({ size }) => {
     const group = groupRef.current;
     const plate = plateRef.current;
     const surface = surfaceRef.current;
     if (!group || !plate || !surface) return;
-    const stagedProgress = presentationProgress(scroll.current, reduceMotion);
+
+    group.visible = inRange;
+    if (!inRange) return;
+
+    const position = archive.position;
     const previous = presentationRef.current;
     if (
       previous.group === group
       && previous.plate === plate
       && previous.surface === surface
-      && previous.progress === stagedProgress
+      && previous.position === position
+      && previous.index === index
       && previous.viewportWidth === size.width
       && previous.hovered === hovered
     ) return;
 
-    const focus = focusFor(index, stagedProgress);
+    // Angle and height come from the record's absolute index, so a slot that
+    // has just been recycled lands on its new rung in the same frame.
+    const angle = index * ANGLE_STEP + Math.PI / 2;
+    const focus = focusFor(index, position);
     const compact = size.width <= 430;
     const narrow = size.width <= 700;
     const helixRadius = helixRadiusFor(size.width);
@@ -343,7 +363,8 @@ function ImagePlane({
     const baseScale = compact ? 0.66 : narrow ? 0.7 : 0.76;
     const focusScale = compact ? 1.42 : narrow ? 1.35 : FOCUS_SCALE;
     const radius = helixRadius + focus * radiusBoost;
-    group.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+    group.position.set(Math.cos(angle) * radius, -index * Y_STEP, Math.sin(angle) * radius);
+    group.rotation.set(0, Math.atan2(Math.cos(angle), Math.sin(angle)), 0);
     const scale = baseScale + focus * (focusScale - baseScale);
     group.scale.setScalar(scale);
     plate.scale.setScalar(plateScale);
@@ -353,14 +374,15 @@ function ImagePlane({
       group,
       plate,
       surface,
-      progress: stagedProgress,
+      position,
+      index,
       viewportWidth: size.width,
       hovered,
     };
   }, -1);
 
   return (
-    <group ref={groupRef} position={[Math.cos(angle) * HELIX_R, y, Math.sin(angle) * HELIX_R]} rotation={[0, faceAngle, 0]}>
+    <group ref={groupRef} visible={inRange}>
       <group ref={plateRef}>
         <mesh>
           <boxGeometry args={[CARD_W, CARD_H, 0.11]} />
@@ -391,8 +413,8 @@ function ImagePlane({
       <object3D
         ref={(anchor) => {
           if (!registry) return;
-          if (anchor) registry.cards.set(index, anchor);
-          else registry.cards.delete(index);
+          if (anchor) registry.cards.set(slot, anchor);
+          else registry.cards.delete(slot);
         }}
         position={[0, 0, 0.02]}
         scale={0.0065}
@@ -422,14 +444,87 @@ function WebGLContextMonitor({ onLost }: { onLost: (lost: boolean) => void }) {
   return null;
 }
 
+/* ================================================================== *
+ *  DOM card face                                                      *
+ * ================================================================== */
+function CardMedia({ asset }: { asset: MediaAsset }) {
+  return (
+    <div
+      className={styles.cardMedia}
+      // The blur stands in until the photo decodes, so a card is never an
+      // empty rectangle mid-flight through the helix.
+      style={{ backgroundImage: `url("${asset.blurDataUrl}")` }}
+      aria-hidden="true"
+    >
+      {/* The media pipeline already emitted this exact width ladder, and the
+          site can ship as a static export where next/image would be
+          unoptimised regardless. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={asset.src}
+        srcSet={asset.srcSet}
+        sizes="720px"
+        alt=""
+        width={asset.width}
+        height={asset.height}
+        loading="lazy"
+        decoding="async"
+        draggable={false}
+      />
+      <span className={styles.cardMediaScrim} />
+    </div>
+  );
+}
+
+const ArchiveCardFace = memo(function ArchiveCardFace({
+  record,
+  index,
+  hovered,
+}: {
+  record: AchievementRecord;
+  index: number;
+  hovered: boolean;
+}) {
+  const media = typeof record.media === 'object' ? record.media : null;
+
+  return (
+    <div className={styles.cardFrame} data-hovered={hovered ? 'true' : undefined}>
+      {media ? <CardMedia asset={media} /> : null}
+      <div className={styles.cardGrid} aria-hidden="true" />
+      <div className={styles.cardHead}>
+        <span>ARC / {String(index + 1).padStart(2, '0')}</span>
+        <span className={styles.status}><i /> VERIFIED</span>
+      </div>
+      <div className={styles.cardCore}>
+        <p className={styles.cardCategory}>{record.category}</p>
+        <div className={styles.cardIdentity}>
+          <strong>{record.year}</strong>
+          <h3>{record.title}</h3>
+        </div>
+        <p className={styles.cardDescription}>{record.description}</p>
+      </div>
+      <div className={styles.cardFoot}>
+        <span>{record.metric}</span>
+        <span>UIU / MARS ROVER TEAM</span>
+      </div>
+      <i className={`${styles.corner} ${styles.cornerTl}`} aria-hidden="true" />
+      <i className={`${styles.corner} ${styles.cornerBr}`} aria-hidden="true" />
+    </div>
+  );
+});
+
 function GalleryDomOverlay({
   handles,
-  hoveredIndex,
+  records,
+  windowCenter,
+  hoveredSlot,
   onHover,
 }: {
   handles: GalleryDomHandles;
-  hoveredIndex: number | null;
-  onHover: (index: number | null) => void;
+  records: AchievementRecord[];
+  windowCenter: number;
+  hoveredSlot: number | null;
+  onHover: (slot: number | null) => void;
 }) {
   return (
     <div
@@ -442,46 +537,32 @@ function GalleryDomOverlay({
         className={styles.cameraLayer}
         style={{ transformStyle: 'preserve-3d' }}
       >
-        {ITEMS.map((item, index) => {
-          const hovered = hoveredIndex === index;
+        {Array.from({ length: SLOT_COUNT }, (_, slot) => {
+          const index = recordIndexForSlot(slot, windowCenter);
+          const record = records[index];
+          if (!record) return null;
+          const hovered = hoveredSlot === slot;
           return (
             <article
-              key={`gallery-card-${index}`}
+              key={`gallery-slot-${slot}`}
               ref={(element) => {
-                if (element) handles.cards.set(index, element);
-                else handles.cards.delete(index);
+                if (element) handles.cards.set(slot, element);
+                else handles.cards.delete(slot);
               }}
               className={styles.archiveCard}
-              aria-label={`${item.year}: ${item.title}. ${item.description}`}
-              onMouseEnter={() => onHover(index)}
+              // Hidden until the projection loop has placed it. A card that
+              // has never been given a matrix would otherwise stack in the
+              // corner of the camera layer for a frame.
+              style={{ display: 'none' }}
+              aria-label={`${record.year}: ${record.title}. ${record.description}`}
+              onMouseEnter={() => onHover(slot)}
               onMouseLeave={() => onHover(null)}
             >
-              <div className={styles.cardFrame} data-hovered={hovered ? 'true' : undefined}>
-                <div className={styles.cardGrid} aria-hidden="true" />
-                <div className={styles.cardHead}>
-                  <span>ARC / {String(index + 1).padStart(2, '0')}</span>
-                  <span className={styles.status}><i /> VERIFIED</span>
-                </div>
-                <div className={styles.cardCore}>
-                  <p className={styles.cardCategory}>{item.category}</p>
-                  <div className={styles.cardIdentity}>
-                    <strong>{item.year}</strong>
-                    <h3>{item.title}</h3>
-                  </div>
-                  <p className={styles.cardDescription}>{item.description}</p>
-                </div>
-                <div className={styles.cardFoot}>
-                  <span>{item.metric}</span>
-                  <span>UIU / MARS ROVER TEAM</span>
-                </div>
-                <i className={`${styles.corner} ${styles.cornerTl}`} aria-hidden="true" />
-                <i className={`${styles.corner} ${styles.cornerBr}`} aria-hidden="true" />
-              </div>
+              <ArchiveCardFace record={record} index={index} hovered={hovered} />
             </article>
           );
         })}
       </div>
-
     </div>
   );
 }
@@ -492,14 +573,24 @@ function GalleryDomOverlay({
 function HelixGroup({
   registry,
   domHandles,
-  hoveredIndex,
+  records,
+  recordCount,
+  windowCenter,
+  onWindowCenterChange,
+  onNeedMore,
+  hoveredSlot,
   quality,
   active,
   reduceMotion,
 }: {
   registry: ProjectionRegistry;
   domHandles: GalleryDomHandles;
-  hoveredIndex: number | null;
+  records: AchievementRecord[];
+  recordCount: number;
+  windowCenter: number;
+  onWindowCenterChange: (center: number) => void;
+  onNeedMore: () => void;
+  hoveredSlot: number | null;
   quality: Quality;
   active: boolean;
   reduceMotion: boolean;
@@ -507,16 +598,18 @@ function HelixGroup({
   const groupRef = useRef<THREE.Group>(null);
   const worldPosition = useMemo(() => new THREE.Vector3(), []);
   const viewPosition = useMemo(() => new THREE.Vector3(), []);
-  const transformRef = useRef<{ group: THREE.Group | null; progress: number }>({
+  const transformRef = useRef<{ group: THREE.Group | null; position: number }>({
     group: null,
-    progress: Number.NaN,
+    position: Number.NaN,
   });
   const projectionRef = useRef<{
     group: THREE.Group | null;
     root: HTMLDivElement | null;
     cameraLayer: HTMLDivElement | null;
     camera: THREE.Camera | null;
-    progress: number;
+    position: number;
+    center: number;
+    loaded: number;
     width: number;
     height: number;
   }>({
@@ -524,12 +617,14 @@ function HelixGroup({
     root: null,
     cameraLayer: null,
     camera: null,
-    progress: Number.NaN,
+    position: Number.NaN,
+    center: Number.NaN,
+    loaded: Number.NaN,
     width: Number.NaN,
     height: Number.NaN,
   });
 
-  // Scroll state must settle before card-local transforms run. ImagePlane uses
+  // Scroll state must settle before card-local transforms run. CardSlot uses
   // priority -1, and the DOM projection below uses the default priority, so a
   // newly snapped reduced-motion chapter can never project the previous
   // chapter's anchor matrix and then remain cached there.
@@ -543,29 +638,40 @@ function HelixGroup({
       ? scroll.target
       : nextProgress;
 
-    const presentation = presentationProgress(scroll.current, reduceMotion);
-    // The extra presentation range is only for the small -> focus -> small
-    // boundary pulse. Holding the parent helix at its physical endpoints keeps
-    // the Sun high on entry and Neptune low beside the footer on departure.
-    const motionProgress = THREE.MathUtils.clamp(presentation, 0, 1);
+    const position = presentedPosition(scroll.current, recordCount, reduceMotion);
+    archive.position = position;
+
+    // The extra edge travel is only for the small -> focus -> small boundary
+    // pulse. Holding the helix at its physical endpoints keeps the opening
+    // star high on entry and the last record low beside the footer.
+    const motionPosition = THREE.MathUtils.clamp(position, 0, Math.max(0, recordCount - 1));
     const previous = transformRef.current;
     if (
       previous.group !== groupRef.current
-      || previous.progress !== motionProgress
+      || previous.position !== motionPosition
     ) {
-      // Spin the helix as user scrolls.
-      groupRef.current.rotation.y = motionProgress * SCROLL_ROT;
-      // Lift the helix to bring lower elements up, starting from the offset.
-      groupRef.current.position.y = INITIAL_Y_OFFSET + motionProgress * TOTAL_LIFT;
-      transformRef.current = { group: groupRef.current, progress: motionProgress };
+      // One record of scroll = one angular step and one vertical drop.
+      groupRef.current.rotation.y = motionPosition * ANGLE_STEP;
+      groupRef.current.position.y = motionPosition * Y_STEP;
+      transformRef.current = { group: groupRef.current, position: motionPosition };
     }
+
+    const nextCenter = THREE.MathUtils.clamp(
+      Math.round(position),
+      0,
+      Math.max(0, recordCount - 1),
+    );
+    if (nextCenter !== windowCenter) onWindowCenterChange(nextCenter);
+
+    // Pull the next page well before the reader can reach it.
+    if (position > records.length - PREFETCH_MARGIN) onNeedMore();
   }, -2);
 
   useFrame(({ camera, size }) => {
     const group = groupRef.current;
     if (!group) return;
 
-    const p = presentationProgress(scroll.current, reduceMotion);
+    const position = archive.position;
 
     const root = domHandles.root;
     const cameraLayer = domHandles.cameraLayer;
@@ -577,18 +683,16 @@ function HelixGroup({
       && previous.root === root
       && previous.cameraLayer === cameraLayer
       && previous.camera === camera
-      && previous.progress === p
+      && previous.position === position
+      && previous.center === windowCenter
+      // A page can land while the reader is stationary. Its cards mount into
+      // slots that were empty a frame ago and have never been projected, so
+      // the loaded count has to invalidate this cache too — otherwise they
+      // would sit untransformed in the corner of the camera layer.
+      && previous.loaded === records.length
       && previous.width === size.width
       && previous.height === size.height
     ) return;
-
-    // The Canvas and DOM overlay are separate React roots. Validate every
-    // corresponding handle before touching the overlay, but only after the
-    // unchanged-state fast path. This avoids an array plus eight object
-    // allocations on every animation frame.
-    for (let index = 0; index < N; index += 1) {
-      if (!registry.cards.get(index) || !domHandles.cards.get(index)) return;
-    }
 
     group.updateWorldMatrix(false, true);
     camera.updateWorldMatrix(true, false);
@@ -603,17 +707,26 @@ function HelixGroup({
       `translate(${size.width * 0.5}px,${size.height * 0.5}px)`,
     ].join(' ');
 
-    for (let index = 0; index < N; index += 1) {
-      const anchor = registry.cards.get(index)!;
-      const element = domHandles.cards.get(index)!;
-      const focus = focusFor(index, p);
+    // The Canvas and DOM overlay are separate React roots, and a slot's card
+    // only exists while its record is in range. Validate each pair as it is
+    // used rather than requiring all eleven.
+    for (let slot = 0; slot < SLOT_COUNT; slot += 1) {
+      const anchor = registry.cards.get(slot);
+      const element = domHandles.cards.get(slot);
+      if (!anchor || !element) continue;
+
+      const index = recordIndexForSlot(slot, windowCenter);
+      const focus = focusFor(index, position);
       element.style.setProperty('--card-focus', focus.toFixed(4));
       element.dataset.active = focus >= 0.82 ? 'true' : 'false';
 
       anchor.updateWorldMatrix(true, false);
       anchor.getWorldPosition(worldPosition);
       viewPosition.copy(worldPosition).applyMatrix4(camera.matrixWorldInverse);
-      const visible = viewPosition.z < -camera.near && viewPosition.z > -camera.far;
+      const visible = index >= 0
+        && index < recordCount
+        && viewPosition.z < -camera.near
+        && viewPosition.z > -camera.far;
       element.style.display = visible ? 'flex' : 'none';
       if (!visible) continue;
 
@@ -634,7 +747,9 @@ function HelixGroup({
       root,
       cameraLayer,
       camera,
-      progress: p,
+      position,
+      center: windowCenter,
+      loaded: records.length,
       width: size.width,
       height: size.height,
     };
@@ -647,15 +762,16 @@ function HelixGroup({
           quality={quality}
           active={active}
           reduceMotion={reduceMotion}
-          topY={TOTAL_Y_DROP * 0.5 + SOLAR_TOP_OVERSCAN}
-          bottomY={-TOTAL_Y_DROP * 0.5 - SOLAR_BOTTOM_OVERSCAN}
+          archiveState={archive}
+          cardYStep={Y_STEP}
         />
-        {ITEMS.map((_, i) => (
-          <ImagePlane
-            key={`ribbon-${i}`}
-            index={i}
-            hovered={hoveredIndex === i}
-            reduceMotion={reduceMotion}
+        {Array.from({ length: SLOT_COUNT }, (_, slot) => (
+          <CardSlot
+            key={`rung-${slot}`}
+            slot={slot}
+            windowCenter={windowCenter}
+            recordCount={recordCount}
+            hovered={hoveredSlot === slot}
           />
         ))}
       </group>
@@ -666,11 +782,18 @@ function HelixGroup({
 /* ================================================================== *
  *  HTML Overlay                                                       *
  * ================================================================== */
+/** Chapters shown either side of the active one in the rail. */
+const RAIL_RADIUS = 4;
+
 function Overlay({
   active,
+  records,
+  recordCount,
   reduceMotion,
 }: {
   active: boolean;
+  records: AchievementRecord[];
+  recordCount: number;
   reduceMotion: boolean;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -696,9 +819,9 @@ function Overlay({
         progressRef.current?.style.setProperty('--archive-progress', `${nextPercentage}%`);
       }
       const nextIndex = THREE.MathUtils.clamp(
-        Math.round(archivePositionForScroll(scroll.current)),
+        Math.round(archivePositionForScroll(scroll.current, recordCount)),
         0,
-        N - 1,
+        Math.max(0, recordCount - 1),
       );
       if (nextIndex !== lastIndex) {
         lastIndex = nextIndex;
@@ -720,16 +843,16 @@ function Overlay({
       cancelAnimationFrame(raf);
       window.removeEventListener('scroll', wake);
     };
-  }, [active]);
+  }, [active, recordCount]);
 
-  const scrollToChapter = (index: number) => {
+  const scrollToChapter = useCallback((index: number) => {
     const gallery = document.getElementById('helix-gallery');
     if (!gallery) return;
 
     const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
     const sectionTop = gallery.getBoundingClientRect().top + window.scrollY;
     const travel = Math.max(1, gallery.offsetHeight - viewportHeight);
-    const chapterProgress = scrollProgressForChapter(index);
+    const chapterProgress = scrollProgressForChapter(index, recordCount);
 
     // Update the HUD immediately while native smooth scrolling advances the
     // same global scroll state used by the WebGL and DOM projection layers.
@@ -738,7 +861,16 @@ function Overlay({
       top: sectionTop + travel * chapterProgress,
       behavior: reduceMotion ? 'auto' : 'smooth',
     });
-  };
+  }, [recordCount, reduceMotion]);
+
+  // An archive of arbitrary length cannot list every chapter. The rail shows
+  // a moving window around the reader; keyboard navigation still walks the
+  // full set, one record at a time.
+  const railStart = Math.max(
+    0,
+    Math.min(activeIndex - RAIL_RADIUS, recordCount - (RAIL_RADIUS * 2 + 1)),
+  );
+  const railEnd = Math.min(recordCount - 1, railStart + RAIL_RADIUS * 2);
 
   const handleRailKeyDown = (
     event: React.KeyboardEvent<HTMLButtonElement>,
@@ -746,24 +878,30 @@ function Overlay({
   ) => {
     let nextIndex = index;
     if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
-      nextIndex = Math.min(N - 1, index + 1);
+      nextIndex = Math.min(recordCount - 1, index + 1);
     } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
       nextIndex = Math.max(0, index - 1);
     } else if (event.key === 'Home') {
       nextIndex = 0;
     } else if (event.key === 'End') {
-      nextIndex = N - 1;
+      nextIndex = recordCount - 1;
     } else {
       return;
     }
 
     event.preventDefault();
-    const buttons = railRef.current?.querySelectorAll<HTMLButtonElement>('button');
-    buttons?.[nextIndex]?.focus({ preventScroll: true });
     scrollToChapter(nextIndex);
+    // The rail window follows the active chapter, so the button for the new
+    // index may not exist until after this render. Restore focus once it does.
+    requestAnimationFrame(() => {
+      railRef.current
+        ?.querySelector<HTMLButtonElement>(`button[data-index="${nextIndex}"]`)
+        ?.focus({ preventScroll: true });
+    });
   };
 
-  const activeItem = ITEMS[activeIndex] ?? ITEMS[0];
+  const activeItem = records[activeIndex] ?? records[0];
+  if (!activeItem) return null;
 
   return (
     <div className={styles.hud} data-active={active ? 'true' : 'false'}>
@@ -774,7 +912,9 @@ function Overlay({
         </div>
         <div className={styles.hudProgress}>
           <div className={styles.progressMeta}>
-            <span>ARC {String(activeIndex + 1).padStart(2, '0')} / {String(N).padStart(2, '0')}</span>
+            <span>
+              ARC {String(activeIndex + 1).padStart(2, '0')} / {String(recordCount).padStart(2, '0')}
+            </span>
             <span ref={percentRef}>000%</span>
           </div>
           <div ref={progressRef} className={styles.progressTrack}><i /></div>
@@ -784,27 +924,33 @@ function Overlay({
       <aside
         ref={railRef}
         className={styles.hudRail}
-        aria-label="Achievement archive chapters"
+        aria-label={`Achievement archive chapters, ${recordCount} total`}
       >
-        {ITEMS.map((item, index) => (
-          <button
-            key={`${item.year}-${item.title}`}
-            type="button"
-            data-active={index === activeIndex ? 'true' : undefined}
-            aria-current={index === activeIndex ? 'step' : undefined}
-            aria-label={`Go to chapter ${index + 1}: ${item.year} ${item.title}`}
-            onClick={() => scrollToChapter(index)}
-            onKeyDown={(event) => handleRailKeyDown(event, index)}
-          >
-            <i aria-hidden="true" />
-            <span className={styles.railNumber} aria-hidden="true">
-              {String(index + 1).padStart(2, '0')}
-            </span>
-            <span className={styles.railLabel} aria-hidden="true">
-              {item.year} / {item.title}
-            </span>
-          </button>
-        ))}
+        {Array.from({ length: railEnd - railStart + 1 }, (_, offset) => {
+          const index = railStart + offset;
+          const item = records[index];
+          if (!item) return null;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              data-index={index}
+              data-active={index === activeIndex ? 'true' : undefined}
+              aria-current={index === activeIndex ? 'step' : undefined}
+              aria-label={`Go to chapter ${index + 1} of ${recordCount}: ${item.year} ${item.title}`}
+              onClick={() => scrollToChapter(index)}
+              onKeyDown={(event) => handleRailKeyDown(event, index)}
+            >
+              <i aria-hidden="true" />
+              <span className={styles.railNumber} aria-hidden="true">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <span className={styles.railLabel} aria-hidden="true">
+                {item.year} / {item.title}
+              </span>
+            </button>
+          );
+        })}
       </aside>
 
       <div className={styles.hudBottom}>
@@ -832,11 +978,43 @@ export default function HelixGallery3D() {
   const [canvasActive, setCanvasActive] = useState(false);
   const [canvasMounted, setCanvasMounted] = useState(false);
   const [contextLost, setContextLost] = useState(false);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [shadersReady, setShadersReady] = useState(false);
+  const [veilMounted, setVeilMounted] = useState(true);
+  // Programs die with their context. Remounting the warm-up rebuilds them
+  // behind the same curtain instead of stalling the first restored frame.
+  const [warmupGeneration, setWarmupGeneration] = useState(0);
+  // Read every frame by SceneRenderLoop, which lives outside <Suspense> so the
+  // archive keeps drawing even if the scene below it re-suspends.
+  const shaderReadyRef = useRef(false);
+  const [hoveredSlot, setHoveredSlot] = useState<number | null>(null);
+  const [windowCenter, setWindowCenter] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(() => getReducedMotion());
-  const unmountTimerRef = useRef<number | null>(null);
   const quality = useMemo(() => detectQuality(), []);
   const dprMax = useResponsiveDpr(quality);
+
+  const {
+    records,
+    total,
+    status,
+    error,
+    loadMore,
+    reload,
+  } = useContentCollection('achievements', { limit: PAGE_SIZE });
+
+  // The section's height encodes the archive's length, so it must follow the
+  // reported total rather than the pages loaded so far — otherwise the
+  // document would grow under the reader on every fetch.
+  const recordCount = Math.max(records.length, total ?? 0);
+
+  const handleShadersReady = useCallback(() => setShadersReady(true), []);
+  const handleContextLost = useCallback((lost: boolean) => {
+    setContextLost(lost);
+    setShadersReady(false);
+    // Every program died with the context. Stop drawing until the remounted
+    // warm-up has rebuilt them.
+    shaderReadyRef.current = false;
+    if (!lost) setWarmupGeneration((generation) => generation + 1);
+  }, []);
 
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -876,6 +1054,11 @@ export default function HelixGallery3D() {
 
     const resizeObserver = new ResizeObserver(measure);
     resizeObserver.observe(container);
+    // The canvas is created before the reader reaches the archive, so the
+    // sections above it may still be settling. Anything that changes the
+    // document's height moves `sectionTop`; re-measure on that too, not only
+    // when the archive's own box changes.
+    resizeObserver.observe(document.body);
 
     measure();
     window.addEventListener('scroll', scheduleUpdate, { passive: true });
@@ -904,67 +1087,81 @@ export default function HelixGallery3D() {
     return () => observer.disconnect();
   }, []);
 
+  // Create the context a viewport and a half ahead of the archive, then keep
+  // it for the lifetime of the route. Building this scene's GPU programs costs
+  // seconds of main thread on a cold context; a canvas that is retired on
+  // scroll-away pays that price again every time the reader comes back.
   useEffect(() => {
+    if (canvasMounted) return undefined;
     const container = containerRef.current;
     if (!container) return undefined;
+
+    let idleHandle = 0;
+    let fallbackTimer = 0;
+    const mount = () => setCanvasMounted(true);
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          if (unmountTimerRef.current) {
-            window.clearTimeout(unmountTimerRef.current);
-            unmountTimerRef.current = null;
-          }
-          setCanvasMounted(true);
-          return;
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        // Hydration and the hero's own first paint come first. Warming the
+        // archive during the reader's approach is free; warming it while the
+        // page is still becoming interactive is not.
+        if (typeof window.requestIdleCallback === 'function') {
+          idleHandle = window.requestIdleCallback(mount, { timeout: 1_500 });
+        } else {
+          fallbackTimer = window.setTimeout(mount, 300);
         }
-        if (unmountTimerRef.current) window.clearTimeout(unmountTimerRef.current);
-        unmountTimerRef.current = window.setTimeout(() => {
-          setCanvasMounted(false);
-          unmountTimerRef.current = null;
-        }, 3_000);
       },
-      { rootMargin: '50% 0px' },
+      { rootMargin: '150% 0px' },
     );
     observer.observe(container);
+
     return () => {
       observer.disconnect();
-      if (unmountTimerRef.current) {
-        window.clearTimeout(unmountTimerRef.current);
-        unmountTimerRef.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!canvasMounted) {
-      setHoveredIndex(null);
-      setContextLost(false);
-      projectionRegistryRef.current.cards.clear();
-      domHandlesRef.current.cards.clear();
-      domHandlesRef.current.root = null;
-      domHandlesRef.current.cameraLayer = null;
-      return undefined;
-    }
-    return () => {
-      scroll.target = 0;
-      scroll.current = 0;
+      if (idleHandle) window.cancelIdleCallback?.(idleHandle);
+      if (fallbackTimer) window.clearTimeout(fallbackTimer);
     };
   }, [canvasMounted]);
+
+  // Retire the curtain only after its fade, so the archive is never revealed
+  // in a single frame and the spinner stops animating once it is gone.
+  useEffect(() => {
+    if (!shadersReady) {
+      setVeilMounted(true);
+      return undefined;
+    }
+    const timer = window.setTimeout(() => setVeilMounted(false), VEIL_FADE_MS);
+    return () => window.clearTimeout(timer);
+  }, [shadersReady]);
+
+  useEffect(() => () => {
+    scroll.target = 0;
+    scroll.current = 0;
+    archive.position = 0;
+  }, []);
+
+  const sectionHeight = Math.max(1, recordCount) * SECTION_SVH_PER_RECORD + SECTION_SVH_PADDING;
+  const ready = recordCount > 0;
 
   return (
     <section
       ref={containerRef}
       id="helix-gallery"
       className={styles.gallerySection}
-      style={{ height: `${N * 88 + 96}svh` }}
+      style={{ height: `${sectionHeight}svh` }}
     >
       <div className={styles.stickyStage}>
-        <Overlay
-          active={canvasActive && canvasMounted}
-          reduceMotion={reduceMotion}
-        />
+        {ready && (
+          <Overlay
+            active={canvasActive && canvasMounted}
+            records={records}
+            recordCount={recordCount}
+            reduceMotion={reduceMotion}
+          />
+        )}
 
-        {canvasMounted && (
+        {canvasMounted && ready && (
           <>
             <Canvas
               dpr={[Math.min(1, dprMax), dprMax]}
@@ -984,6 +1181,16 @@ export default function HelixGallery3D() {
                 stencil: false,
               }}
               className={styles.canvas}
+              onCreated={({ gl }) => {
+                // Three's production default still asks WebGL for every
+                // program's info log the first time it is used, which forces
+                // the driver to finish the whole scene's parallel compilation
+                // in a single multi-second task. All custom shaders stay
+                // checked in development; skip only that diagnostic readback
+                // in the tested production build.
+                if (process.env.NODE_ENV === 'production') gl.debug.checkShaderErrors = false;
+                gl.setClearColor('#050504', 1);
+              }}
             >
               <HybridFrameGovernor
                 startupDurationMs={1_200}
@@ -991,7 +1198,10 @@ export default function HelixGallery3D() {
                 reduceMotion={reduceMotion}
               />
               <WebGLRendererLifecycle />
-              <WebGLContextMonitor onLost={setContextLost} />
+              <WebGLContextMonitor onLost={handleContextLost} />
+              {/* Outside the Suspense boundary on purpose: this is what keeps
+                  drawing while anything below re-suspends. */}
+              <SceneRenderLoop readyRef={shaderReadyRef} />
               <Suspense fallback={null}>
                 <Environment />
                 <Skydome
@@ -1009,24 +1219,50 @@ export default function HelixGallery3D() {
                 <HelixGroup
                   registry={projectionRegistryRef.current}
                   domHandles={domHandlesRef.current}
-                  hoveredIndex={hoveredIndex}
+                  records={records}
+                  recordCount={recordCount}
+                  windowCenter={windowCenter}
+                  onWindowCenterChange={setWindowCenter}
+                  onNeedMore={loadMore}
+                  hoveredSlot={hoveredSlot}
                   quality={quality}
                   active={canvasActive}
                   reduceMotion={reduceMotion}
                 />
-
+                <AsyncShaderWarmup
+                  key={warmupGeneration}
+                  readyRef={shaderReadyRef}
+                  onReady={handleShadersReady}
+                />
               </Suspense>
             </Canvas>
             <GalleryDomOverlay
               handles={domHandlesRef.current}
-              hoveredIndex={hoveredIndex}
-              onHover={setHoveredIndex}
+              records={records}
+              windowCenter={windowCenter}
+              hoveredSlot={hoveredSlot}
+              onHover={setHoveredSlot}
             />
           </>
         )}
 
-        {!canvasMounted && (
-          <div className={styles.canvasFallback} aria-hidden="true"><i /><span>INITIALIZING ORBITAL ARCHIVE</span></div>
+        {veilMounted && (
+          <div
+            className={styles.canvasFallback}
+            data-ready={shadersReady && ready ? 'true' : undefined}
+            aria-hidden="true"
+          >
+            <i /><span>INITIALIZING ORBITAL ARCHIVE</span>
+          </div>
+        )}
+        {status === 'error' && (
+          <div className={styles.contextNotice} role="status">
+            <span>ARCHIVE LINK INTERRUPTED</span>
+            <strong>{error?.message ?? 'The record feed is unreachable.'}</strong>
+            <button type="button" className={styles.retryButton} onClick={reload}>
+              RETRY TRANSMISSION
+            </button>
+          </div>
         )}
         {contextLost && (
           <div className={styles.contextNotice} role="status">

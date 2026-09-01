@@ -1,0 +1,4236 @@
+{
+  "schemaVersion": 1,
+  "revision": "da5c531171a9",
+  "counts": {
+    "assets": 117,
+    "roster": 32,
+    "bytes": 79454018
+  },
+  "assets": [
+    {
+      "id": "rover-sunset-playa",
+      "collection": "rover",
+      "kind": "image",
+      "order": 0,
+      "width": 3300,
+      "height": 1856,
+      "aspectRatio": 1.77802,
+      "alt": "The rover alone on a flat desert pan at sunset, antennas raised against a low orange sun.",
+      "caption": "Sundown on the competition pan.",
+      "tags": [
+        "rover",
+        "field",
+        "hero"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRlgAAABXRUJQVlA4IEwAAABwAwCdASoUAAsAPwlurk+rpiQiMAgBcCEJZQAAWxfbhqDAn/AA93UMbX9acOs83W2aiixHy41mO8iuBADQw1NMG99KORjvgGK4YiAA",
+      "src": "/media/rover/rover-sunset-playa-1600.webp",
+      "srcSet": "/media/rover/rover-sunset-playa-480.webp 480w, /media/rover/rover-sunset-playa-960.webp 960w, /media/rover/rover-sunset-playa-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 270,
+          "url": "/media/rover/rover-sunset-playa-480.webp",
+          "bytes": 15288
+        },
+        {
+          "width": 960,
+          "height": 540,
+          "url": "/media/rover/rover-sunset-playa-960.webp",
+          "bytes": 61184
+        },
+        {
+          "width": 1600,
+          "height": 900,
+          "url": "/media/rover/rover-sunset-playa-1600.webp",
+          "bytes": 145866
+        }
+      ]
+    },
+    {
+      "id": "rover-field-poles",
+      "collection": "rover",
+      "kind": "image",
+      "order": 1,
+      "width": 4032,
+      "height": 3024,
+      "aspectRatio": 1.33333,
+      "alt": "The rover parked on dry desert ground beneath utility poles and a wide blue sky, mast and antennas deployed.",
+      "caption": "Field configuration, mast deployed.",
+      "tags": [
+        "rover",
+        "field",
+        "hero"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAACwAwCdASoUAA8APwlur0+rpiQiMAgBcCEJZgCdAA1SppQs2tcnAADdiVEp5t1oyUUHxdFO/sEuoTfEydJPaWQDEwpgT2WQiYAmbS7XUFeGRcuSmmL1IarUBQ8YE/Db/QGBc3wXkLduipNxUjNOwfX0OuBuogAA",
+      "src": "/media/rover/rover-field-poles-1600.webp",
+      "srcSet": "/media/rover/rover-field-poles-480.webp 480w, /media/rover/rover-field-poles-960.webp 960w, /media/rover/rover-field-poles-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/rover/rover-field-poles-480.webp",
+          "bytes": 40216
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/rover/rover-field-poles-960.webp",
+          "bytes": 153380
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/rover/rover-field-poles-1600.webp",
+          "bytes": 394802
+        }
+      ]
+    },
+    {
+      "id": "rover-terrain-climb",
+      "collection": "rover",
+      "kind": "image",
+      "order": 2,
+      "width": 4032,
+      "height": 3024,
+      "aspectRatio": 1.33333,
+      "alt": "The rover climbing a mound of broken earth with its orange wheels dug in, apartment blocks behind.",
+      "caption": "Traverse test on excavated ground.",
+      "tags": [
+        "rover",
+        "testing",
+        "hero"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRoAAAABXRUJQVlA4IHQAAABwAwCdASoUAA8APwlurk+rpiQiMAgBcCEJYwDCgBNPlEB5ugAA/rWhrW46ywyUZqMjGADYWItMQxgwl3SaizY09Q6tXFFlL7si8AK8tJaQxkoxLdgaDW/V8bVQZTxMS+LSwLtM08Ms1rA7pPkOy5LxSiAAAA==",
+      "src": "/media/rover/rover-terrain-climb-1600.webp",
+      "srcSet": "/media/rover/rover-terrain-climb-480.webp 480w, /media/rover/rover-terrain-climb-960.webp 960w, /media/rover/rover-terrain-climb-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/rover/rover-terrain-climb-480.webp",
+          "bytes": 27122
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/rover/rover-terrain-climb-960.webp",
+          "bytes": 73084
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/rover/rover-terrain-climb-1600.webp",
+          "bytes": 150672
+        }
+      ]
+    },
+    {
+      "id": "rover-studio-night",
+      "collection": "rover",
+      "kind": "image",
+      "order": 3,
+      "width": 1848,
+      "height": 4000,
+      "aspectRatio": 0.462,
+      "alt": "The rover lit by a single lamp on a dark studio floor, manipulator arm raised.",
+      "caption": "Arm raised, single-light study.",
+      "tags": [
+        "rover",
+        "studio",
+        "hero"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAAAwBQCdASoUACsAPwl8sVSrp6ojJWzJcCEJZwDPZEWIMyYH3THMmymWoCTcD6f1voGGiAD+80IS3QR1go0C9B1n+j0Ek3dcKbBW2Ll8+i8S9FB/ONDUDEXwKBhBVvSN7B27Pc22Bx8Q75RwgQySwbxk5+JYgAAA",
+      "src": "/media/rover/rover-studio-night-1600.webp",
+      "srcSet": "/media/rover/rover-studio-night-480.webp 480w, /media/rover/rover-studio-night-960.webp 960w, /media/rover/rover-studio-night-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 1039,
+          "url": "/media/rover/rover-studio-night-480.webp",
+          "bytes": 17394
+        },
+        {
+          "width": 960,
+          "height": 2078,
+          "url": "/media/rover/rover-studio-night-960.webp",
+          "bytes": 44962
+        },
+        {
+          "width": 1600,
+          "height": 3463,
+          "url": "/media/rover/rover-studio-night-1600.webp",
+          "bytes": 82498
+        }
+      ]
+    },
+    {
+      "id": "rover-sunset-wide",
+      "collection": "rover",
+      "kind": "image",
+      "order": 4,
+      "width": 3300,
+      "height": 1856,
+      "aspectRatio": 1.77802,
+      "alt": "Wide view of the rover on open desert at sunset with distant mesas on the horizon.",
+      "caption": "Open desert, last light.",
+      "tags": [
+        "rover",
+        "field"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAAAwAwCdASoUAAsAPwlwr1ArpqQisAgBcCEJZQC06AMxt9zgAPd1j0LkQyJzxnqhWMIIOCpAUV2h54uRv8Aejrvmdz/fyjgI/5EbIIPlAAA=",
+      "src": "/media/rover/rover-sunset-wide-1600.webp",
+      "srcSet": "/media/rover/rover-sunset-wide-480.webp 480w, /media/rover/rover-sunset-wide-960.webp 960w, /media/rover/rover-sunset-wide-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 270,
+          "url": "/media/rover/rover-sunset-wide-480.webp",
+          "bytes": 14456
+        },
+        {
+          "width": 960,
+          "height": 540,
+          "url": "/media/rover/rover-sunset-wide-960.webp",
+          "bytes": 56254
+        },
+        {
+          "width": 1600,
+          "height": 900,
+          "url": "/media/rover/rover-sunset-wide-1600.webp",
+          "bytes": 138060
+        }
+      ]
+    },
+    {
+      "id": "rover-field-open",
+      "collection": "rover",
+      "kind": "image",
+      "order": 5,
+      "width": 4032,
+      "height": 3024,
+      "aspectRatio": 1.33333,
+      "alt": "The rover on open desert ground under a bright sky, seen from behind.",
+      "caption": "Rear quarter on open ground.",
+      "tags": [
+        "rover",
+        "field"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRnYAAABXRUJQVlA4IGoAAABQBACdASoUAA8APwlurk+rpiQiMAgBcCEJaACdMoR4PoADqlsehlvYzi3AAP6dlHbE2UMiOwmhxF2mKxne69ClOPNJ9Z3welTyB80FcdLAJUxmRXx2FW9dGj8lCxgSMc7Gh5Aq/HPJAAAA",
+      "src": "/media/rover/rover-field-open-1600.webp",
+      "srcSet": "/media/rover/rover-field-open-480.webp 480w, /media/rover/rover-field-open-960.webp 960w, /media/rover/rover-field-open-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/rover/rover-field-open-480.webp",
+          "bytes": 21886
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/rover/rover-field-open-960.webp",
+          "bytes": 82208
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/rover/rover-field-open-1600.webp",
+          "bytes": 219784
+        }
+      ]
+    },
+    {
+      "id": "rover-terrain-traverse",
+      "collection": "rover",
+      "kind": "image",
+      "order": 6,
+      "width": 4000,
+      "height": 3000,
+      "aspectRatio": 1.33333,
+      "alt": "The rover crossing packed dirt beside a bare tree during a local traverse test.",
+      "caption": "Local traverse validation run.",
+      "tags": [
+        "rover",
+        "testing"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAADQAwCdASoUAA8APwlurk+rpiQiMAgBcCEJQBbZAs8j77YrAbZsmqgA/pQ+AlNIsba+xkGh869Tgc0+HatndIq4ZNImSeq8X1UVZgRobhLsoNqteWq3HG1MshiAAAAA",
+      "src": "/media/rover/rover-terrain-traverse-1600.webp",
+      "srcSet": "/media/rover/rover-terrain-traverse-480.webp 480w, /media/rover/rover-terrain-traverse-960.webp 960w, /media/rover/rover-terrain-traverse-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/rover/rover-terrain-traverse-480.webp",
+          "bytes": 27948
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/rover/rover-terrain-traverse-960.webp",
+          "bytes": 90286
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/rover/rover-terrain-traverse-1600.webp",
+          "bytes": 207626
+        }
+      ]
+    },
+    {
+      "id": "rover-field-camp",
+      "collection": "rover",
+      "kind": "image",
+      "order": 7,
+      "width": 4032,
+      "height": 3024,
+      "aspectRatio": 1.33333,
+      "alt": "The rover on gravel with the competition site buildings in the background.",
+      "caption": "Staged beside the field site.",
+      "tags": [
+        "rover",
+        "field"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRngAAABXRUJQVlA4IGwAAACQAwCdASoUAA8APwlurk+rpiQiMAgBcCEJaACdAB5OzAjeryawAPqUIF2tSgI8+Wg9bMBWGaO62FHCXGG0heYpH30H1r6DA3ZlYFRToBdpGgpQtLnDCcZYB/apvPLAdlScfPcQ6P8TvE9vAAA=",
+      "src": "/media/rover/rover-field-camp-1600.webp",
+      "srcSet": "/media/rover/rover-field-camp-480.webp 480w, /media/rover/rover-field-camp-960.webp 960w, /media/rover/rover-field-camp-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/rover/rover-field-camp-480.webp",
+          "bytes": 36772
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/rover/rover-field-camp-960.webp",
+          "bytes": 151860
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/rover/rover-field-camp-1600.webp",
+          "bytes": 420276
+        }
+      ]
+    },
+    {
+      "id": "rover-terrain-approach",
+      "collection": "rover",
+      "kind": "image",
+      "order": 8,
+      "width": 4000,
+      "height": 3000,
+      "aspectRatio": 1.33333,
+      "alt": "The rover driving across grass with a domed building behind it.",
+      "caption": "Approach geometry check.",
+      "tags": [
+        "rover",
+        "testing"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRoQAAABXRUJQVlA4IHgAAACwBACdASoUAA8APwlur0+rpiQiMAgBcCEJYgCdMoMrin/AaCEl+U22Y9226PS8AP7D+anNrIHW+WCZCrtnl0nOkwfvpNkBE65vG4C76swrBg7TUVH/7b2Le9W0k9zWqPBK3hDts7cs2NFBjwZ+EXMkKyMUZAHdAAA=",
+      "src": "/media/rover/rover-terrain-approach-1600.webp",
+      "srcSet": "/media/rover/rover-terrain-approach-480.webp 480w, /media/rover/rover-terrain-approach-960.webp 960w, /media/rover/rover-terrain-approach-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/rover/rover-terrain-approach-480.webp",
+          "bytes": 21534
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/rover/rover-terrain-approach-960.webp",
+          "bytes": 66262
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/rover/rover-terrain-approach-1600.webp",
+          "bytes": 144324
+        }
+      ]
+    },
+    {
+      "id": "rover-grass-trial",
+      "collection": "rover",
+      "kind": "image",
+      "order": 9,
+      "width": 4000,
+      "height": 3000,
+      "aspectRatio": 1.33333,
+      "alt": "The rover on a stretch of grass with construction cranes and city buildings behind.",
+      "caption": "Drive trial on soft ground.",
+      "tags": [
+        "rover",
+        "testing"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRoQAAABXRUJQVlA4IHgAAADwAwCdASoUAA8APwlur0+rpiQiMAgBcCEJZACdMoAC+35vKHewzI+4AP6yCSk0+Qv+cqZ1FC7bhkW2yeNh60c7po8Ua6mi79WbhoghCHTivleJe/pwEDOFQO58sGII1CbqyS3a7Nfl//QgV6EzEisIMTQPOpqgAAA=",
+      "src": "/media/rover/rover-grass-trial-1600.webp",
+      "srcSet": "/media/rover/rover-grass-trial-480.webp 480w, /media/rover/rover-grass-trial-960.webp 960w, /media/rover/rover-grass-trial-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/rover/rover-grass-trial-480.webp",
+          "bytes": 24150
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/rover/rover-grass-trial-960.webp",
+          "bytes": 76988
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/rover/rover-grass-trial-1600.webp",
+          "bytes": 166328
+        }
+      ]
+    },
+    {
+      "id": "rover-sunset-horizon",
+      "collection": "rover",
+      "kind": "image",
+      "order": 10,
+      "width": 3300,
+      "height": 1856,
+      "aspectRatio": 1.77802,
+      "alt": "The rover silhouetted on a desert flat as the sun drops to the horizon.",
+      "caption": "Silhouette at the horizon.",
+      "tags": [
+        "rover",
+        "field"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRl4AAABXRUJQVlA4IFIAAABwAwCdASoUAAsAPwlur0+rpiQiMAgBcCEJZQC06B2mEJgJk8AA93WPelnF3s/m9g1LskUbOGsjGN3zwFAGKSyImUFW0dmELS8KnbrBlXCVLAAA",
+      "src": "/media/rover/rover-sunset-horizon-1600.webp",
+      "srcSet": "/media/rover/rover-sunset-horizon-480.webp 480w, /media/rover/rover-sunset-horizon-960.webp 960w, /media/rover/rover-sunset-horizon-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 270,
+          "url": "/media/rover/rover-sunset-horizon-480.webp",
+          "bytes": 14270
+        },
+        {
+          "width": 960,
+          "height": 540,
+          "url": "/media/rover/rover-sunset-horizon-960.webp",
+          "bytes": 57096
+        },
+        {
+          "width": 1600,
+          "height": 900,
+          "url": "/media/rover/rover-sunset-horizon-1600.webp",
+          "bytes": 137604
+        }
+      ]
+    },
+    {
+      "id": "urc26-team-banner",
+      "collection": "urc",
+      "kind": "image",
+      "order": 11,
+      "width": 4160,
+      "height": 3120,
+      "aspectRatio": 1.33333,
+      "alt": "The UMRT crew standing with the rover, the Bangladesh flag and a United International University banner in front of a University Rover Challenge backdrop.",
+      "caption": "Crew and rover at the University Rover Challenge.",
+      "tags": [
+        "urc",
+        "competition",
+        "crew",
+        "hero"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRnIAAABXRUJQVlA4IGYAAAAQBACdASoUAA8APwlurk+rpiQiMAgBcCEJQBdgBDxCSGOUNK5G78rvIAD+xc+fEEMUWg6T/LcjNrDIrMPOY2sOXMtDaFBw7LDVaB/vA8LByNk98q9VgXyXTxjQ81huNDsbwjXgAAA=",
+      "src": "/media/urc/urc26-team-banner-1600.webp",
+      "srcSet": "/media/urc/urc26-team-banner-480.webp 480w, /media/urc/urc26-team-banner-960.webp 960w, /media/urc/urc26-team-banner-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/urc/urc26-team-banner-480.webp",
+          "bytes": 27700
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/urc/urc26-team-banner-960.webp",
+          "bytes": 98826
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/urc/urc26-team-banner-1600.webp",
+          "bytes": 273562
+        }
+      ]
+    },
+    {
+      "id": "urc26-podium-announcement",
+      "collection": "urc",
+      "kind": "image",
+      "order": 12,
+      "width": 1469,
+      "height": 1231,
+      "aspectRatio": 1.19334,
+      "alt": "Announcement graphic: UIU Mars Rover Team ranks 3rd worldwide at University Rover Challenge 2026 with the Best Autonomous System recognition, the first Asian team on the podium in twenty years.",
+      "caption": "3rd worldwide. First Asian team on the podium in 20 years.",
+      "tags": [
+        "urc",
+        "competition",
+        "announcement"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRoYAAABXRUJQVlA4IHoAAADQBACdASoUABEAPwl4tFMrpyUiqAqpcCEJYwDE2BF+GwvJBRBaLLDYBsGvs27EAAD+qhDH7IXF/UhAojKuZ4c0BXckN8JFtax/FKMKmH4A5ExKZMU7/3KHnfyMN0IuoNH8TciSaq4sYuAQ63D3+Aughwe8dIsKBQAAAA==",
+      "src": "/media/urc/urc26-podium-announcement-960.webp",
+      "srcSet": "/media/urc/urc26-podium-announcement-480.webp 480w, /media/urc/urc26-podium-announcement-960.webp 960w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 402,
+          "url": "/media/urc/urc26-podium-announcement-480.webp",
+          "bytes": 34206
+        },
+        {
+          "width": 960,
+          "height": 804,
+          "url": "/media/urc/urc26-podium-announcement-960.webp",
+          "bytes": 90682
+        }
+      ]
+    },
+    {
+      "id": "urc26-butte-celebration",
+      "collection": "urc",
+      "kind": "image",
+      "order": 13,
+      "width": 4160,
+      "height": 3120,
+      "aspectRatio": 1.33333,
+      "alt": "The team celebrating with raised arms beside the rover, holding the Bangladesh flag and a university banner below a desert butte.",
+      "caption": "Celebration below the butte.",
+      "tags": [
+        "urc",
+        "competition",
+        "crew"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRoAAAABXRUJQVlA4IHQAAAAwBACdASoUAA8APwlurk+rpiQiMAgBcCEJQBWCP/wHn5HIl9Y4K6zxTgAA/tQ4tM4U9D1EzU+v18p/7CPi4BJie/fjkPsRGXfhvLCYFKJLEtku8pWrvbKjH/7FAtwgdRvlzEvAOqXzwbATqUa2H/ngzCAAAA==",
+      "src": "/media/urc/urc26-butte-celebration-1600.webp",
+      "srcSet": "/media/urc/urc26-butte-celebration-480.webp 480w, /media/urc/urc26-butte-celebration-960.webp 960w, /media/urc/urc26-butte-celebration-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/urc/urc26-butte-celebration-480.webp",
+          "bytes": 31446
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/urc/urc26-butte-celebration-960.webp",
+          "bytes": 120988
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/urc/urc26-butte-celebration-1600.webp",
+          "bytes": 312498
+        }
+      ]
+    },
+    {
+      "id": "urc26-butte-group",
+      "collection": "urc",
+      "kind": "image",
+      "order": 14,
+      "width": 4160,
+      "height": 3120,
+      "aspectRatio": 1.33333,
+      "alt": "The full team posed with the rover and flags in front of a red desert butte.",
+      "caption": "Team portrait at the field site.",
+      "tags": [
+        "urc",
+        "competition",
+        "crew"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRowAAABXRUJQVlA4IIAAAABwBACdASoUAA8APwlur0+rpiQiMAgBcCEJaACdL1FrAt/8B3UKNV46B0cuAAD+ta19gBwNRhTvOGAXrIkH/nvtLJdfbr2+yalJKAVNtT3R4I/jgOfqxxlZw9gtRBzLaZ8S6vmudgDA5RQUQWU5JvozrZ4EqaIXg0yCWarrf9KIAA==",
+      "src": "/media/urc/urc26-butte-group-1600.webp",
+      "srcSet": "/media/urc/urc26-butte-group-480.webp 480w, /media/urc/urc26-butte-group-960.webp 960w, /media/urc/urc26-butte-group-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/urc/urc26-butte-group-480.webp",
+          "bytes": 35340
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/urc/urc26-butte-group-960.webp",
+          "bytes": 132282
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/urc/urc26-butte-group-1600.webp",
+          "bytes": 336326
+        }
+      ]
+    },
+    {
+      "id": "urc26-team-rovers",
+      "collection": "urc",
+      "kind": "image",
+      "order": 15,
+      "width": 4160,
+      "height": 3120,
+      "aspectRatio": 1.33333,
+      "alt": "Team members standing behind two rovers on the desert competition ground.",
+      "caption": "Both platforms on the line.",
+      "tags": [
+        "urc",
+        "competition"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRooAAABXRUJQVlA4IH4AAABQBACdASoUAA8APwlurk+rpiQiMAgBcCEJQBOmUGdACXf2yp+FC0bF6y4AAP6xhuWb33jpLJl34k1i/dMcaCjYaRtOnT4HW2KBtx66SGzMIMVzjYTYIZezCxxMYdTITvbLiX9rjotoFWecdIyadJUDyvy7u+2wMi2USU3gAAA=",
+      "src": "/media/urc/urc26-team-rovers-1600.webp",
+      "srcSet": "/media/urc/urc26-team-rovers-480.webp 480w, /media/urc/urc26-team-rovers-960.webp 960w, /media/urc/urc26-team-rovers-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/urc/urc26-team-rovers-480.webp",
+          "bytes": 32594
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/urc/urc26-team-rovers-960.webp",
+          "bytes": 113252
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/urc/urc26-team-rovers-1600.webp",
+          "bytes": 275094
+        }
+      ]
+    },
+    {
+      "id": "urc26-teams-lineup",
+      "collection": "urc",
+      "kind": "image",
+      "order": 16,
+      "width": 4160,
+      "height": 3120,
+      "aspectRatio": 1.33333,
+      "alt": "Competing teams and their rovers lined up together beside a support vehicle at the competition site.",
+      "caption": "Teams and machines, end of day.",
+      "tags": [
+        "urc",
+        "competition"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRoYAAABXRUJQVlA4IHoAAACQAwCdASoUAA8APwlur0+rpiQiMAgBcCEJQBOgBDExUhCrWR50APpcWlyyU0DAr2pPjItRfTvOUsIumsAh//FDQ/AF775FCzbjtKiEV7Wxb0sa6BRYnnUey2xL2r1tbT+ccMS2KcsCn31Ltr79mYRVlZiqhitAoAAAAA==",
+      "src": "/media/urc/urc26-teams-lineup-1600.webp",
+      "srcSet": "/media/urc/urc26-teams-lineup-480.webp 480w, /media/urc/urc26-teams-lineup-960.webp 960w, /media/urc/urc26-teams-lineup-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/urc/urc26-teams-lineup-480.webp",
+          "bytes": 24762
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/urc/urc26-teams-lineup-960.webp",
+          "bytes": 87896
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/urc/urc26-teams-lineup-1600.webp",
+          "bytes": 239360
+        }
+      ]
+    },
+    {
+      "id": "urc26-flag-plain",
+      "collection": "urc",
+      "kind": "image",
+      "order": 17,
+      "width": 4160,
+      "height": 3120,
+      "aspectRatio": 1.33333,
+      "alt": "The team holding the Bangladesh flag and a university banner on an open desert plain with the rover in front.",
+      "caption": "Flag on the plain.",
+      "tags": [
+        "urc",
+        "competition",
+        "crew"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRm4AAABXRUJQVlA4IGIAAAAQBACdASoUAA8APwlur0+rpiQiMAgBcCEJQBOiyAAGfsr/Bp16zAlaRAD+sVRm6Y7/tK43Yh2PPOe3/fdn4AxtSShAE9/3MkR557kLT1Q8EF8dJb7SQ2Hoj0UOGKWM6wAAAA==",
+      "src": "/media/urc/urc26-flag-plain-1600.webp",
+      "srcSet": "/media/urc/urc26-flag-plain-480.webp 480w, /media/urc/urc26-flag-plain-960.webp 960w, /media/urc/urc26-flag-plain-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/urc/urc26-flag-plain-480.webp",
+          "bytes": 30766
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/urc/urc26-flag-plain-960.webp",
+          "bytes": 120288
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/urc/urc26-flag-plain-1600.webp",
+          "bytes": 316736
+        }
+      ]
+    },
+    {
+      "id": "urc26-banner-group",
+      "collection": "urc",
+      "kind": "image",
+      "order": 18,
+      "width": 1280,
+      "height": 960,
+      "aspectRatio": 1.33333,
+      "alt": "The team gathered with the rover and flags in front of the University Rover Challenge banner.",
+      "caption": "Under the competition banner.",
+      "tags": [
+        "urc",
+        "competition",
+        "crew"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRnwAAABXRUJQVlA4IHAAAACQAwCdASoUAA8APwlurk+rpiQiMAgBcCEJQBOgBDpIP8jKJ8GAAP7F0o8puyusNyPjaOWvevl6orhtX19WjO/3eHe/LxKknRj2T/inZ09lUMrkk2f7Fz0jbxxtgbyBOKeJG4gMtp+W8FLodyfOwAAA",
+      "src": "/media/urc/urc26-banner-group-960.webp",
+      "srcSet": "/media/urc/urc26-banner-group-480.webp 480w, /media/urc/urc26-banner-group-960.webp 960w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/urc/urc26-banner-group-480.webp",
+          "bytes": 29220
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/urc/urc26-banner-group-960.webp",
+          "bytes": 99688
+        }
+      ]
+    },
+    {
+      "id": "urc26-banner-wide",
+      "collection": "urc",
+      "kind": "image",
+      "order": 19,
+      "width": 4160,
+      "height": 3120,
+      "aspectRatio": 1.33333,
+      "alt": "Wide view of the team with two rovers and flags in front of the University Rover Challenge banner.",
+      "caption": "Both rovers under the banner.",
+      "tags": [
+        "urc",
+        "competition",
+        "crew"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRnoAAABXRUJQVlA4IG4AAABwAwCdASoUAA8APwlurk+rpiQiMAgBcCEJQBOgBDpDtNyUK3wA/sXSjym7K6w3I+No5a96+XqiuG1fX1aMqsofbCFluSj2nCcW+y2IgygPsxW1RSSDEe/H+8PQZQnLuW/IEpxvycaIIafVwqcgAA==",
+      "src": "/media/urc/urc26-banner-wide-1600.webp",
+      "srcSet": "/media/urc/urc26-banner-wide-480.webp 480w, /media/urc/urc26-banner-wide-960.webp 960w, /media/urc/urc26-banner-wide-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/urc/urc26-banner-wide-480.webp",
+          "bytes": 28642
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/urc/urc26-banner-wide-960.webp",
+          "bytes": 100512
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/urc/urc26-banner-wide-1600.webp",
+          "bytes": 266234
+        }
+      ]
+    },
+    {
+      "id": "urc26-rover-field",
+      "collection": "urc",
+      "kind": "image",
+      "order": 20,
+      "width": 4032,
+      "height": 3024,
+      "aspectRatio": 1.33333,
+      "alt": "The rover standing ready on desert ground at the competition, utility poles behind it.",
+      "caption": "Ready state on the course.",
+      "tags": [
+        "urc",
+        "competition",
+        "rover"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRqAAAABXRUJQVlA4IJQAAAAwBACdASoUAA8APwlur0+rpiQiMAgBcCEJZgCdAYxEzfqGswWyOY7XuqAAyzIsorzEsk0n609B9oW5ry2bMSzT+O/4CzKuq+gVdKpn56/J27DMZkSxp/poouXRbWd0NhsvUGCFWMgYou+EoHtmrJNxeGbZ07bwVZM9s+L2FM6fAeX6mu1/cFHN7JsZfVxvc9uzEAAA",
+      "src": "/media/urc/urc26-rover-field-1600.webp",
+      "srcSet": "/media/urc/urc26-rover-field-480.webp 480w, /media/urc/urc26-rover-field-960.webp 960w, /media/urc/urc26-rover-field-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/urc/urc26-rover-field-480.webp",
+          "bytes": 36204
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/urc/urc26-rover-field-960.webp",
+          "bytes": 132496
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/urc/urc26-rover-field-1600.webp",
+          "bytes": 331254
+        }
+      ]
+    },
+    {
+      "id": "urc26-service-task",
+      "collection": "urc",
+      "kind": "image",
+      "order": 21,
+      "width": 4032,
+      "height": 3024,
+      "aspectRatio": 1.33333,
+      "alt": "Two crew members crouched beside the rover working on it during a competition task.",
+      "caption": "Servicing between tasks.",
+      "tags": [
+        "urc",
+        "competition",
+        "rover"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpgAAABXRUJQVlA4IIwAAACQBACdASoUAA8APwlurk+rpiQiMAgBcCEJZACdIKtJ/gNsWCys1+E8SEEfo34A/oxuqGSHVrkVxOCHsM6wN3BeVLny2mpKg9hBPdAD5kYAZJ9Tecr4FHRopnFo9ArfT2JvYDF1ujFXx3G21v2/oQJMXdVrCmTRC2Adxprb8cCfqycg42lykGhoIgAAAA==",
+      "src": "/media/urc/urc26-service-task-1600.webp",
+      "srcSet": "/media/urc/urc26-service-task-480.webp 480w, /media/urc/urc26-service-task-960.webp 960w, /media/urc/urc26-service-task-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/urc/urc26-service-task-480.webp",
+          "bytes": 55492
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/urc/urc26-service-task-960.webp",
+          "bytes": 198708
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/urc/urc26-service-task-1600.webp",
+          "bytes": 502892
+        }
+      ]
+    },
+    {
+      "id": "bear26-visitor-child",
+      "collection": "summit",
+      "kind": "image",
+      "order": 22,
+      "width": 6000,
+      "height": 4000,
+      "aspectRatio": 1.5,
+      "alt": "A young visitor looking closely at the rover on an exhibition floor while a crowd moves around the stand.",
+      "caption": "First contact, exhibition floor.",
+      "tags": [
+        "outreach",
+        "bear-summit",
+        "hero"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpIAAABXRUJQVlA4IIYAAABQBACdASoUAA0APwlurk+rpiQiMAgBcCEJZAC7GvAAN/MvDQc7qOegP2gAAM1XKSsG9D+t2S1fHQIfTUu72/hmXustrzMOnN1EroON42YlKpyknZGmPk2dmRgzsqIuT5TY2apTb2T+o9NBPCjPuf4ku1V+DSP6sd3vWr+J5t7AjITIUAAAAA==",
+      "src": "/media/summit/bear26-visitor-child-1600.webp",
+      "srcSet": "/media/summit/bear26-visitor-child-480.webp 480w, /media/summit/bear26-visitor-child-960.webp 960w, /media/summit/bear26-visitor-child-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 320,
+          "url": "/media/summit/bear26-visitor-child-480.webp",
+          "bytes": 22910
+        },
+        {
+          "width": 960,
+          "height": 640,
+          "url": "/media/summit/bear26-visitor-child-960.webp",
+          "bytes": 56718
+        },
+        {
+          "width": 1600,
+          "height": 1067,
+          "url": "/media/summit/bear26-visitor-child-1600.webp",
+          "bytes": 112994
+        }
+      ]
+    },
+    {
+      "id": "bear26-stand-a",
+      "collection": "summit",
+      "kind": "image",
+      "order": 23,
+      "width": 6000,
+      "height": 4000,
+      "aspectRatio": 1.5,
+      "alt": "The rover displayed on the exhibition floor with visitors around it.",
+      "caption": "Stand traffic.",
+      "tags": [
+        "outreach",
+        "bear-summit"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRnwAAABXRUJQVlA4IHAAAAAQBACdASoUAA0APwlur0+rpiQiMAgBcCEJYwDCgCLfgOgRUJx8JquKAAD+0GpE5/pzxk5+zOu6m10mDEYnOFplL/bPrK5TJBSZy0ndzFjlffc6/ZVKVqlnqwWLe7Jbm2+2wrw8IAe6CqZnOBtAj4IA",
+      "src": "/media/summit/bear26-stand-a-1600.webp",
+      "srcSet": "/media/summit/bear26-stand-a-480.webp 480w, /media/summit/bear26-stand-a-960.webp 960w, /media/summit/bear26-stand-a-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 320,
+          "url": "/media/summit/bear26-stand-a-480.webp",
+          "bytes": 18068
+        },
+        {
+          "width": 960,
+          "height": 640,
+          "url": "/media/summit/bear26-stand-a-960.webp",
+          "bytes": 45418
+        },
+        {
+          "width": 1600,
+          "height": 1067,
+          "url": "/media/summit/bear26-stand-a-1600.webp",
+          "bytes": 88862
+        }
+      ]
+    },
+    {
+      "id": "bear26-stand-b",
+      "collection": "summit",
+      "kind": "image",
+      "order": 24,
+      "width": 6000,
+      "height": 4000,
+      "aspectRatio": 1.5,
+      "alt": "The rover at the UMRT booth with team signage behind it.",
+      "caption": "At the booth.",
+      "tags": [
+        "outreach",
+        "bear-summit"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRogAAABXRUJQVlA4IHwAAADwAwCdASoUAA0APwlur0+rpiQiMAgBcCEJZACnFBkRa1jin6cqdn/oAP7d6LJC/ev27ryortzHipe9JTvobTdvqw9yn2ja3OR79a9GwoT6QAeq2Aa9XNsZ3qnicsHtzQjP8ATjMsDTLKjoe9sxDf2g7rjTsV3P6aO6SYAA",
+      "src": "/media/summit/bear26-stand-b-1600.webp",
+      "srcSet": "/media/summit/bear26-stand-b-480.webp 480w, /media/summit/bear26-stand-b-960.webp 960w, /media/summit/bear26-stand-b-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 320,
+          "url": "/media/summit/bear26-stand-b-480.webp",
+          "bytes": 18188
+        },
+        {
+          "width": 960,
+          "height": 640,
+          "url": "/media/summit/bear26-stand-b-960.webp",
+          "bytes": 45466
+        },
+        {
+          "width": 1600,
+          "height": 1067,
+          "url": "/media/summit/bear26-stand-b-1600.webp",
+          "bytes": 85450
+        }
+      ]
+    },
+    {
+      "id": "bear26-stand-c",
+      "collection": "summit",
+      "kind": "image",
+      "order": 25,
+      "width": 6000,
+      "height": 4000,
+      "aspectRatio": 1.5,
+      "alt": "Visitors gathered around the rover at the exhibition stand.",
+      "caption": "Visitors at the stand.",
+      "tags": [
+        "outreach",
+        "bear-summit"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRqIAAABXRUJQVlA4IJYAAACwAwCdASoUAA0APwlur0+rpiQiMAgBcCEJbACw7BsvY+Pdx9+hYAD80LQp8B8FhemRolj/FJBgOAEHuqn6LqnwzlAk0IByxj6a/2kIfYGmJxd8wyfiykVOBK0WxUc+MogS/oc/9VFx84jJRRX/Ybd7caFzFZLTU0BAeLLxFE9FvuJb8z7e67iTsaNOseNnun9MVPA1AAA=",
+      "src": "/media/summit/bear26-stand-c-1600.webp",
+      "srcSet": "/media/summit/bear26-stand-c-480.webp 480w, /media/summit/bear26-stand-c-960.webp 960w, /media/summit/bear26-stand-c-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 320,
+          "url": "/media/summit/bear26-stand-c-480.webp",
+          "bytes": 24186
+        },
+        {
+          "width": 960,
+          "height": 640,
+          "url": "/media/summit/bear26-stand-c-960.webp",
+          "bytes": 62766
+        },
+        {
+          "width": 1600,
+          "height": 1067,
+          "url": "/media/summit/bear26-stand-c-1600.webp",
+          "bytes": 132148
+        }
+      ]
+    },
+    {
+      "id": "bear26-record-banner",
+      "collection": "summit",
+      "kind": "image",
+      "order": 26,
+      "width": 6000,
+      "height": 4000,
+      "aspectRatio": 1.5,
+      "alt": "The UMRT booth with a banner reading \"UIU broke the record 2026\" and attendees in conversation.",
+      "caption": "The record, on the wall.",
+      "tags": [
+        "outreach",
+        "bear-summit"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpAAAABXRUJQVlA4IIQAAADwAwCdASoUAA0APwlurk+rpiQiMAgBcCEJbACdABhBJWGlo0o8o/CAAPzQ7ShCKEtS7wOZEVlfJyO0nHkVDdLMlUtMhePSrbv60SK3cIkP8DaLYi9mEp7nA1o/PGthB0YWAisueatSXU8KPuHnkh1upQz4vWfbiBWk3bXTJbmf2kYAAAA=",
+      "src": "/media/summit/bear26-record-banner-1600.webp",
+      "srcSet": "/media/summit/bear26-record-banner-480.webp 480w, /media/summit/bear26-record-banner-960.webp 960w, /media/summit/bear26-record-banner-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 320,
+          "url": "/media/summit/bear26-record-banner-480.webp",
+          "bytes": 16468
+        },
+        {
+          "width": 960,
+          "height": 640,
+          "url": "/media/summit/bear26-record-banner-960.webp",
+          "bytes": 37520
+        },
+        {
+          "width": 1600,
+          "height": 1067,
+          "url": "/media/summit/bear26-record-banner-1600.webp",
+          "bytes": 68510
+        }
+      ]
+    },
+    {
+      "id": "bear26-hall",
+      "collection": "summit",
+      "kind": "image",
+      "order": 27,
+      "width": 6000,
+      "height": 4000,
+      "aspectRatio": 1.5,
+      "alt": "Attendees moving through the summit exhibition hall past the team stand.",
+      "caption": "Exhibition hall.",
+      "tags": [
+        "outreach",
+        "bear-summit"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRoQAAABXRUJQVlA4IHgAAAAwBACdASoUAA0APwlur0+rpiQiMAgBcCEJaACdMoADaG/1iixcoTDN5wAA/mm+fAHH4gRdFcNp8E4b4GheuIYZ+j067YU1Rm2M3nwqovy8/L/0+oKEKuVVC3zd/emSOfI2ifDXZXZLmiYUHsfuu84CblhigBgoAAA=",
+      "src": "/media/summit/bear26-hall-1600.webp",
+      "srcSet": "/media/summit/bear26-hall-480.webp 480w, /media/summit/bear26-hall-960.webp 960w, /media/summit/bear26-hall-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 320,
+          "url": "/media/summit/bear26-hall-480.webp",
+          "bytes": 16724
+        },
+        {
+          "width": 960,
+          "height": 640,
+          "url": "/media/summit/bear26-hall-960.webp",
+          "bytes": 40632
+        },
+        {
+          "width": 1600,
+          "height": 1067,
+          "url": "/media/summit/bear26-hall-1600.webp",
+          "bytes": 79386
+        }
+      ]
+    },
+    {
+      "id": "iut26-crew-rover",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 28,
+      "width": 4000,
+      "height": 3000,
+      "aspectRatio": 1.33333,
+      "alt": "The full UMRT crew posed with the rover in a brick colonnade at the IUT Rover Summit.",
+      "caption": "Crew and rover, IUT Rover Summit.",
+      "tags": [
+        "outreach",
+        "iut-summit",
+        "crew",
+        "hero"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRogAAABXRUJQVlA4IHwAAACQAwCdASoUAA8APwlur0+rpiQiMAgBcCEJYgCdABmqjb2vS0N8AP50gezoNPylzufUYRCe9yKKBeh9hvHHnmOPRpq2uzg7Sy3/30fFAQ1TrD822x2CwhUzmOht6yK0km81Co23hihKCYir+GgoK2wI5+LurZVjmQAcQAAA",
+      "src": "/media/outreach/iut26-crew-rover-1600.webp",
+      "srcSet": "/media/outreach/iut26-crew-rover-480.webp 480w, /media/outreach/iut26-crew-rover-960.webp 960w, /media/outreach/iut26-crew-rover-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/outreach/iut26-crew-rover-480.webp",
+          "bytes": 28102
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/outreach/iut26-crew-rover-960.webp",
+          "bytes": 86280
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/outreach/iut26-crew-rover-1600.webp",
+          "bytes": 202308
+        }
+      ]
+    },
+    {
+      "id": "iut26-panel-speaker",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 29,
+      "width": 1280,
+      "height": 720,
+      "aspectRatio": 1.77778,
+      "alt": "A UMRT member speaking into a microphone on stage under a Rover Summit panel discussion backdrop.",
+      "caption": "On the summit panel.",
+      "tags": [
+        "outreach",
+        "iut-summit"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRnoAAABXRUJQVlA4IG4AAADwAwCdASoUAAsAPwlwsFArpiSisAgBcCEJbAC+SBFOA/Z1f9r+0q8AAHSmxehSMZHplxSSeG29jrCGTsnSDDI1qoOJjiIaN06zNcWWP6uLomGTe1ZXxZXYp3q5qUevR5iBTM7aeqTCIOb8OgAAAA==",
+      "src": "/media/outreach/iut26-panel-speaker-960.webp",
+      "srcSet": "/media/outreach/iut26-panel-speaker-480.webp 480w, /media/outreach/iut26-panel-speaker-960.webp 960w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 270,
+          "url": "/media/outreach/iut26-panel-speaker-480.webp",
+          "bytes": 17168
+        },
+        {
+          "width": 960,
+          "height": 540,
+          "url": "/media/outreach/iut26-panel-speaker-960.webp",
+          "bytes": 41198
+        }
+      ]
+    },
+    {
+      "id": "iut26-panel-stage",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 30,
+      "width": 3024,
+      "height": 4032,
+      "aspectRatio": 0.75,
+      "alt": "The Rover Summit panel on stage, one speaker standing and addressing the room.",
+      "caption": "Panel discussion, 11 July.",
+      "tags": [
+        "outreach",
+        "iut-summit"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrYAAABXRUJQVlA4IKoAAAAQBQCdASoUABsAPwlwq1ArpiOisBgMAXAhCUAXurYAQSnu5aukxAvaaCsg+iEaOp4AAPcm8KYvw1iAWLumyyTcX6rh0YtqfkjolTCY9C9kS3P4o6Uue1LiLoDpy2itnQefGYf3U6bF4A2jnRfiBOQrjXyAc04kvapUCoQmOJ0KW4lBLlQMpb50oY02eaFvN/fW6N/OKMVFBYZToMDI2YqQ44fUeaCwdAAAAA==",
+      "src": "/media/outreach/iut26-panel-stage-1600.webp",
+      "srcSet": "/media/outreach/iut26-panel-stage-480.webp 480w, /media/outreach/iut26-panel-stage-960.webp 960w, /media/outreach/iut26-panel-stage-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 640,
+          "url": "/media/outreach/iut26-panel-stage-480.webp",
+          "bytes": 30420
+        },
+        {
+          "width": 960,
+          "height": 1280,
+          "url": "/media/outreach/iut26-panel-stage-960.webp",
+          "bytes": 106884
+        },
+        {
+          "width": 1600,
+          "height": 2133,
+          "url": "/media/outreach/iut26-panel-stage-1600.webp",
+          "bytes": 264482
+        }
+      ]
+    },
+    {
+      "id": "iut26-award",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 31,
+      "width": 2268,
+      "height": 4032,
+      "aspectRatio": 0.5625,
+      "alt": "A certificate being handed to a UMRT member on stage at the Rover Summit.",
+      "caption": "Recognition on stage.",
+      "tags": [
+        "outreach",
+        "iut-summit"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRtQAAABXRUJQVlA4IMgAAACQBQCdASoUACQAPwlws1QrpaQjKrgKAXAhCWwAsR8OSIBJNCTDhBGkSOmjW3nPqjh3M6aUAAD+8ttNWjApRx3cJuKQ0+RQ/+4UY0ZKUtg/Izehm5Bd9fBU2WmF6OBcGlUVN+s1O5tnf7cec+38FUTS5ImoVTD9FjQJyb8pMrKy2RkyTPykXKDdXJEqQq7kdDDWYD/7a2irsMgxemNEfEUIwzVpKu8041ZaFVkWJzpLccnpoojsFfeUt0Vua4QVB1SQPqxEsQAAAA==",
+      "src": "/media/outreach/iut26-award-1600.webp",
+      "srcSet": "/media/outreach/iut26-award-480.webp 480w, /media/outreach/iut26-award-960.webp 960w, /media/outreach/iut26-award-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 853,
+          "url": "/media/outreach/iut26-award-480.webp",
+          "bytes": 53566
+        },
+        {
+          "width": 960,
+          "height": 1707,
+          "url": "/media/outreach/iut26-award-960.webp",
+          "bytes": 173106
+        },
+        {
+          "width": 1600,
+          "height": 2844,
+          "url": "/media/outreach/iut26-award-1600.webp",
+          "bytes": 376778
+        }
+      ]
+    },
+    {
+      "id": "ieeb26-stand",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 32,
+      "width": 4000,
+      "height": 3000,
+      "aspectRatio": 1.33333,
+      "alt": "Three crew members standing behind the rover on a display table at an IEEE Bangladesh event, ground station laid out beside it.",
+      "caption": "Open bench at the IEEE showcase.",
+      "tags": [
+        "outreach",
+        "ieeb"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRowAAABXRUJQVlA4IIAAAAAwBACdASoUAA8APwlurk+rpiQiMAgBcCEJZQAD5Vl7H9D8Hzmf5WjvaIAA/sTHkM7547w1BSQz/CVrWlQGcocMkEt82+fHRC6lC4jZVoiNlEy8CnWQhEcJ2JR829dZcQkraGKzjSTTBgO/PVNf87VG6vO5JhFvvtz72MTF/JAAAA==",
+      "src": "/media/outreach/ieeb26-stand-1600.webp",
+      "srcSet": "/media/outreach/ieeb26-stand-480.webp 480w, /media/outreach/ieeb26-stand-960.webp 960w, /media/outreach/ieeb26-stand-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/outreach/ieeb26-stand-480.webp",
+          "bytes": 21552
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/outreach/ieeb26-stand-960.webp",
+          "bytes": 61640
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/outreach/ieeb26-stand-1600.webp",
+          "bytes": 136738
+        }
+      ]
+    },
+    {
+      "id": "udayan26-students",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 33,
+      "width": 1600,
+      "height": 1066,
+      "aspectRatio": 1.50094,
+      "alt": "School students crowding around the rover in a courtyard at the Udayan Science Carnival.",
+      "caption": "Students meeting the rover.",
+      "tags": [
+        "outreach",
+        "udayan",
+        "hero"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRogAAABXRUJQVlA4IHwAAAAQBACdASoUAA0APwlurk+rpiQiMAgBcCEJYwC7ABnT1gy7Z5szGveDoAD+oOHFHzx+9e0SbbmlH5Z4Tb3OrPm3GldbgHw+LmL+k7tHKgHkbmxd2tG+9XItiLt0OyeOMPfaZHWBP6/+drXsen/Fji1vAKAAwmARxQBhkAAA",
+      "src": "/media/outreach/udayan26-students-1600.webp",
+      "srcSet": "/media/outreach/udayan26-students-480.webp 480w, /media/outreach/udayan26-students-960.webp 960w, /media/outreach/udayan26-students-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 320,
+          "url": "/media/outreach/udayan26-students-480.webp",
+          "bytes": 29882
+        },
+        {
+          "width": 960,
+          "height": 640,
+          "url": "/media/outreach/udayan26-students-960.webp",
+          "bytes": 87432
+        },
+        {
+          "width": 1600,
+          "height": 1066,
+          "url": "/media/outreach/udayan26-students-1600.webp",
+          "bytes": 184506
+        }
+      ]
+    },
+    {
+      "id": "udayan26-group",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 34,
+      "width": 1600,
+      "height": 1066,
+      "aspectRatio": 1.50094,
+      "alt": "A large group of students and staff gathered behind the rover for a photograph at the carnival.",
+      "caption": "The whole hall, one frame.",
+      "tags": [
+        "outreach",
+        "udayan"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAADQAwCdASoUAA0APwlurk+rpiQiMAgBcCEJbAC06CG32eEJ+rsR5RAA/kAJ4I0NWhwMUpJTJAZrJduVTJdczda0DToicOaMQX8FwCLgcbl9tXp1GAmMIK9n0LOLuunXIUtMH+/O/HCcXQ6ED8Rge6yNZELSSVzVFKkZceuIj8OmPDOkN1Iuvw2MzFUWFcAA",
+      "src": "/media/outreach/udayan26-group-1600.webp",
+      "srcSet": "/media/outreach/udayan26-group-480.webp 480w, /media/outreach/udayan26-group-960.webp 960w, /media/outreach/udayan26-group-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 320,
+          "url": "/media/outreach/udayan26-group-480.webp",
+          "bytes": 33180
+        },
+        {
+          "width": 960,
+          "height": 640,
+          "url": "/media/outreach/udayan26-group-960.webp",
+          "bytes": 95066
+        },
+        {
+          "width": 1600,
+          "height": 1066,
+          "url": "/media/outreach/udayan26-group-1600.webp",
+          "bytes": 198226
+        }
+      ]
+    },
+    {
+      "id": "udayan26-reach",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 35,
+      "width": 1600,
+      "height": 1066,
+      "aspectRatio": 1.50094,
+      "alt": "A boy reaching toward the rover on a display table while a crew member explains it.",
+      "caption": "Hands on the hardware.",
+      "tags": [
+        "outreach",
+        "udayan"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRowAAABXRUJQVlA4IIAAAADwAwCdASoUAA0APwlurk+rpiQiMAgBcCEJbADCgBCcp79pl/94Ap0AAPkL76FmhtGaMc0qdIwjtgnxH8kcaRzz/3mue7spi8GzaFR40Vhrvs4+tiDrTfWbrPUenRdqMwzwgfYKXze/aWxR8KQ4ZFPnUbnQVpmQRQw7qHfnNYpAAA==",
+      "src": "/media/outreach/udayan26-reach-1600.webp",
+      "srcSet": "/media/outreach/udayan26-reach-480.webp 480w, /media/outreach/udayan26-reach-960.webp 960w, /media/outreach/udayan26-reach-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 320,
+          "url": "/media/outreach/udayan26-reach-480.webp",
+          "bytes": 27524
+        },
+        {
+          "width": 960,
+          "height": 640,
+          "url": "/media/outreach/udayan26-reach-960.webp",
+          "bytes": 67018
+        },
+        {
+          "width": 1600,
+          "height": 1066,
+          "url": "/media/outreach/udayan26-reach-1600.webp",
+          "bytes": 122556
+        }
+      ]
+    },
+    {
+      "id": "udayan26-demo",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 36,
+      "width": 1600,
+      "height": 1066,
+      "aspectRatio": 1.50094,
+      "alt": "A crew member demonstrating the manipulator arm to a circle of school children.",
+      "caption": "Demonstrating the arm.",
+      "tags": [
+        "outreach",
+        "udayan"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAAAQBACdASoUAA0APwlurk+rpiQiMAgBcCEJbACdABhWjLo72BQqopc7gAD+h7G05i0BvFF5QIZYK2rPc6XktsJy1APB7ppDYz6FO6QWv/9xG2m4FiOoSar9XUHTAUI7iBQ58q5xNjUVLwsl7MeZxnl3XPnv1GFS95ntwe1QoU6iZtLKUX59xxYwiDhe1AAA",
+      "src": "/media/outreach/udayan26-demo-1600.webp",
+      "srcSet": "/media/outreach/udayan26-demo-480.webp 480w, /media/outreach/udayan26-demo-960.webp 960w, /media/outreach/udayan26-demo-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 320,
+          "url": "/media/outreach/udayan26-demo-480.webp",
+          "bytes": 28656
+        },
+        {
+          "width": 960,
+          "height": 640,
+          "url": "/media/outreach/udayan26-demo-960.webp",
+          "bytes": 71528
+        },
+        {
+          "width": 1600,
+          "height": 1066,
+          "url": "/media/outreach/udayan26-demo-1600.webp",
+          "bytes": 134158
+        }
+      ]
+    },
+    {
+      "id": "udayan26-courtyard",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 37,
+      "width": 1600,
+      "height": 1066,
+      "aspectRatio": 1.50094,
+      "alt": "The rover driving along a courtyard path beneath a university canopy while students watch from both sides.",
+      "caption": "Courtyard traverse.",
+      "tags": [
+        "outreach",
+        "udayan"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRogAAABXRUJQVlA4IHwAAADwAwCdASoUAA0APwlur0+rpiQiMAgBcCEJQBdgA77KteQSZIWNA/MAAP6ohA5iOJiTeffckPn2qJiEAcQ4OTwbC3f5Til4V7boObB0OhJi1Wd8xnD7b6x5DQ8PdrexgiKYImJioHJhHX4CeHtSaaUnXylNQ8r7nQGmeSwA",
+      "src": "/media/outreach/udayan26-courtyard-1600.webp",
+      "srcSet": "/media/outreach/udayan26-courtyard-480.webp 480w, /media/outreach/udayan26-courtyard-960.webp 960w, /media/outreach/udayan26-courtyard-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 320,
+          "url": "/media/outreach/udayan26-courtyard-480.webp",
+          "bytes": 30294
+        },
+        {
+          "width": 960,
+          "height": 640,
+          "url": "/media/outreach/udayan26-courtyard-960.webp",
+          "bytes": 88862
+        },
+        {
+          "width": 1600,
+          "height": 1066,
+          "url": "/media/outreach/udayan26-courtyard-1600.webp",
+          "bytes": 195754
+        }
+      ]
+    },
+    {
+      "id": "uiu26-welcome-crowd",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 38,
+      "width": 6000,
+      "height": 4000,
+      "aspectRatio": 1.5,
+      "alt": "A large crowd of students raising phones to record the team returning to campus.",
+      "caption": "Campus welcome.",
+      "tags": [
+        "outreach",
+        "uiu-celebration",
+        "hero"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRogAAABXRUJQVlA4IHwAAADwAwCdASoUAA0APwlur0+rpiQiMAgBcCEJZQC7ABeChZPMxUyb5Kw0AP55JTpl4WtFC+BQMRKm97z1NB/hCUpnHWoSrAY6ad1kWo056jiZqK7X/Ub9ZnSY1ns7mA9WGIQ2LrE0BHbAY1dDtnzB7b0MZcXyHqSPVVPml4AA",
+      "src": "/media/outreach/uiu26-welcome-crowd-1600.webp",
+      "srcSet": "/media/outreach/uiu26-welcome-crowd-480.webp 480w, /media/outreach/uiu26-welcome-crowd-960.webp 960w, /media/outreach/uiu26-welcome-crowd-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 320,
+          "url": "/media/outreach/uiu26-welcome-crowd-480.webp",
+          "bytes": 45706
+        },
+        {
+          "width": 960,
+          "height": 640,
+          "url": "/media/outreach/uiu26-welcome-crowd-960.webp",
+          "bytes": 143662
+        },
+        {
+          "width": 1600,
+          "height": 1067,
+          "url": "/media/outreach/uiu26-welcome-crowd-1600.webp",
+          "bytes": 316640
+        }
+      ]
+    },
+    {
+      "id": "uiu26-garlands",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 39,
+      "width": 6000,
+      "height": 4000,
+      "aspectRatio": 1.5,
+      "alt": "Team members wearing flower garlands as they are honoured in front of the assembled students.",
+      "caption": "Honoured on return.",
+      "tags": [
+        "outreach",
+        "uiu-celebration"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRowAAABXRUJQVlA4IIAAAACQAwCdASoUAA0APwlur0+rpiQiMAgBcCEJYwAOcAMLHQtveEzwAM3GVoAYltgVY0JKV8oORGOTLyhUcLJLexXC8DwuF61wYmihxDuj+X7PyxiWGyFUR4GZEmoDVO2yAgdYVlXpeaEP0dLIIsf3v0qW95kl8LevGUZlG02Xq9AAAA==",
+      "src": "/media/outreach/uiu26-garlands-1600.webp",
+      "srcSet": "/media/outreach/uiu26-garlands-480.webp 480w, /media/outreach/uiu26-garlands-960.webp 960w, /media/outreach/uiu26-garlands-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 320,
+          "url": "/media/outreach/uiu26-garlands-480.webp",
+          "bytes": 31554
+        },
+        {
+          "width": 960,
+          "height": 640,
+          "url": "/media/outreach/uiu26-garlands-960.webp",
+          "bytes": 85452
+        },
+        {
+          "width": 1600,
+          "height": 1067,
+          "url": "/media/outreach/uiu26-garlands-1600.webp",
+          "bytes": 166718
+        }
+      ]
+    },
+    {
+      "id": "uiu26-stars-unveiling",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 40,
+      "width": 4000,
+      "height": 3000,
+      "aspectRatio": 1.33333,
+      "alt": "The team unveiling a commemorative plaque together on stage under a \"STARS\" backdrop.",
+      "caption": "Unveiling the plaque.",
+      "tags": [
+        "outreach",
+        "uiu-celebration"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpQAAABXRUJQVlA4IIgAAAAQBACdASoUAA8APwlur0+rpiQiMAgBcCEJZgCdMoADC0vC3fVHlXaiAAD+IuVt3RlTA0dwy9CAf6FwsG8CYwXQ8WKziKRypcNp9AvNoG3tamz/H2BMN9QdNwEHTERHtLAyHYHm8hpmDEnPy750vt1l9WlGsygz5Eh5NqotUouvGMgOc52C0AAA",
+      "src": "/media/outreach/uiu26-stars-unveiling-1600.webp",
+      "srcSet": "/media/outreach/uiu26-stars-unveiling-480.webp 480w, /media/outreach/uiu26-stars-unveiling-960.webp 960w, /media/outreach/uiu26-stars-unveiling-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/outreach/uiu26-stars-unveiling-480.webp",
+          "bytes": 31754
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/outreach/uiu26-stars-unveiling-960.webp",
+          "bytes": 89380
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/outreach/uiu26-stars-unveiling-1600.webp",
+          "bytes": 196592
+        }
+      ]
+    },
+    {
+      "id": "uiu26-stars-stage",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 41,
+      "width": 4000,
+      "height": 3000,
+      "aspectRatio": 1.33333,
+      "alt": "The team gathered on stage around the commemorative plaque during the campus ceremony.",
+      "caption": "On stage together.",
+      "tags": [
+        "outreach",
+        "uiu-celebration"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRogAAABXRUJQVlA4IHwAAADwAwCdASoUAA8APwlurk+rpiQiMAgBcCEJYgC1F1yBpRfWjMhy8uEoAP3VkABNufjg4U4d/bI8iG++kYFrIxWi57C9w1LpTrmgho5LM1VXpdi04XXnciVxJYrn5r/Dhtbmvf448kx2nAl29HnGeeXUsbJdqz+qHZXgAAAA",
+      "src": "/media/outreach/uiu26-stars-stage-1600.webp",
+      "srcSet": "/media/outreach/uiu26-stars-stage-480.webp 480w, /media/outreach/uiu26-stars-stage-960.webp 960w, /media/outreach/uiu26-stars-stage-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/outreach/uiu26-stars-stage-480.webp",
+          "bytes": 29114
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/outreach/uiu26-stars-stage-960.webp",
+          "bytes": 99816
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/outreach/uiu26-stars-stage-1600.webp",
+          "bytes": 221720
+        }
+      ]
+    },
+    {
+      "id": "uiu26-stars-hands",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 42,
+      "width": 4000,
+      "height": 3000,
+      "aspectRatio": 1.33333,
+      "alt": "Many hands together on the commemorative plaque as the team unveils it.",
+      "caption": "Every hand on it.",
+      "tags": [
+        "outreach",
+        "uiu-celebration"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAADwAwCdASoUAA8APwlurk+rpiQiMAgBcCEJYgCw7B6o5Rstb+fvnYiIAP3PYUmIG4NpygkBYKiQCc8nW/WhDvwuRGjCu9BN5oykJ9/zhsyzGUQ9A7S2AP2rf0SuRcf6YSyjFAriOyAkZB1wYeDvvhdo7dSYIAAA",
+      "src": "/media/outreach/uiu26-stars-hands-1600.webp",
+      "srcSet": "/media/outreach/uiu26-stars-hands-480.webp 480w, /media/outreach/uiu26-stars-hands-960.webp 960w, /media/outreach/uiu26-stars-hands-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/outreach/uiu26-stars-hands-480.webp",
+          "bytes": 29530
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/outreach/uiu26-stars-hands-960.webp",
+          "bytes": 101020
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/outreach/uiu26-stars-hands-1600.webp",
+          "bytes": 226398
+        }
+      ]
+    },
+    {
+      "id": "uiu26-stars-close",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 43,
+      "width": 4000,
+      "height": 3000,
+      "aspectRatio": 1.33333,
+      "alt": "Close view of the team around the plaque during the unveiling.",
+      "caption": "The moment itself.",
+      "tags": [
+        "outreach",
+        "uiu-celebration"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRogAAABXRUJQVlA4IHwAAAAQBACdASoUAA8APwlurk+rpiQiMAgBcCEJQBbe4AA0GI4qxliuP9ks4AD93vtWSBUJ+oZWdoBChhHn1I8ls7+1+Im+zCGZizWd4aD8uOzXWepaERitF7JLKpDNNikFgFxZzNP9j+/8mHK+9C7GJWxzTyyqfm+Ea214eSAA",
+      "src": "/media/outreach/uiu26-stars-close-1600.webp",
+      "srcSet": "/media/outreach/uiu26-stars-close-480.webp 480w, /media/outreach/uiu26-stars-close-960.webp 960w, /media/outreach/uiu26-stars-close-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/outreach/uiu26-stars-close-480.webp",
+          "bytes": 33780
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/outreach/uiu26-stars-close-960.webp",
+          "bytes": 115656
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/outreach/uiu26-stars-close-1600.webp",
+          "bytes": 253190
+        }
+      ]
+    },
+    {
+      "id": "uiu26-stars-confetti",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 44,
+      "width": 4000,
+      "height": 3000,
+      "aspectRatio": 1.33333,
+      "alt": "Confetti falling over the team as the commemorative plaque is revealed.",
+      "caption": "Confetti over the plaque.",
+      "tags": [
+        "outreach",
+        "uiu-celebration"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpQAAABXRUJQVlA4IIgAAAAwBACdASoUAA8APwlurk+rpiQiMAgBcCEJZACdMoBOACA8Cs5D7w5nxQAA/iLAW4OvXkDiryBAFlVyZsKM1fGD6bfdWtZyiuMrahQ/vM8Ic2bUzgOoNmxLdleIN/d/CmE3ODp/lxcN4UxvzmN+kQ+44A9p48ZfyZs+DWJAX7WCK/yum+L7oAAA",
+      "src": "/media/outreach/uiu26-stars-confetti-1600.webp",
+      "srcSet": "/media/outreach/uiu26-stars-confetti-480.webp 480w, /media/outreach/uiu26-stars-confetti-960.webp 960w, /media/outreach/uiu26-stars-confetti-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/outreach/uiu26-stars-confetti-480.webp",
+          "bytes": 32664
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/outreach/uiu26-stars-confetti-960.webp",
+          "bytes": 94708
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/outreach/uiu26-stars-confetti-1600.webp",
+          "bytes": 211396
+        }
+      ]
+    },
+    {
+      "id": "uiu26-stars-wide",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 45,
+      "width": 4000,
+      "height": 3000,
+      "aspectRatio": 1.33333,
+      "alt": "Wide view of the ceremony stage with the team and university banners.",
+      "caption": "Ceremony, wide.",
+      "tags": [
+        "outreach",
+        "uiu-celebration"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRooAAABXRUJQVlA4IH4AAABQBACdASoUAA8APwlurk+rpiQiMAgBcCEJYgCdACPQZ+t2K3iyX8Z/Aa7iAP7G9ozC3lcy4GXSkrcMwJMZwGKnpcI5WFmvbPtG+mXtzZdbHO0Hxeadb19TUh9XltKQNi6g5NB/+Q/Ly1d953o5tz3UDkN1cYHK1lqt05jYAAA=",
+      "src": "/media/outreach/uiu26-stars-wide-1600.webp",
+      "srcSet": "/media/outreach/uiu26-stars-wide-480.webp 480w, /media/outreach/uiu26-stars-wide-960.webp 960w, /media/outreach/uiu26-stars-wide-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/outreach/uiu26-stars-wide-480.webp",
+          "bytes": 31494
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/outreach/uiu26-stars-wide-960.webp",
+          "bytes": 101266
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/outreach/uiu26-stars-wide-1600.webp",
+          "bytes": 214842
+        }
+      ]
+    },
+    {
+      "id": "uiu26-stars-after",
+      "collection": "outreach",
+      "kind": "image",
+      "order": 46,
+      "width": 4000,
+      "height": 3000,
+      "aspectRatio": 1.33333,
+      "alt": "The team standing together after the unveiling as confetti settles.",
+      "caption": "After the reveal.",
+      "tags": [
+        "outreach",
+        "uiu-celebration"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRo4AAABXRUJQVlA4IIIAAABQBACdASoUAA8APwlurk+rpiQiMAgBcCEJQBfnBFKqPH/HnCkeTZ2jBjwAAP62o9OHd13ryNfWuug7k5PSxWcekaHuAVNBvI4zzRldmTxtr6qdTuSMgPIRKGvUz4YRdJCxwEe/4ROlN/bht1O0eqOtGCXLUYbhqA+wJpuIQWB0QAAA",
+      "src": "/media/outreach/uiu26-stars-after-1600.webp",
+      "srcSet": "/media/outreach/uiu26-stars-after-480.webp 480w, /media/outreach/uiu26-stars-after-960.webp 960w, /media/outreach/uiu26-stars-after-1600.webp 1600w",
+      "variants": [
+        {
+          "width": 480,
+          "height": 360,
+          "url": "/media/outreach/uiu26-stars-after-480.webp",
+          "bytes": 36404
+        },
+        {
+          "width": 960,
+          "height": 720,
+          "url": "/media/outreach/uiu26-stars-after-960.webp",
+          "bytes": 113584
+        },
+        {
+          "width": 1600,
+          "height": 1200,
+          "url": "/media/outreach/uiu26-stars-after-1600.webp",
+          "bytes": 241214
+        }
+      ]
+    },
+    {
+      "id": "crew-abid-hossain",
+      "collection": "crew",
+      "kind": "image",
+      "order": 47,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Abid Hossain, mentor, UIU Mars Rover Team.",
+      "caption": "Abid Hossain",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrYAAABXRUJQVlA4IKoAAAAwBQCdASoUACQAPwl2tFKrpyUjpWzJcCEJZQDAKDnfh81F91HapoTyY8h0QkxPUHxOAAD+8qeKWucpfgPiJ1f87I657SNAKdUdJlPGZeJ74r/rS4kycX0yvCwxjQ1uLpB3roL5lueQuaubd5AMGMH0AdOvbH348fAGgoEYPzF02bOE1OrB0v2oOP35dlX3him0vERjFlQ+dQzCLo3lfCE5/A4d8LuBoGAAAA==",
+      "src": "/media/crew/crew-abid-hossain-640.webp",
+      "srcSet": "/media/crew/crew-abid-hossain-320.webp 320w, /media/crew/crew-abid-hossain-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-abid-hossain-320.webp",
+          "bytes": 11042
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-abid-hossain-640.webp",
+          "bytes": 29996
+        }
+      ]
+    },
+    {
+      "id": "crew-saif-al-saad",
+      "collection": "crew",
+      "kind": "image",
+      "order": 48,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Saif Al Saad, team lead, UIU Mars Rover Team.",
+      "caption": "Saif Al Saad",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRqAAAABXRUJQVlA4IJQAAAAwBQCdASoUACQAPwl0sFKrpqQjqrgMAXAhCWUAzuwitqDEt7lVbFdQ2HTKsf5kivhwwAD+686AYLdyRUiUQIcWd79/cZfWPbU37sufL066gtE9+UGm8dz5YLlfUi3FVGm8yA5eUYLuOFGyUU8LjWF/ji6pYPNmQFNlqJu2HBJ219SgLZJuWH1dWC81muLmcKhX1CAA",
+      "src": "/media/crew/crew-saif-al-saad-640.webp",
+      "srcSet": "/media/crew/crew-saif-al-saad-320.webp 320w, /media/crew/crew-saif-al-saad-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-saif-al-saad-320.webp",
+          "bytes": 9366
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-saif-al-saad-640.webp",
+          "bytes": 25932
+        }
+      ]
+    },
+    {
+      "id": "crew-sheikh-shakib",
+      "collection": "crew",
+      "kind": "image",
+      "order": 49,
+      "width": 577,
+      "height": 1024,
+      "aspectRatio": 0.56348,
+      "alt": "Studio portrait of Sheikh Shakib, co-team lead, UIU Mars Rover Team.",
+      "caption": "Sheikh Shakib",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAABQBQCdASoUACQAPwl6slOrp6QoJWzJcCEJYwDC+DnhgFmFpbhUFDlX+8DF8saDYHoKM4AA/vDO67RTAKHeWatiliRJFOtjzc7wmfN7VJL/+rNLoUHlKL26XMQXC1fjCs9VFtMFa5KpsmqjlSjwLUqFWLdvsWA3J/Tkgod/c2oGmhUvLbempucBMRiq2AAA",
+      "src": "/media/crew/crew-sheikh-shakib-320.webp",
+      "srcSet": "/media/crew/crew-sheikh-shakib-320.webp 320w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 568,
+          "url": "/media/crew/crew-sheikh-shakib-320.webp",
+          "bytes": 8960
+        }
+      ]
+    },
+    {
+      "id": "crew-mosfiqur-rahman",
+      "collection": "crew",
+      "kind": "image",
+      "order": 50,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Mosfiqur Rahman, senior lead, UIU Mars Rover Team.",
+      "caption": "Mosfiqur Rahman",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpwAAABXRUJQVlA4IJAAAAAwBQCdASoUACQAPwlysVErpqSnJW5hcCEJYwDL4ETai4cJjEtKMCbJgg/jfFAyXg7igAD+9CfvCRkg/iSekKYrXAiB3h/cMWxxMEyf9Yyzzy6bNXqGPRqGEumVr8Jiw2ASlit6ckkEKYjaNSW0QF9KeVEAhvOXQL3EoL9qm3cO2cN3RJB9L+EbsqZxM0cAAAA=",
+      "src": "/media/crew/crew-mosfiqur-rahman-640.webp",
+      "srcSet": "/media/crew/crew-mosfiqur-rahman-320.webp 320w, /media/crew/crew-mosfiqur-rahman-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-mosfiqur-rahman-320.webp",
+          "bytes": 8950
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-mosfiqur-rahman-640.webp",
+          "bytes": 24690
+        }
+      ]
+    },
+    {
+      "id": "crew-nadim-hossain",
+      "collection": "crew",
+      "kind": "image",
+      "order": 51,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Nadim Hossain, sub-team lead, media and branding, UIU Mars Rover Team.",
+      "caption": "Nadim Hossain",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRqYAAABXRUJQVlA4IJoAAAAQBQCdASoUACQAPwlutFGrpiUiqrgMAXAhCWUAxkAitowuoQbECOIQ8Vg4mZ2draXgAP7rzqbc/b7PQmppvHL5UqlMEox42V+00OB6gm/CfJqLf2WZP4+CepX+b0DlkuJwLZEJSmUUc1zwZq/Htpv4w2Tky5Ng/JJAEC2BErXW3srTby7rKqGU6TGHJ86oyuyfHdwTS9hUgAAA",
+      "src": "/media/crew/crew-nadim-hossain-640.webp",
+      "srcSet": "/media/crew/crew-nadim-hossain-320.webp 320w, /media/crew/crew-nadim-hossain-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-nadim-hossain-320.webp",
+          "bytes": 9248
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-nadim-hossain-640.webp",
+          "bytes": 25800
+        }
+      ]
+    },
+    {
+      "id": "crew-salman-kabir",
+      "collection": "crew",
+      "kind": "image",
+      "order": 52,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Salman Kabir, sub-team lead, autonomous team, UIU Mars Rover Team.",
+      "caption": "Salman Kabir",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrAAAABXRUJQVlA4IKQAAADQBQCdASoUACQAPwl6sFSrp6QjJWzJcCEJZQDM0Dnhe9zxVeWkYYEZyRQqt1fNouCGUUaG5eOQAP7ypwqeHuf1x81LgEEzc9BHZzuGJlAwf/5AlXdWXWiz00H4jsN/9qgu0smS/bsLBlZzRt+LU+2RfA8Y51m3tBGU5AOUwbEfKyUlM/oGlDoAKS0GALaewajy5zPBuG2jG6Dqe9Lt/MMYRIAAAA==",
+      "src": "/media/crew/crew-salman-kabir-640.webp",
+      "srcSet": "/media/crew/crew-salman-kabir-320.webp 320w, /media/crew/crew-salman-kabir-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-salman-kabir-320.webp",
+          "bytes": 10126
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-salman-kabir-640.webp",
+          "bytes": 28454
+        }
+      ]
+    },
+    {
+      "id": "crew-sabbir-ahmed",
+      "collection": "crew",
+      "kind": "image",
+      "order": 53,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Sabbir Ahmed, sub-team lead, aerial and communication team, UIU Mars Rover Team.",
+      "caption": "Sabbir Ahmed",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpYAAABXRUJQVlA4IIoAAABQBQCdASoUACQAPwlutFErpiUisBVaqXAhCWUAyUwuboOEdidRVIOSrRM3FWdtFvHoXQAA/vDPGZhWNYqJ+m6HbGvt8+PqHaiaFF9qro5/hxCp4rYuCQkFx8HD9JT14ks8cv32xrSg91fUTzDXTjcke80FbIokvMQCHbqhJLcpcnE0klyScz+AAAA=",
+      "src": "/media/crew/crew-sabbir-ahmed-640.webp",
+      "srcSet": "/media/crew/crew-sabbir-ahmed-320.webp 320w, /media/crew/crew-sabbir-ahmed-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-sabbir-ahmed-320.webp",
+          "bytes": 8436
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-sabbir-ahmed-640.webp",
+          "bytes": 23016
+        }
+      ]
+    },
+    {
+      "id": "crew-ayesha-sayma",
+      "collection": "crew",
+      "kind": "image",
+      "order": 54,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Ayesha Sayma, sub-team lead, science team, UIU Mars Rover Team.",
+      "caption": "Ayesha Sayma",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRowAAABXRUJQVlA4IIAAAACwBACdASoUACQAPwlyslMrpiSsMBVYAYAhCWUAyywubSuz3kdpfzlMZxrUs/6AAP7ueS67u5wDYJuBFUMwZbJT+E8Ulvf3pFdK0LN1O80v8WEJNp35/VrvRPqdM7ULYcIL8meThN6MTM6rC4zGScAKWZz5ANOQuDnaXRFi6wAAAA==",
+      "src": "/media/crew/crew-ayesha-sayma-640.webp",
+      "srcSet": "/media/crew/crew-ayesha-sayma-320.webp 320w, /media/crew/crew-ayesha-sayma-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-ayesha-sayma-320.webp",
+          "bytes": 8844
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-ayesha-sayma-640.webp",
+          "bytes": 25044
+        }
+      ]
+    },
+    {
+      "id": "crew-siam-ibne-sarwar",
+      "collection": "crew",
+      "kind": "image",
+      "order": 55,
+      "width": 2304,
+      "height": 4008,
+      "aspectRatio": 0.57485,
+      "alt": "Studio portrait of Siam Ibne Sarwar, sub-team lead, mechanical team, UIU Mars Rover Team.",
+      "caption": "Siam Ibne Sarwar",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrgAAABXRUJQVlA4IKwAAACwBQCdASoUACMAPwl4sVOrpyQkKrgKAXAhCWMAvVgiqj2vP4qyvgvecUN059m21Y/heK2cUAAA/uvdq4/QzVqbdpWV+zYJSMEOAgT6pKxwMlMxcblyUryh3u3okAoxKK+PgQlRFVcataL06qvOGgO1aVEGeEqxpKvFFwfqLl9Fw3DTW6XC/g0hdLJVTieUzVPRu/HLU2SE0GeJuujKpC8Gk5ZZxhoX3Pr4MAAA",
+      "src": "/media/crew/crew-siam-ibne-sarwar-960.webp",
+      "srcSet": "/media/crew/crew-siam-ibne-sarwar-320.webp 320w, /media/crew/crew-siam-ibne-sarwar-640.webp 640w, /media/crew/crew-siam-ibne-sarwar-960.webp 960w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 557,
+          "url": "/media/crew/crew-siam-ibne-sarwar-320.webp",
+          "bytes": 11460
+        },
+        {
+          "width": 640,
+          "height": 1113,
+          "url": "/media/crew/crew-siam-ibne-sarwar-640.webp",
+          "bytes": 29582
+        },
+        {
+          "width": 960,
+          "height": 1670,
+          "url": "/media/crew/crew-siam-ibne-sarwar-960.webp",
+          "bytes": 51254
+        }
+      ]
+    },
+    {
+      "id": "crew-mahin-hasan-upol",
+      "collection": "crew",
+      "kind": "image",
+      "order": 56,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Mahin Hasan Upol, member, autonomous team, UIU Mars Rover Team.",
+      "caption": "Mahin Hasan Upol",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpgAAABXRUJQVlA4IIwAAAAQBQCdASoUACQAPwlss1GrpaSisBVaqXAhCWUAyYgubRqi0YRbQ75rSMxlKmoP7J8IAP7w0MkRKIMiOcwHZuH4ovOtg3XN+0jqsJS5eLzBGZY3U5pNbE5t/GFLam5ZREV4JqYtebBsWZCKkteBDh0DVEVXy+opy/fahLUmj5BR5KEBSewX/gDmpRAAAA==",
+      "src": "/media/crew/crew-mahin-hasan-upol-640.webp",
+      "srcSet": "/media/crew/crew-mahin-hasan-upol-320.webp 320w, /media/crew/crew-mahin-hasan-upol-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-mahin-hasan-upol-320.webp",
+          "bytes": 7910
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-mahin-hasan-upol-640.webp",
+          "bytes": 21948
+        }
+      ]
+    },
+    {
+      "id": "crew-talha-jubayer",
+      "collection": "crew",
+      "kind": "image",
+      "order": 57,
+      "width": 1024,
+      "height": 1536,
+      "aspectRatio": 0.66667,
+      "alt": "Studio portrait of Talha Jubayer, member, autonomous team, UIU Mars Rover Team.",
+      "caption": "Talha Jubayer",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRowAAABXRUJQVlA4IIAAAACwBACdASoUAB4APwlur0+rpi6iMBgMAdAhCWUAzfwyyrSo/3Mw7KiMT52wOHVAAP7w3576T4hSoIYibjFe4tscsLk8Gj2r0W/zSw03HbrQYvS+cbFeyXNtcZ/gtOXNi5wHp/AYG51cr0PAZbPnXO5r11kpU7RskSl9cojHqnpAAA==",
+      "src": "/media/crew/crew-talha-jubayer-960.webp",
+      "srcSet": "/media/crew/crew-talha-jubayer-320.webp 320w, /media/crew/crew-talha-jubayer-640.webp 640w, /media/crew/crew-talha-jubayer-960.webp 960w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 480,
+          "url": "/media/crew/crew-talha-jubayer-320.webp",
+          "bytes": 7794
+        },
+        {
+          "width": 640,
+          "height": 960,
+          "url": "/media/crew/crew-talha-jubayer-640.webp",
+          "bytes": 19946
+        },
+        {
+          "width": 960,
+          "height": 1440,
+          "url": "/media/crew/crew-talha-jubayer-960.webp",
+          "bytes": 36844
+        }
+      ]
+    },
+    {
+      "id": "crew-muhutasim-sadik",
+      "collection": "crew",
+      "kind": "image",
+      "order": 58,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Muhutasim Sadik, member, autonomous team, UIU Mars Rover Team.",
+      "caption": "Muhutasim Sadik",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpwAAABXRUJQVlA4IJAAAABwBQCdASoUACQAPwlusFCrpiSitVQIAXAhCWMA0Mw5X9+yqL1JH9YI9Ow+TtvHiNT0vsgAAP7r3nyUebrRvY6eCP5VPkP6JUlK/wMUWIElhnCM1nmX04hrLGO75FTVx4xna0qXCtpX9bAl/z5Lkw0K0HWG52/STA2qunD/GgyIh6u/ZXlvTm8DPgPNg+Z2MAA=",
+      "src": "/media/crew/crew-muhutasim-sadik-640.webp",
+      "srcSet": "/media/crew/crew-muhutasim-sadik-320.webp 320w, /media/crew/crew-muhutasim-sadik-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-muhutasim-sadik-320.webp",
+          "bytes": 8528
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-muhutasim-sadik-640.webp",
+          "bytes": 24540
+        }
+      ]
+    },
+    {
+      "id": "crew-shahriar-siyam",
+      "collection": "crew",
+      "kind": "image",
+      "order": 59,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Shahriar Siyam, member, autonomous team, UIU Mars Rover Team.",
+      "caption": "Shahriar Siyam",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpIAAABXRUJQVlA4IIYAAAAQBQCdASoUACQAPwlwslKrpaSiqrgMAXAhCWcAyngito18qL2I6Bw9AVpnMO6lZL4AAP7wv2htfxUSP88UR15NJwSH702lwtmjdTuMCg9LN+6myiVIcLPtPS9B9fpx02qScY/r6CkOWSK6C+Q8FRyhajy0AjEngG6U8HoIOqB5bFJFkkAAAA==",
+      "src": "/media/crew/crew-shahriar-siyam-640.webp",
+      "srcSet": "/media/crew/crew-shahriar-siyam-320.webp 320w, /media/crew/crew-shahriar-siyam-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-shahriar-siyam-320.webp",
+          "bytes": 8152
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-shahriar-siyam-640.webp",
+          "bytes": 22984
+        }
+      ]
+    },
+    {
+      "id": "crew-bakhtiar-fahim",
+      "collection": "crew",
+      "kind": "image",
+      "order": 60,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Bakhtiar Fahim, member, autonomous team, UIU Mars Rover Team.",
+      "caption": "Bakhtiar Fahim",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpYAAABXRUJQVlA4IIoAAACQBQCdASoUACQAPwl0tVGrpqUjpWzJcCEJZwDMlDnhzNwKFg/W27ytNkGzg0xXC745Mj8lPAD+8qeFdIQS1coBMr0YR+ys0/GBXp4BdAybig7fRjqHsTwPaYfjvlg8EvbhZMA6q9YAPZTNvWsJkqKbFU44+4B0/D3oLc0satCCqQrx80JlhtRQgAA=",
+      "src": "/media/crew/crew-bakhtiar-fahim-640.webp",
+      "srcSet": "/media/crew/crew-bakhtiar-fahim-320.webp 320w, /media/crew/crew-bakhtiar-fahim-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-bakhtiar-fahim-320.webp",
+          "bytes": 7606
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-bakhtiar-fahim-640.webp",
+          "bytes": 21210
+        }
+      ]
+    },
+    {
+      "id": "crew-arman-hossain",
+      "collection": "crew",
+      "kind": "image",
+      "order": 61,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Arman Hossain, member, autonomous team, UIU Mars Rover Team.",
+      "caption": "Arman Hossain",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAADQBACdASoUACQAPwlusFArpiSitVQIAXAhCWUAxNg5X4frXQshpGmfaefStSfyAAD+7o2CGeCaHeKvFzw2ZbBtdVSFI9g05qlenG4TKUxXlpIzTsmzhdPNu+xxWRKZUEBaxqoUrjjdKMHe79+dzAaaA2IBEY9vQDRwNOEJfbj5zo8fK3yJZ8BsIeGgyAAA",
+      "src": "/media/crew/crew-arman-hossain-640.webp",
+      "srcSet": "/media/crew/crew-arman-hossain-320.webp 320w, /media/crew/crew-arman-hossain-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-arman-hossain-320.webp",
+          "bytes": 8958
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-arman-hossain-640.webp",
+          "bytes": 25122
+        }
+      ]
+    },
+    {
+      "id": "crew-marina-montaz",
+      "collection": "crew",
+      "kind": "image",
+      "order": 62,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Marina Montaz, member, media and branding, UIU Mars Rover Team.",
+      "caption": "Marina Montaz",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpYAAABXRUJQVlA4IIoAAAAwBQCdASoUACQAPwl4slMrpySkJWzJcCEJZQDIXDnhe+jImzulUo9pKVu53D+6MygQAAD+8qbkxTB6huGU0naGiHzjUJexLOercfe5kc2/54XW7bJttnQyJhSzLXvntCwUy2GGdr0jp832DfTijY77T9TNiZVA/ReOeOuS9COAzmja7YJ3SdRoAAA=",
+      "src": "/media/crew/crew-marina-montaz-640.webp",
+      "srcSet": "/media/crew/crew-marina-montaz-320.webp 320w, /media/crew/crew-marina-montaz-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-marina-montaz-320.webp",
+          "bytes": 8912
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-marina-montaz-640.webp",
+          "bytes": 24334
+        }
+      ]
+    },
+    {
+      "id": "crew-zihad-shariar",
+      "collection": "crew",
+      "kind": "image",
+      "order": 63,
+      "width": 1024,
+      "height": 1536,
+      "aspectRatio": 0.66667,
+      "alt": "Studio portrait of Zihad Shariar, member, media and branding, UIU Mars Rover Team.",
+      "caption": "Zihad Shariar",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRogAAABXRUJQVlA4IHwAAACQBACdASoUAB4APwVorU+rpaQmt/VYAXAgiWMAvkhFX4ZFRWonEwl2yJQv4AAA/u6NI93V5F3BHGhKGWinplZt87+mxn0oSs/5r7UH65PnMzNHwSTqIsuQSPiqJqtfWf0WPKSgJFTMdCc8qK3JCnZE+qmK+24DfizhUAAA",
+      "src": "/media/crew/crew-zihad-shariar-960.webp",
+      "srcSet": "/media/crew/crew-zihad-shariar-320.webp 320w, /media/crew/crew-zihad-shariar-640.webp 640w, /media/crew/crew-zihad-shariar-960.webp 960w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 480,
+          "url": "/media/crew/crew-zihad-shariar-320.webp",
+          "bytes": 7872
+        },
+        {
+          "width": 640,
+          "height": 960,
+          "url": "/media/crew/crew-zihad-shariar-640.webp",
+          "bytes": 21648
+        },
+        {
+          "width": 960,
+          "height": 1440,
+          "url": "/media/crew/crew-zihad-shariar-960.webp",
+          "bytes": 39828
+        }
+      ]
+    },
+    {
+      "id": "crew-riad-hossen",
+      "collection": "crew",
+      "kind": "image",
+      "order": 64,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Riad Hossen, member, mechanical team, UIU Mars Rover Team.",
+      "caption": "Riad Hossen",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRqYAAABXRUJQVlA4IJoAAAAQBQCdASoUACQAPwlwslIrpaSiqrgMAXAhCWUAxgQitzJcvoMEpxJuDq1f46IGAcsgAP7ukhKeyQbFP3TI2m1f0/D1qtcT55rbPlCWKomHOaQR2YEoPm72Na8V2WylzzyMA6qFgf5/LTVWpvJyDPkDgY58JZ/Vq+f/ZCeepBt+EZJw8iUTdL2HIrgZWbeYSizyWLLqbURhcAAA",
+      "src": "/media/crew/crew-riad-hossen-640.webp",
+      "srcSet": "/media/crew/crew-riad-hossen-320.webp 320w, /media/crew/crew-riad-hossen-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-riad-hossen-320.webp",
+          "bytes": 7156
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-riad-hossen-640.webp",
+          "bytes": 18616
+        }
+      ]
+    },
+    {
+      "id": "crew-nazmuz-sakib",
+      "collection": "crew",
+      "kind": "image",
+      "order": 65,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Nazmuz Sakib, member, mechanical team, UIU Mars Rover Team.",
+      "caption": "Nazmuz Sakib",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRp4AAABXRUJQVlA4IJIAAADwBACdASoUACQAPwVor0+rpaQiNVQMAXAgiWcAyng5X1GNYF/BU+LD42M7+wLqdgAA/vC9AFur44QrKbv/hcIbIdCtkcy5jtNOkRndnwMadHvTrIz7TRGyIVjMmlUFcHyalrGo8s/UJ0jGJOfBSBdnx+Y8ejO5dEbwxUtosE0wxwebyMzCCrHl9nB6RB9fAAAAAA==",
+      "src": "/media/crew/crew-nazmuz-sakib-640.webp",
+      "srcSet": "/media/crew/crew-nazmuz-sakib-320.webp 320w, /media/crew/crew-nazmuz-sakib-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-nazmuz-sakib-320.webp",
+          "bytes": 6686
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-nazmuz-sakib-640.webp",
+          "bytes": 17382
+        }
+      ]
+    },
+    {
+      "id": "crew-miraz-al-hyder",
+      "collection": "crew",
+      "kind": "image",
+      "order": 66,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Miraz Al Hyder, member, mechanical team, UIU Mars Rover Team.",
+      "caption": "Miraz Al Hyder",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRoQAAABXRUJQVlA4IHgAAACQBACdASoUACQAPwl2s1KrpyqipWzJcCEJZwDFyDnfvgG6Rnjr1H3w29wCy9AA/vKZ1WnDdl42OiR5pIU80H4+ANpzW0dzlx/L8IPLeE0RTumIm26VCs9o6mtBGkLI9rlKlBxtVYBlUZLIRpYBLamt2NQ/B9oAAAA=",
+      "src": "/media/crew/crew-miraz-al-hyder-640.webp",
+      "srcSet": "/media/crew/crew-miraz-al-hyder-320.webp 320w, /media/crew/crew-miraz-al-hyder-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-miraz-al-hyder-320.webp",
+          "bytes": 7040
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-miraz-al-hyder-640.webp",
+          "bytes": 19692
+        }
+      ]
+    },
+    {
+      "id": "crew-alif-nebir",
+      "collection": "crew",
+      "kind": "image",
+      "order": 67,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Alif Nebir, member, mechanical team, UIU Mars Rover Team.",
+      "caption": "Alif Nebir",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRowAAABXRUJQVlA4IIAAAADQBACdASoUACQAPwlur1ArpiQitVQIAXAhCWUAxcg5X43NObY8BXOhczGl1sxsAAD+8L9/dvcsLPfcuPpZJ3iigRjB/FqZX7Z54DHBcgaqMupSsVsw89uKg0ipkNqCFr3kMWHCOqtUlrwNFWRS+afG2pEayh2KscOlmMQ2FxHAAA==",
+      "src": "/media/crew/crew-alif-nebir-640.webp",
+      "srcSet": "/media/crew/crew-alif-nebir-320.webp 320w, /media/crew/crew-alif-nebir-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-alif-nebir-320.webp",
+          "bytes": 8008
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-alif-nebir-640.webp",
+          "bytes": 23386
+        }
+      ]
+    },
+    {
+      "id": "crew-mimtiage-hemal",
+      "collection": "crew",
+      "kind": "image",
+      "order": 68,
+      "width": 1024,
+      "height": 1536,
+      "aspectRatio": 0.66667,
+      "alt": "Studio portrait of Mimtiage Hemal, member, mechanical team, UIU Mars Rover Team.",
+      "caption": "Mimtiage Hemal",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRo4AAABXRUJQVlA4IIIAAACwBACdASoUAB4APwlwrU+rpqQmsBgMAXAhCUAY3uWAVEB60sZToY6gtcnDJvAAAP7ug1umOCp/CXf35Di1Rr4hQ+ZO5H5qmTKuCopY3R72mIAULn5MI+ygcyjOepYp8Kgwf8QqbcGBnXmoUoDZJQxUZPpObfRYrig0Cg0tJwQPQAAA",
+      "src": "/media/crew/crew-mimtiage-hemal-960.webp",
+      "srcSet": "/media/crew/crew-mimtiage-hemal-320.webp 320w, /media/crew/crew-mimtiage-hemal-640.webp 640w, /media/crew/crew-mimtiage-hemal-960.webp 960w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 480,
+          "url": "/media/crew/crew-mimtiage-hemal-320.webp",
+          "bytes": 8136
+        },
+        {
+          "width": 640,
+          "height": 960,
+          "url": "/media/crew/crew-mimtiage-hemal-640.webp",
+          "bytes": 21346
+        },
+        {
+          "width": 960,
+          "height": 1440,
+          "url": "/media/crew/crew-mimtiage-hemal-960.webp",
+          "bytes": 38078
+        }
+      ]
+    },
+    {
+      "id": "crew-adipta-shaha",
+      "collection": "crew",
+      "kind": "image",
+      "order": 69,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Adipta Shaha, member, logistics, UIU Mars Rover Team.",
+      "caption": "Adipta Shaha",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRroAAABXRUJQVlA4IK4AAAAwBQCdASoUACQAPwl6r1IrqCQiqrgMAXAhCUAXYARYfu4qZ5EjSxcFarAziBYsVWuWAAD+6M6V3cCVaAlgPPoYCMPNtmSVm/bpP7c4itoLkGUjrjYMEqOXL91Md8aLpBYbewGBL07X+kcEJpBa6mPE+6d+6kHx2epy5tYVEzjqnXzN911rECkwb6Tw8z5yXS/b7TZGaAKamLSVXPW4d0mKPPqjj6UzQTQjCZ96xAA=",
+      "src": "/media/crew/crew-adipta-shaha-640.webp",
+      "srcSet": "/media/crew/crew-adipta-shaha-320.webp 320w, /media/crew/crew-adipta-shaha-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-adipta-shaha-320.webp",
+          "bytes": 11002
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-adipta-shaha-640.webp",
+          "bytes": 32256
+        }
+      ]
+    },
+    {
+      "id": "crew-shanjida-shopna",
+      "collection": "crew",
+      "kind": "image",
+      "order": 70,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Shanjida Shopna, member, science team, UIU Mars Rover Team.",
+      "caption": "Shanjida Shopna",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRqIAAABXRUJQVlA4IJYAAABQBQCdASoUACQAPwl0tFIrpqUipWzJcCEJZQDKeDnhYA5UR7Ost++l/Tqmetev9K7B+eAA/u6M2F2EnqN/Z5fqtT1X0GLxmla5ZSf2RS5QGs++kSiz4IZU2Gz5UAmbWRBu6GUX+/cploLYeXW3WuIubqrXV3r24Kui2DuDeghLi3bl7ET3yqr7ya9Jpn4CtQ7859dCAAA=",
+      "src": "/media/crew/crew-shanjida-shopna-640.webp",
+      "srcSet": "/media/crew/crew-shanjida-shopna-320.webp 320w, /media/crew/crew-shanjida-shopna-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-shanjida-shopna-320.webp",
+          "bytes": 8872
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-shanjida-shopna-640.webp",
+          "bytes": 23888
+        }
+      ]
+    },
+    {
+      "id": "crew-nowshin-faria",
+      "collection": "crew",
+      "kind": "image",
+      "order": 71,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Nowshin Faria, member, science team, UIU Mars Rover Team.",
+      "caption": "Nowshin Faria",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRqQAAABXRUJQVlA4IJgAAADQBQCdASoUACQAPwlws1CrpiUisBVaqXAhCWUAxNgubO0vtS+rVlWVvVhxZLcUFYEafyiyX3wAAP7o2HRBKJq/Zd3wpYfcSLzR22JlkyB3RCz3NtY+RzE6pRXa8IQLwO6Z3HGIUKMcd66WwyUjSjadgzFYQRfO3ScWWqJkJEr4cIZtOwn++SbORru8IBHh2YMlSJxdQeAAAA==",
+      "src": "/media/crew/crew-nowshin-faria-640.webp",
+      "srcSet": "/media/crew/crew-nowshin-faria-320.webp 320w, /media/crew/crew-nowshin-faria-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-nowshin-faria-320.webp",
+          "bytes": 8864
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-nowshin-faria-640.webp",
+          "bytes": 24462
+        }
+      ]
+    },
+    {
+      "id": "crew-epshita-sara",
+      "collection": "crew",
+      "kind": "image",
+      "order": 72,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Epshita Sara, member, science team, UIU Mars Rover Team.",
+      "caption": "Epshita Sara",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRqwAAABXRUJQVlA4IKAAAABQBQCdASoUACQAPwl6slUrpyQjJWsxcCEJZQDE2C5tRTGSWfxk1mh5jhd1WXhmVnRJ+ZAA/u6D/wE/TC28o4QOCDLLBV3HvSW6H2KrJc758v1OyExTOKEprb80BM6bqnUkSP3D9VdI6QaxhBVpGyEUW6Ku/ObESvcpAen5Qvx7LmvO5vZGhOBhspJCGCIRo2me7J2pBflBYZjjPTEttwAA",
+      "src": "/media/crew/crew-epshita-sara-640.webp",
+      "srcSet": "/media/crew/crew-epshita-sara-320.webp 320w, /media/crew/crew-epshita-sara-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-epshita-sara-320.webp",
+          "bytes": 10720
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-epshita-sara-640.webp",
+          "bytes": 31628
+        }
+      ]
+    },
+    {
+      "id": "crew-syed-thuha",
+      "collection": "crew",
+      "kind": "image",
+      "order": 73,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Syed Thuha, member, electrical team, UIU Mars Rover Team.",
+      "caption": "Syed Thuha",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpIAAABXRUJQVlA4IIYAAAAwBQCdASoUACQAPwlus1ErpiSisBVaqXAhCWUAzBwubZgn/+R+A+JqQnMhWx0JJzAmAAD+7nX1fwvUGJi06EgbRqDdPFIeDqwYV7oC1o4TW++ej14V1nPEdjfclqmwYwouJm4R9/ED7KQlIlzOQxZHeuqZcbQ0PEvKIXh9UQztVQyA4+gAAA==",
+      "src": "/media/crew/crew-syed-thuha-640.webp",
+      "srcSet": "/media/crew/crew-syed-thuha-320.webp 320w, /media/crew/crew-syed-thuha-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-syed-thuha-320.webp",
+          "bytes": 8610
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-syed-thuha-640.webp",
+          "bytes": 24988
+        }
+      ]
+    },
+    {
+      "id": "crew-sabik-sifat",
+      "collection": "crew",
+      "kind": "image",
+      "order": 74,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Sabik Sifat, member, electrical team, UIU Mars Rover Team.",
+      "caption": "Sabik Sifat",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpQAAABXRUJQVlA4IIgAAABwBQCdASoUACQAPwluslKrpaSiqrgMAXAhCWUAyngitqGaptXg9wR/KWnHm21gfFUe8UAAAP7udKPNXdfNkhP0hVZCTJoMT2cJbULISt4eGU6bOV/0DnEILQ5svtSS75y3rUmdY/Ow9m4K8V9ialdmZhpyCE8L+U2djDknzegQGKHBfHN7kAAA",
+      "src": "/media/crew/crew-sabik-sifat-640.webp",
+      "srcSet": "/media/crew/crew-sabik-sifat-320.webp 320w, /media/crew/crew-sabik-sifat-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-sabik-sifat-320.webp",
+          "bytes": 8086
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-sabik-sifat-640.webp",
+          "bytes": 22626
+        }
+      ]
+    },
+    {
+      "id": "crew-partha-podder",
+      "collection": "crew",
+      "kind": "image",
+      "order": 75,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Partha Podder, member, electrical team, UIU Mars Rover Team.",
+      "caption": "Partha Podder",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpAAAABXRUJQVlA4IIQAAABwBQCdASoUACQAPwlss1GrpaSisBVaqXAhCWMAv+wubWDl/ESJaE9bcLu1+pa9QhCcvwQAAP7ouAhmPKMuuoYdyaa3TtGy331vQp2nQxPAQDXiQZPt5Fs/0wA9ZUNCkC2ktNtnTRlTfxBbwz9z9HmisXQnivBhjPSwyAUURNCwc5VobAA=",
+      "src": "/media/crew/crew-partha-podder-640.webp",
+      "srcSet": "/media/crew/crew-partha-podder-320.webp 320w, /media/crew/crew-partha-podder-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-partha-podder-320.webp",
+          "bytes": 7938
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-partha-podder-640.webp",
+          "bytes": 23214
+        }
+      ]
+    },
+    {
+      "id": "crew-abir-saba",
+      "collection": "crew",
+      "kind": "image",
+      "order": 76,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Abir Saba, member, autonomous team, UIU Mars Rover Team.",
+      "caption": "Abir Saba",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAACQBACdASoUACQAPwl0tVGrprCipWzKECEJZwDIIDnfusz9D2bc8cinLbRKGMAA/vC/FhEAeHpQDkdwioD3DieZzzlHEOt9HZ0wzxzSCO9vNuaX2rWLXuyHpLw4k5/JFtug+mQ1Nr17X78zObNB/rRAYsJhwAAA",
+      "src": "/media/crew/crew-abir-saba-640.webp",
+      "srcSet": "/media/crew/crew-abir-saba-320.webp 320w, /media/crew/crew-abir-saba-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-abir-saba-320.webp",
+          "bytes": 6120
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-abir-saba-640.webp",
+          "bytes": 17490
+        }
+      ]
+    },
+    {
+      "id": "crew-abrar-adib",
+      "collection": "crew",
+      "kind": "image",
+      "order": 77,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Abrar Adib, member, media and branding, UIU Mars Rover Team.",
+      "caption": "Abrar Adib",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRpwAAABXRUJQVlA4IJAAAAAwBQCdASoUACQAPwlysVGrpqUipW5hcCEJYwDN/ETaiKkKv+GSCLHXNDiYoyidB7QmAAD+8Mgedc9i0tcLvna/edks8tiXbNzjL6xQWIovm246l7XvpJuh0HENH3wK5Yg9ZmXg9LaRiYJudhuYel5COGZ2AG5oEgAkMxiV8fDnLxhk82TwrAwmAmY6XyjAAAA=",
+      "src": "/media/crew/crew-abrar-adib-640.webp",
+      "srcSet": "/media/crew/crew-abrar-adib-320.webp 320w, /media/crew/crew-abrar-adib-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-abrar-adib-320.webp",
+          "bytes": 8874
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-abrar-adib-640.webp",
+          "bytes": 25000
+        }
+      ]
+    },
+    {
+      "id": "crew-aninda-talukdar",
+      "collection": "crew",
+      "kind": "image",
+      "order": 78,
+      "width": 941,
+      "height": 1672,
+      "aspectRatio": 0.5628,
+      "alt": "Studio portrait of Aninda Talukdar, member, aerial and communication team, UIU Mars Rover Team.",
+      "caption": "Aninda Talukdar",
+      "tags": [
+        "crew",
+        "portrait"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRp4AAABXRUJQVlA4IJIAAACQBQCdASoUACQAPwl2tFCrp6UiqrgMAXAhCWMAyUwitsVa5dqG9QnxRZX5eTW82RE38jI2AAD+6LfCGCK4bQQwUGkUS6LLaaKWvh+iiqxNU+XR+T7YLqSFH2n9dh7224bFaSpjARcOPgvAyoal27qYBdtnUFa9t9PgAra9bu4QtV+RlVzY/ohm45klGZ2jTwAAAA==",
+      "src": "/media/crew/crew-aninda-talukdar-640.webp",
+      "srcSet": "/media/crew/crew-aninda-talukdar-320.webp 320w, /media/crew/crew-aninda-talukdar-640.webp 640w",
+      "variants": [
+        {
+          "width": 320,
+          "height": 569,
+          "url": "/media/crew/crew-aninda-talukdar-320.webp",
+          "bytes": 9098
+        },
+        {
+          "width": 640,
+          "height": 1137,
+          "url": "/media/crew/crew-aninda-talukdar-640.webp",
+          "bytes": 25570
+        }
+      ]
+    },
+    {
+      "id": "crew-card-abid-hossain",
+      "collection": "roster",
+      "kind": "image",
+      "order": 79,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Abid Hossain, Mentor.",
+      "caption": "Abid Hossain",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRroAAABXRUJQVlA4IK4AAACQBQCdASoUABQAPwl8tVSrp6SjKAgBcCEJQBieNASwAdgAZaT2l0dJjaCLSrpT6vCC6skuAAD+536hHAutxWRGnaogcTS2sSH9NVbM9IQ/1QI2dgQHtQPmOBT9xMMh/TTy2P2zTU682NvJr4TAGtCVUfYkNCbUdXxtaZZ9YmI1vdi5F8GbISXuF0/HjXl67/poroI9nX7fqbHN878eNXrFexv9h4IdwR57S8iqAAA=",
+      "src": "/media/roster/crew-card-abid-hossain-800.webp",
+      "srcSet": "/media/roster/crew-card-abid-hossain-400.webp 400w, /media/roster/crew-card-abid-hossain-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-abid-hossain-400.webp",
+          "bytes": 18402
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-abid-hossain-800.webp",
+          "bytes": 60122
+        }
+      ]
+    },
+    {
+      "id": "crew-card-saif-al-saad",
+      "collection": "roster",
+      "kind": "image",
+      "order": 80,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Saif Al Saad, Team Lead.",
+      "caption": "Saif Al Saad",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrgAAABXRUJQVlA4IKwAAABQBQCdASoUABQAPwl6sFOrp6QiqAqpcCEJQBicxAACPf+LgLq5Pv372RiDq89KyfbFd8AA/ueT6RBCYxa3D3SZdGiQnAK405099fI+JAiZMRXklNbfFkaGt4JLdi3dBy0i5jOB+0d4I6ATC1VHkoe01HCfakLqrKHJTzUUGK3h+At4wfDY8pf/QOEbGkL1sBGQCBV2cIzllFchQHNEqr3yGekeYKsOZ+SzAAAA",
+      "src": "/media/roster/crew-card-saif-al-saad-800.webp",
+      "srcSet": "/media/roster/crew-card-saif-al-saad-400.webp 400w, /media/roster/crew-card-saif-al-saad-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-saif-al-saad-400.webp",
+          "bytes": 18030
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-saif-al-saad-800.webp",
+          "bytes": 58938
+        }
+      ]
+    },
+    {
+      "id": "crew-card-sheikh-shakib",
+      "collection": "roster",
+      "kind": "image",
+      "order": 81,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Sheikh Shakib, Co-Team Lead.",
+      "caption": "Sheikh Shakib",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrgAAABXRUJQVlA4IKwAAABQBQCdASoUABQAPwl6sVOrp6QiqAqpcCEJQBicxMACPf+GJ26OxyaRDloioiqQXL07NAAA/ueT6RBCYxa3D3SZdGiFivcHbbbLxs+cX9wQ8Ye32YjvNugf4g3p3bJJCY+7iO3lRjm67GY77usfvxH9tUM0iII2uWndT+fz329ApW8MT+2WrGQzXs7aJKZJlKcUcQdyzkDIdVCHedzS+A16ficjQk3RpiOFQAAA",
+      "src": "/media/roster/crew-card-sheikh-shakib-800.webp",
+      "srcSet": "/media/roster/crew-card-sheikh-shakib-400.webp 400w, /media/roster/crew-card-sheikh-shakib-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-sheikh-shakib-400.webp",
+          "bytes": 18446
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-sheikh-shakib-800.webp",
+          "bytes": 60034
+        }
+      ]
+    },
+    {
+      "id": "crew-card-mosfiqur-rahman",
+      "collection": "roster",
+      "kind": "image",
+      "order": 82,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Mosfiqur Rahman, Senior Lead.",
+      "caption": "Mosfiqur Rahman",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrYAAABXRUJQVlA4IKoAAACwBQCdASoUABQAPwl6sFOrp6QiqAqpcCEJYwDE+SEwAfwABHv/DE75WCey1nKVhBfHD9Gi4ZAA/ueT6RBCYxa3D3SZdGiEHBwbkFBZta2unny2o6hgkasd0e2ea4QcMGpnqyrKO3iwFkykgY7lLKz1pJQXhddPnnr43cFfKHKLe8Rb8tJW8McBA0EmLNgEUGrgJ6eDqxyf6xFfIbb62RzL0UHCD+hIwkIwAA==",
+      "src": "/media/roster/crew-card-mosfiqur-rahman-800.webp",
+      "srcSet": "/media/roster/crew-card-mosfiqur-rahman-400.webp 400w, /media/roster/crew-card-mosfiqur-rahman-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-mosfiqur-rahman-400.webp",
+          "bytes": 18888
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-mosfiqur-rahman-800.webp",
+          "bytes": 60390
+        }
+      ]
+    },
+    {
+      "id": "crew-card-nadim-hossain",
+      "collection": "roster",
+      "kind": "image",
+      "order": 83,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Nadim Hossain, Sub-Team Lead, Media and Branding.",
+      "caption": "Nadim Hossain",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrQAAABXRUJQVlA4IKgAAACwBQCdASoUABQAPwl8tVUrpySjKAgBcCEJQBihXqe1pHigD+AAI9/xBjyzd4kxTuwHYCq9OIAA/ueT6RBCYxa3D3SZdGigACacnRUKEKTVJ/PSA5/Gl31xf8FDM/sHiA0+10yw4VUwbjDib9IBVAxY+ZcsLo06sTD0FKx0CPN/CXBdDUV5fW9D0C3YwD3zaRU9W3vgDa/8t35tMsRs/jLrPi4d9M8UAAA=",
+      "src": "/media/roster/crew-card-nadim-hossain-800.webp",
+      "srcSet": "/media/roster/crew-card-nadim-hossain-400.webp 400w, /media/roster/crew-card-nadim-hossain-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-nadim-hossain-400.webp",
+          "bytes": 19532
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-nadim-hossain-800.webp",
+          "bytes": 62388
+        }
+      ]
+    },
+    {
+      "id": "crew-card-salman-kabir",
+      "collection": "roster",
+      "kind": "image",
+      "order": 84,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Salman Kabir, Sub-Team Lead, Autonomous Team.",
+      "caption": "Salman Kabir",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrYAAABXRUJQVlA4IKoAAAAwBQCdASoUABQAPwl6tVSrpySjKAgBcCEJQBicxAACPf61RibYtxhGKQPJE0GmSS+1wAD+55PpEEJjFrcPdJl0aKLekcke/dx9WWqN8oJkramGuyE3D2OwQAwDQXFeNa+klY6s0Pbfa0n/APlGn1tTO+n2S1GdoJs7Y7NEgyyynUQlxpc/3bwucSr4l+RCHwRklDRIK2hThiy9iy/TbIE9I+NqbEHFhIwAAA==",
+      "src": "/media/roster/crew-card-salman-kabir-800.webp",
+      "srcSet": "/media/roster/crew-card-salman-kabir-400.webp 400w, /media/roster/crew-card-salman-kabir-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-salman-kabir-400.webp",
+          "bytes": 19768
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-salman-kabir-800.webp",
+          "bytes": 62514
+        }
+      ]
+    },
+    {
+      "id": "crew-card-sabbir-ahmed",
+      "collection": "roster",
+      "kind": "image",
+      "order": 85,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Sabbir Ahmed, Sub-Team Lead, Aerial and Communication Team.",
+      "caption": "Sabbir Ahmed",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrwAAABXRUJQVlA4ILAAAABQBQCdASoUABQAPwl6tFSrpySjKAgBcCEJQBig4BgAACPf+LIUydTtaZ/OkN3h1cG+YQAA/ueT6RBCYxa3D3SZdGiFivcC9iDBVWs84/AuLd6mrClmPcS2frOm7D/vWwiEKYA7gPpSbAbsGTapEKehItGwmkJe4mw+EzYHctIiSjWLBF1/Hpu+t6EMUz9l9KAvkvgBliFYDAYkKSJ28i8i/OvzI5hBAw1HkSTcpQAAAA==",
+      "src": "/media/roster/crew-card-sabbir-ahmed-800.webp",
+      "srcSet": "/media/roster/crew-card-sabbir-ahmed-400.webp 400w, /media/roster/crew-card-sabbir-ahmed-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-sabbir-ahmed-400.webp",
+          "bytes": 19836
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-sabbir-ahmed-800.webp",
+          "bytes": 62848
+        }
+      ]
+    },
+    {
+      "id": "crew-card-ayesha-sayma",
+      "collection": "roster",
+      "kind": "image",
+      "order": 86,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Ayesha Sayma, Sub-Team Lead, Science Team.",
+      "caption": "Ayesha Sayma",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrwAAABXRUJQVlA4ILAAAACQBQCdASoUABQAPwl6tFUrpySjKAgBcCEJQBhptASwB/AAEe/8EDYyPhyiVkTlxn2XnPmBIAD+55PpEEJjFrcPdJl0aJwh0sDUKOC5p93mxc+6aQbeWCH8CA2TV68Ywa1OVefFFTPQQIUwB3Ad2ursHBUJA+FdYlRS0/RYihMSHPsP0CTCumD+caIKPGN7WAU9KOW+AK+mne8vu/uKQIv5FUXW3ucczD50Z5vAPKXAAA==",
+      "src": "/media/roster/crew-card-ayesha-sayma-800.webp",
+      "srcSet": "/media/roster/crew-card-ayesha-sayma-400.webp 400w, /media/roster/crew-card-ayesha-sayma-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-ayesha-sayma-400.webp",
+          "bytes": 18690
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-ayesha-sayma-800.webp",
+          "bytes": 59692
+        }
+      ]
+    },
+    {
+      "id": "crew-card-siam-ibne-sarwar",
+      "collection": "roster",
+      "kind": "image",
+      "order": 87,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Siam Ibne Sarwar, Sub-Team Lead, Mechanical Team.",
+      "caption": "Siam Ibne Sarwar",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrYAAABXRUJQVlA4IKoAAAAQBQCdASoUABQAPwl8tVUrp6SjKAgBcCEJQAfICWAAEe/8MTvmSNd655/uETHcVLoAAP7nk+kQQmMWtw90mXRohYruHKbs8PRBzQCRMl5Vm6Uebz6PlK+yeoYsIdPyeNPN+0mPUkiGgVx3sqUex4l6E03JXRP/O7k/oMUibt71qduOPa+MbdCH6LHa3AbtihaOb2uvECsmNVGH757R8m2UuteDhu+RqLeAAA==",
+      "src": "/media/roster/crew-card-siam-ibne-sarwar-800.webp",
+      "srcSet": "/media/roster/crew-card-siam-ibne-sarwar-400.webp 400w, /media/roster/crew-card-siam-ibne-sarwar-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-siam-ibne-sarwar-400.webp",
+          "bytes": 19530
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-siam-ibne-sarwar-800.webp",
+          "bytes": 63080
+        }
+      ]
+    },
+    {
+      "id": "crew-card-mahin-hasan-upol",
+      "collection": "roster",
+      "kind": "image",
+      "order": 88,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Mahin Hasan Upol, Member, Autonomous Team.",
+      "caption": "Mahin Hasan Upol",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRsAAAABXRUJQVlA4ILQAAACQBQCdASoUABQAPwl6tFUrpySjKAgBcCEJQBAhkvpSAjwAnXA5WZCSPhjPfthnTBoZc9y7AAD+55PpEEJjFrcPJaXD9JxgDDdbJ+39o+JwUCCEgaR8K1ql4xXiUHFQiEXaKP2CWkhzfu3+IKResV0gC5PnClUV1l3g1BzTLWQi1xKTqCk6kdJ+36tXLt/lM4Y4Lo/xXsoCcG+hBMETwhUbbuzONVc88O4zGDx4miYbLGp7XAA=",
+      "src": "/media/roster/crew-card-mahin-hasan-upol-800.webp",
+      "srcSet": "/media/roster/crew-card-mahin-hasan-upol-400.webp 400w, /media/roster/crew-card-mahin-hasan-upol-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-mahin-hasan-upol-400.webp",
+          "bytes": 18544
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-mahin-hasan-upol-800.webp",
+          "bytes": 59684
+        }
+      ]
+    },
+    {
+      "id": "crew-card-talha-jubayer",
+      "collection": "roster",
+      "kind": "image",
+      "order": 89,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Talha Jubayer, Member, Autonomous Team.",
+      "caption": "Talha Jubayer",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrgAAABXRUJQVlA4IKwAAACQBQCdASoUABQAPwl6tFSrpySjKAgBcCEJQBjioCfHtsDdAAELGDsGkwt/u3HW9/yK8aGCAAD+55PpEEJjFrcPdJl0aIQXROdFZwIjf5JF0ExwfPlO/xA2NMY4vpuujTLwU8Mz3dhIhoFXogG6bC7mhQvx3vj2c2IXI/x3sRgUgXu8DsS8jbL6jJk/o/CRBzks2B3+3/0uo3GUnBv/Ik16MJym6PHxNjhK6AAA",
+      "src": "/media/roster/crew-card-talha-jubayer-800.webp",
+      "srcSet": "/media/roster/crew-card-talha-jubayer-400.webp 400w, /media/roster/crew-card-talha-jubayer-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-talha-jubayer-400.webp",
+          "bytes": 18082
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-talha-jubayer-800.webp",
+          "bytes": 59198
+        }
+      ]
+    },
+    {
+      "id": "crew-card-muhutasim-sadik",
+      "collection": "roster",
+      "kind": "image",
+      "order": 90,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Muhutasim Sadik, Member, Autonomous Team.",
+      "caption": "Muhutasim Sadik",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrQAAABXRUJQVlA4IKgAAAAwBQCdASoUABQAPwl6tFSrpySjKAgBcCEJQArYagAAj3/hu1Fz70LKkpZDkuQVX0wOwAD+55PpEEJjFrcPdJl0aIRApbRstVQEgqdq1P4Ic1jhsVWxRN0sNHDOra9AUAjPvvXRA3/VLgF1v2xuTme4yWaZahh52qO3sLH+fcHFEb0FzpewrIKGFqCiKhb7CjIXhqCuAjTvWk9+EWu4f2AEGgx0vFM4cAA=",
+      "src": "/media/roster/crew-card-muhutasim-sadik-800.webp",
+      "srcSet": "/media/roster/crew-card-muhutasim-sadik-400.webp 400w, /media/roster/crew-card-muhutasim-sadik-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-muhutasim-sadik-400.webp",
+          "bytes": 18334
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-muhutasim-sadik-800.webp",
+          "bytes": 60240
+        }
+      ]
+    },
+    {
+      "id": "crew-card-shahriar-siyam",
+      "collection": "roster",
+      "kind": "image",
+      "order": 91,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Shahriar Siyam, Member, Autonomous Team.",
+      "caption": "Shahriar Siyam",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrwAAABXRUJQVlA4ILAAAADQBQCdASoUABQAPwl6tFSrpySjKAgBcCEJQAriHwEsAfwABHv++01JGccqV+5FyTCtfZoqJ04AAP7nk+kQQmMWtw90mXRomjqEQEpg83PWyxdBMoB4cz04UPgx5iRCC7IPNAtPtHamq0r7vMKo7YsB22nJQOnTbQyqrQkZlJKYTjjP2p/Mc67l21XNXOl7e6725GWxDiUtYhsvhI5TPNuXvaVtPRl4miiC5xr8n4lgAA==",
+      "src": "/media/roster/crew-card-shahriar-siyam-800.webp",
+      "srcSet": "/media/roster/crew-card-shahriar-siyam-400.webp 400w, /media/roster/crew-card-shahriar-siyam-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-shahriar-siyam-400.webp",
+          "bytes": 18142
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-shahriar-siyam-800.webp",
+          "bytes": 59130
+        }
+      ]
+    },
+    {
+      "id": "crew-card-bakhtiar-fahim",
+      "collection": "roster",
+      "kind": "image",
+      "order": 92,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Bakhtiar Fahim, Member, Autonomous Team.",
+      "caption": "Bakhtiar Fahim",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrwAAABXRUJQVlA4ILAAAABwBQCdASoUABQAPwl6tFSrpySjKAgBcCEJQAfICWACPXydb+zoAIlJtU2YmB7B6SMv8UMIAP7nk+kQQmMWtw8q3Uk2apEHz3HInYFyWo0VPXcVHvjn4LvVBrleIUvU7+2QHwHdd2fPpEx4NUsfdgMVfNc3ey+Ekyxkcdo4tsqTf3IdSO26YUGf6m4wtFPeVUNeAZ3f8GM7U+Ova1p0dPH7KxauMHwpdbRfB4yM8gAAAA==",
+      "src": "/media/roster/crew-card-bakhtiar-fahim-800.webp",
+      "srcSet": "/media/roster/crew-card-bakhtiar-fahim-400.webp 400w, /media/roster/crew-card-bakhtiar-fahim-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-bakhtiar-fahim-400.webp",
+          "bytes": 18518
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-bakhtiar-fahim-800.webp",
+          "bytes": 60338
+        }
+      ]
+    },
+    {
+      "id": "crew-card-arman-hossain",
+      "collection": "roster",
+      "kind": "image",
+      "order": 93,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Arman Hossain, Member, Autonomous Team.",
+      "caption": "Arman Hossain",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrgAAABXRUJQVlA4IKwAAAAwBQCdASoUABQAPwl8tVSrpySjKAgBcCEJQAh8EUAAI9/4H0WbCvbanpEyLHrFTaCoQAD+55PpEEJjFrcPdJl0aI+Rq5xXdSkYRnDF0DsmnM/MPQ3c4CGg/MVXdvgrfXO6k4Ln1teDg1d79oAUIJP39zGr3WiN8XF8kVGx6ODSWKrnuHxpLKnNJfG8geZl+GgTT9jg3ucBV0/RnPA64HMnQ16fOVoEDKyjAAAA",
+      "src": "/media/roster/crew-card-arman-hossain-800.webp",
+      "srcSet": "/media/roster/crew-card-arman-hossain-400.webp 400w, /media/roster/crew-card-arman-hossain-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-arman-hossain-400.webp",
+          "bytes": 18432
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-arman-hossain-800.webp",
+          "bytes": 59942
+        }
+      ]
+    },
+    {
+      "id": "crew-card-marina-montaz",
+      "collection": "roster",
+      "kind": "image",
+      "order": 94,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Marina Montaz, Member, Media and Branding.",
+      "caption": "Marina Montaz",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRsYAAABXRUJQVlA4ILoAAACQBQCdASoUABQAPwl6tFSrpySjKAgBcCEJQBAn4I8UAfwABHv8sXnkV3mjmb3242jNmZi24AD+55PpEEJjFrcPdJl0aKSqRBktpOKsd5lq9aQuE9k4DBxiwwVafwIB8fppGFZzIGlc0p91r/XthWtn3Oj6W8gFGhzNL695+/FG4ftefMSdXzuDJBriLv3lXzTD4wffqbjEIGnNcpZ5JuLIgdiLSGUqkw9kMzXgIXfxNDPXr+qzn74AAAA=",
+      "src": "/media/roster/crew-card-marina-montaz-800.webp",
+      "srcSet": "/media/roster/crew-card-marina-montaz-400.webp 400w, /media/roster/crew-card-marina-montaz-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-marina-montaz-400.webp",
+          "bytes": 18512
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-marina-montaz-800.webp",
+          "bytes": 59962
+        }
+      ]
+    },
+    {
+      "id": "crew-card-zihad-shariar",
+      "collection": "roster",
+      "kind": "image",
+      "order": 95,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Zihad Shariar, Member, Media and Branding.",
+      "caption": "Zihad Shariar",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRsIAAABXRUJQVlA4ILYAAADwBACdASoUABQAPwl6tFUrpySjKAgBcCEJQArYagAAj3/h6m5Yc960l5q7Aho3cyAA/ueT6RBCYxa3D3SZdGiEQcDxwt0npL1Oty0HcegZOw2Q7P3mySEdmHFbGoWradN8/l0hV4aDuwkQ0Ck0VtyNhY6LQfBjjTkAWCvangp3XphFcXH4YT9LBJe4Qtxe8ovrbcsMYGm58HIg5gLKGw8iJG4qxOcl3jX3ar8VIv3N9nFPTwAAAA==",
+      "src": "/media/roster/crew-card-zihad-shariar-800.webp",
+      "srcSet": "/media/roster/crew-card-zihad-shariar-400.webp 400w, /media/roster/crew-card-zihad-shariar-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-zihad-shariar-400.webp",
+          "bytes": 18756
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-zihad-shariar-800.webp",
+          "bytes": 60218
+        }
+      ]
+    },
+    {
+      "id": "crew-card-riad-hossen",
+      "collection": "roster",
+      "kind": "image",
+      "order": 96,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Riad Hossen, Member, Mechanical Team.",
+      "caption": "Riad Hossen",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRr4AAABXRUJQVlA4ILIAAABwBQCdASoUABQAPwl6s1SrpyQjKAgBcCEJQBifIb4AP4AAj3/a0csecGBcD+GkXqMMdPIwAP7nk+kQQmMWtw90mXRonoc8kiL2Z0upU8JuUkgh5bNXzhs/xs9FFskJvmZ3iO3y3uJhEDBqPpbyAT4yGjTcTmD4qYpIo+MhmAcx+Ep7sL14DKV3QW7gYOL6jJp5fatjt8CxNye6zzLcu/YbXbw4I/XOZGrHsQswu6V0gAAA",
+      "src": "/media/roster/crew-card-riad-hossen-800.webp",
+      "srcSet": "/media/roster/crew-card-riad-hossen-400.webp 400w, /media/roster/crew-card-riad-hossen-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-riad-hossen-400.webp",
+          "bytes": 19148
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-riad-hossen-800.webp",
+          "bytes": 61316
+        }
+      ]
+    },
+    {
+      "id": "crew-card-nazmuz-sakib",
+      "collection": "roster",
+      "kind": "image",
+      "order": 97,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Nazmuz Sakib, Member, Mechanical Team.",
+      "caption": "Nazmuz Sakib",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrgAAABXRUJQVlA4IKwAAABQBQCdASoUABQAPwl8tFUrpySjKAgBcCEJQBkXJCYAAEe/8MUXUOVuMPbxBySjk1SA41AA/ueT6RBCYxa3D3SZdGiEQKSehcxp1cZWC3QNg2AexHz4NlGp8uKlJMknsHYSii1CVHUDToCwlvfj8/SQDtitkdJAfQYEoVFF4IS9wsvwXuDkde1iwvcdGUIIVOhcw6ueKCBt2NTIGp78pDTjxHQ7ijOvbgTVDAAA",
+      "src": "/media/roster/crew-card-nazmuz-sakib-800.webp",
+      "srcSet": "/media/roster/crew-card-nazmuz-sakib-400.webp 400w, /media/roster/crew-card-nazmuz-sakib-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-nazmuz-sakib-400.webp",
+          "bytes": 18386
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-nazmuz-sakib-800.webp",
+          "bytes": 59594
+        }
+      ]
+    },
+    {
+      "id": "crew-card-miraz-al-hyder",
+      "collection": "roster",
+      "kind": "image",
+      "order": 98,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Miraz Al Hyder, Member, Mechanical Team.",
+      "caption": "Miraz Al Hyder",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRr4AAABXRUJQVlA4ILIAAABQBQCdASoUABQAPwl6tVSrpySjKAgBcCEJQArH7JkUAAI9/4IDLi1cyJQzyeanbU/JzHAA/ueT6RBCYxa3D3SZdGiaOcIZDa8/s98TY4uDYtGyinKu82PvtY3aExKFH3lqwOfr2yxrKb6X0DOrQnq2zu6DCPnyiDqYnuNXO0Gzyp6cIZfSq45ph8aSypzSZNBXTitSZF2+ufAksOqoP766vzEZh99bI5hTdQnRzlwgU4AA",
+      "src": "/media/roster/crew-card-miraz-al-hyder-800.webp",
+      "srcSet": "/media/roster/crew-card-miraz-al-hyder-400.webp 400w, /media/roster/crew-card-miraz-al-hyder-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-miraz-al-hyder-400.webp",
+          "bytes": 19298
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-miraz-al-hyder-800.webp",
+          "bytes": 60914
+        }
+      ]
+    },
+    {
+      "id": "crew-card-alif-nebir",
+      "collection": "roster",
+      "kind": "image",
+      "order": 99,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Alif Nebir, Member, Mechanical Team.",
+      "caption": "Alif Nebir",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrgAAABXRUJQVlA4IKwAAABwBQCdASoUABQAPwl8tVSrp6SjKAgBcCEJQBkXGSYIAEe/5d9DTtePx5H/6H5D9NzOdq44AP7nk+kQQmMWtw90mXRopGb1b+24fwETjJwpC3QExBvLfrnPkbH28iL95ZCTz4QbBbPdi3BYxQOjRmibXeHP3qpoQGVCmT87d0fl2PF3+5QlxRNPdgtjTSGaNneKupRqSR4Xha1IvhOZEW31sjmX4cmCQSdAiAAA",
+      "src": "/media/roster/crew-card-alif-nebir-800.webp",
+      "srcSet": "/media/roster/crew-card-alif-nebir-400.webp 400w, /media/roster/crew-card-alif-nebir-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-alif-nebir-400.webp",
+          "bytes": 17908
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-alif-nebir-800.webp",
+          "bytes": 58588
+        }
+      ]
+    },
+    {
+      "id": "crew-card-mimtiage-hemal",
+      "collection": "roster",
+      "kind": "image",
+      "order": 100,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Mimtiage Hemal, Member, Mechanical Team.",
+      "caption": "Mimtiage Hemal",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRroAAABXRUJQVlA4IK4AAACQBQCdASoUABQAPwl6s1UrpyQjKAgBcCEJQAqQjwGF/7oAAhYvNjLUQH3G2O0Tl6/go1nReAD+55PpEEJjFrcPdJl0aKSqRnmYI5h6O6K65eyW3bzHW+Oh25TvI2IO/3W1gLbdfXLS1U7nd9F0ID+xz+TOjYwO3A3z1iYYAbjfQjPSrlx63XYKT4fGksqc0mJhaX3gnAR9EHMv06qFUOzqR+dfmRzIMpToxdYAAAA=",
+      "src": "/media/roster/crew-card-mimtiage-hemal-800.webp",
+      "srcSet": "/media/roster/crew-card-mimtiage-hemal-400.webp 400w, /media/roster/crew-card-mimtiage-hemal-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-mimtiage-hemal-400.webp",
+          "bytes": 19566
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-mimtiage-hemal-800.webp",
+          "bytes": 61576
+        }
+      ]
+    },
+    {
+      "id": "crew-card-adipta-shaha",
+      "collection": "roster",
+      "kind": "image",
+      "order": 101,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Adipta Shaha, Member, Logistics.",
+      "caption": "Adipta Shaha",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRsIAAABXRUJQVlA4ILYAAACwBQCdASoUABQAPwl6tFSrpySjKAgBcCEJQBifG0E/91GAQsYRAg/aIe3ts7oqOkgE78w2/AAA/ueT6RBCYxa3D3SZdGiFnEyPRnMB7l/i1sBImS0YZ6Lzhs8jZELkCGyY63vCOCWvegD5ACqTXwmAM9+60paxRxIenFOsRANh6oYmA73TiZ7VGPsYxHCYyqH+LTXvxklAa/ZfQ+MWKqTaWVVJ2ZgTy2lZjMa7JF+rjql2HYgAAA==",
+      "src": "/media/roster/crew-card-adipta-shaha-800.webp",
+      "srcSet": "/media/roster/crew-card-adipta-shaha-400.webp 400w, /media/roster/crew-card-adipta-shaha-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-adipta-shaha-400.webp",
+          "bytes": 18906
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-adipta-shaha-800.webp",
+          "bytes": 60732
+        }
+      ]
+    },
+    {
+      "id": "crew-card-shanjida-shopna",
+      "collection": "roster",
+      "kind": "image",
+      "order": 102,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Shanjida Shopna, Member, Science Team.",
+      "caption": "Shanjida Shopna",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRr4AAABXRUJQVlA4ILIAAACQBQCdASoUABQAPwl8tVSrp6SjKAgBcCEJQBBKMLpQABHv+2CxfGgbcjkfWotpaehGAhoIAAD+55PpEEJjFrcPdJl0aJ6ODKSzZQDtQ3Y0Yr+Ji3MMqaRRwZJ+tJOJQUBUsuScTXoVVf0TIlzOAsz91BIE//M9HzxWQJttuUf4I9PHQ+O2ca4iI2kdcttaiwJtzO1cjQ4Wi4O7HgL+veBI3iO70AD762RzEmFsy9vDwAAA",
+      "src": "/media/roster/crew-card-shanjida-shopna-800.webp",
+      "srcSet": "/media/roster/crew-card-shanjida-shopna-400.webp 400w, /media/roster/crew-card-shanjida-shopna-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-shanjida-shopna-400.webp",
+          "bytes": 17968
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-shanjida-shopna-800.webp",
+          "bytes": 56588
+        }
+      ]
+    },
+    {
+      "id": "crew-card-nowshin-faria",
+      "collection": "roster",
+      "kind": "image",
+      "order": 103,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Nowshin Faria, Member, Science Team.",
+      "caption": "Nowshin Faria",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRr4AAABXRUJQVlA4ILIAAABwBQCdASoUABQAPwl6tVSrpySjKAgBcCEJQBAndAB/AAEe/yxcgkbSTT0RyPDWdEeAuLIAAP7nk+kQQmMWtw90mXRopKx3ki6mixYs8V4FVs1j7unXqYcV58d7K4WYqdMN4Db36LSDvT9TGmGwT3WCmAO4D60fsocB9lh28jjtaI4uoC+458QzibFDzG1PBdqwh16Dy5IQsKAzmzzBQ7GRCtYwHk+8xR/GXbeukSopUAAA",
+      "src": "/media/roster/crew-card-nowshin-faria-800.webp",
+      "srcSet": "/media/roster/crew-card-nowshin-faria-400.webp 400w, /media/roster/crew-card-nowshin-faria-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-nowshin-faria-400.webp",
+          "bytes": 17504
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-nowshin-faria-800.webp",
+          "bytes": 55924
+        }
+      ]
+    },
+    {
+      "id": "crew-card-epshita-sara",
+      "collection": "roster",
+      "kind": "image",
+      "order": 104,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Epshita Sara, Member, Science Team.",
+      "caption": "Epshita Sara",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrYAAABXRUJQVlA4IKoAAADwBACdASoUABQAPwl6tFSrpySjKAgBcCEJQBAkNAAAj3+G1O5/kVZZyXKmzZYtphAA/ueT6RBCYxa3D3SZdGikKbo3CSuxwTSdzbQEzIDokMguSGVJWr+sstVm1YJabGprUlw1rVvTJwsICJv0gFUC4pP5rdCb7X5VyIlKU6rxOoErqjOmbxGTYfIlpRIvOKzNqEoHXWML8TIs8X17XpQu6EXPdoZYTxeAAA==",
+      "src": "/media/roster/crew-card-epshita-sara-800.webp",
+      "srcSet": "/media/roster/crew-card-epshita-sara-400.webp 400w, /media/roster/crew-card-epshita-sara-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-epshita-sara-400.webp",
+          "bytes": 18392
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-epshita-sara-800.webp",
+          "bytes": 59320
+        }
+      ]
+    },
+    {
+      "id": "crew-card-syed-thuha",
+      "collection": "roster",
+      "kind": "image",
+      "order": 105,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Syed Thuha, Member, Electrical Team.",
+      "caption": "Syed Thuha",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRsQAAABXRUJQVlA4ILgAAADQBQCdASoUABQAPwl6s1UrpyQjKAgBcCEJQBgfn3eqigABHv862lASFiwWwjR0Z8OYUJdCFtggAP7nk+kQQmMWtw90mXRooABvZoqvPt10DmDwxTX/Pq49B3mnfqRFm5E/Db8TipqWIqB2yi76ggDexVR2xYD5Qh0tGA/I2i4gGEb6DxHgbsJEo0V3GvZRZUZj13eRVusjdlOUDvEvJceKW5NACRVWsfSXe8aVelwH4NHIU9K1dAAA",
+      "src": "/media/roster/crew-card-syed-thuha-800.webp",
+      "srcSet": "/media/roster/crew-card-syed-thuha-400.webp 400w, /media/roster/crew-card-syed-thuha-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-syed-thuha-400.webp",
+          "bytes": 18802
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-syed-thuha-800.webp",
+          "bytes": 61092
+        }
+      ]
+    },
+    {
+      "id": "crew-card-sabik-sifat",
+      "collection": "roster",
+      "kind": "image",
+      "order": 106,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Sabik Sifat, Member, Electrical Team.",
+      "caption": "Sabik Sifat",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRr4AAABXRUJQVlA4ILIAAABwBQCdASoUABQAPwl6tFUrpySjKAgBcCEJQArH3wEsAAI9/4YJCHzO7uICu6fO+q6z0AIYAP7nk+kQQmMWtw90mXRoo0k8PStSei8/LRo/flFt9JLOJ/rvU9M3xeVKhyZkinDJFE3XBxawUwB3Ae93u1s9fFmixXpJpm5fHdsAbzMSYitmCyEKWrm46jZh4KF0WAYBz3LbwDnxNjnNW6HIaiOvk2yxCspCrP0nVbdAAAAA",
+      "src": "/media/roster/crew-card-sabik-sifat-800.webp",
+      "srcSet": "/media/roster/crew-card-sabik-sifat-400.webp 400w, /media/roster/crew-card-sabik-sifat-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-sabik-sifat-400.webp",
+          "bytes": 19142
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-sabik-sifat-800.webp",
+          "bytes": 60956
+        }
+      ]
+    },
+    {
+      "id": "crew-card-partha-podder",
+      "collection": "roster",
+      "kind": "image",
+      "order": 107,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Partha Podder, Member, Electrical Team.",
+      "caption": "Partha Podder",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRr4AAABXRUJQVlA4ILIAAACQBQCdASoUABQAPwl6tFUrpySjKAgBcCEJQBAn4GcUAAI9/4YnHKwQ5uanflkWmQk2HeroAAD+55PpEEJjFrcPdJl0aKB8SPlg4uh2INW20vssQHPwsX575Tv8J/m0GvTfpVB7BCcoLlzve1lN9L6BnVfgSRCGWWp2wxMGykmpRjdUPNXTjIqr9SXdBbuBg4vqRCIktMgWTKGnW5QZD8wiYgcFiBcUJJX5kcwbg60CdAAA",
+      "src": "/media/roster/crew-card-partha-podder-800.webp",
+      "srcSet": "/media/roster/crew-card-partha-podder-400.webp 400w, /media/roster/crew-card-partha-podder-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-partha-podder-400.webp",
+          "bytes": 19512
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-partha-podder-800.webp",
+          "bytes": 61488
+        }
+      ]
+    },
+    {
+      "id": "crew-card-abir-saba",
+      "collection": "roster",
+      "kind": "image",
+      "order": 108,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Abir Saba, Member, Autonomous Team.",
+      "caption": "Abir Saba",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRroAAABXRUJQVlA4IK4AAACQBQCdASoUABQAPwl6tFSrpySjKAgBcCEJQBgfpCYAP4AAj3/i0rd+/Avu+TKreNXtXmQPgAD+55PpEEJjFrcPdJl0aIVUz35oN1xn6svPduOHn2X/gQ9Df3Glgq1iM34Vstv4yHVVJCu9+0AJzBjwcBthcISEJOTUGhqDRWeWh30X5kEr7zqS7c7nikEPD2gqWCj89cBhL62KE4KQZkl3jX4wVBDYmyPjC7XkAAA=",
+      "src": "/media/roster/crew-card-abir-saba-800.webp",
+      "srcSet": "/media/roster/crew-card-abir-saba-400.webp 400w, /media/roster/crew-card-abir-saba-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-abir-saba-400.webp",
+          "bytes": 18736
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-abir-saba-800.webp",
+          "bytes": 59796
+        }
+      ]
+    },
+    {
+      "id": "crew-card-abrar-adib",
+      "collection": "roster",
+      "kind": "image",
+      "order": 109,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Abrar Adib, Member, Media and Branding.",
+      "caption": "Abrar Adib",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRroAAABXRUJQVlA4IK4AAAAwBQCdASoUABQAPwl6tFSrpySjKAgBcCEJQAXf/ugACFjB4pj5AJxaGKT9aNWKl1aUAAD+55PpEEJjFrcPdJl0aKP3T9T0AU3an+tO9o4J1dkldP574KSzfLnzKw0w+gvKiVpv9NawsT6/pFIIP5mrYKVr21Y0wiZkapB8RU0DZYuYeEWJdloEreGjoODaf7ptnHLVH6gtUklvhqawskgklfmRzINsiE7rTUMmAAA=",
+      "src": "/media/roster/crew-card-abrar-adib-800.webp",
+      "srcSet": "/media/roster/crew-card-abrar-adib-400.webp 400w, /media/roster/crew-card-abrar-adib-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-abrar-adib-400.webp",
+          "bytes": 18378
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-abrar-adib-800.webp",
+          "bytes": 58934
+        }
+      ]
+    },
+    {
+      "id": "crew-card-aninda-talukdar",
+      "collection": "roster",
+      "kind": "image",
+      "order": 110,
+      "width": 3375,
+      "height": 3375,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team roster card for Aninda Talukdar, Member, Aerial and Communication Team.",
+      "caption": "Aninda Talukdar",
+      "tags": [
+        "crew",
+        "card"
+      ],
+      "hasAlpha": false,
+      "blurDataUrl": "data:image/webp;base64,UklGRrYAAABXRUJQVlA4IKoAAABQBQCdASoUABQAPwl6tFSrpySjKAgBcCEJQArJzP/oAlgD+AAI9/3Py+uxMBBpnbawP0AA/ueT6RBCYxa3D3SZdGiFixIkfIp7n4E1SxOeJkvq1KO1gTBxvmbkfV7S3qZpdw6RPXimjX50fS3kAoWImzTCQ5SQVDmrC718eW3g+uZpZ31N7hphR+Pa+MbgEAFy4pauneO6xL8wr0GJJ5WItdw/kJbzSXPgAA==",
+      "src": "/media/roster/crew-card-aninda-talukdar-800.webp",
+      "srcSet": "/media/roster/crew-card-aninda-talukdar-400.webp 400w, /media/roster/crew-card-aninda-talukdar-800.webp 800w",
+      "variants": [
+        {
+          "width": 400,
+          "height": 400,
+          "url": "/media/roster/crew-card-aninda-talukdar-400.webp",
+          "bytes": 19396
+        },
+        {
+          "width": 800,
+          "height": 800,
+          "url": "/media/roster/crew-card-aninda-talukdar-800.webp",
+          "bytes": 61250
+        }
+      ]
+    },
+    {
+      "id": "mark-umrt",
+      "collection": "marks",
+      "kind": "image",
+      "order": 111,
+      "width": 1080,
+      "height": 1080,
+      "aspectRatio": 1,
+      "alt": "UIU Mars Rover Team emblem.",
+      "caption": "UIU Mars Rover Team",
+      "tags": [
+        "mark"
+      ],
+      "hasAlpha": true,
+      "blurDataUrl": "data:image/webp;base64,UklGRi4BAABXRUJQVlA4WAoAAAAQAAAAEwAAEwAAQUxQSFEAAAARP6CokSQ1t+iBfieBMSICrPy6NKEokqSGJAAVvKOAJII/Hqj1X2QwENF/hW3bNs7e7RvkD8ns6YgKqNE2oAxGAwDvCB1ihVWwalksWv7oCxEAVlA4ILYAAABwBACdASoUABQAPwl2rlKrpyOiqA1RcCEJbABLgPsBNGREVhfgcb5E8FqjUAD+ERdQ6JXFiT5lN6SDphqgmGa3CbiS+aMs1uY2ue3N3QByUVvySXQorSSIra/M+YfnOta3w7rfUbX4P6ZhQ9NSKhLmo5VIyNfosUQNxM5KOnZjfLtG2TYG8YFEsghodBWWBNqAMO1oxVUMbm//ofu5rTqtj6+ZK+bJ75pTfk3BAlL/7fnh0IAAAA==",
+      "src": "/media/marks/mark-umrt-512.webp",
+      "srcSet": "/media/marks/mark-umrt-128.webp 128w, /media/marks/mark-umrt-256.webp 256w, /media/marks/mark-umrt-512.webp 512w",
+      "variants": [
+        {
+          "width": 128,
+          "height": 128,
+          "url": "/media/marks/mark-umrt-128.webp",
+          "bytes": 3170
+        },
+        {
+          "width": 256,
+          "height": 256,
+          "url": "/media/marks/mark-umrt-256.webp",
+          "bytes": 7614
+        },
+        {
+          "width": 512,
+          "height": 512,
+          "url": "/media/marks/mark-umrt-512.webp",
+          "bytes": 17200
+        }
+      ]
+    },
+    {
+      "id": "mark-umrt-wordmark",
+      "collection": "marks",
+      "kind": "image",
+      "order": 112,
+      "width": 2424,
+      "height": 11501,
+      "aspectRatio": 0.21076,
+      "alt": "UIU Mars Rover Team vertical wordmark.",
+      "caption": "UIU Mars Rover Team wordmark",
+      "tags": [
+        "mark"
+      ],
+      "hasAlpha": true,
+      "blurDataUrl": "data:image/webp;base64,UklGRvoGAABXRUJQVlA4WAoAAAAQAAAAEwAAXgAAQUxQSB0DAAARb6CgbRsWD0L/IiKOqYXP4hqUpv9fFMcj+3YzhhwaiZAxLMpQFTQ6hsUd4p4m7u5yCpXTWNyTk2cssstQtb0uzYF/E8/vzQx/NqL/atu2YeyNW8oVOz2oqLRqtRUVdWYSIgAIAKJpHYCMB8DhM6dOVTtSqy1gRDQN8GfC2uxg0MlxacrOnWLaCkC7RVTnSCUt0KYk4vH/YTc4JiIDx8t37txZ5ZCTIjpWZ1a7eSaiaTyfzad0YXFlXMem3BMw4P1KPlaXlCO/mL69b2XjX8GvmL51LynNygeE3xq+dfsYERmUlm89vq3ZbDYymt7W6SIcwQGi7k2aHf2m48/PLtcXF9gGG5yxsFlg+ruDLY+WdA43MHu+f+5AofrrjNJoGoYLr+6DTR0ZaFAWf/eC2fODLf2mnpTnSvXuw5P7G+BYNdEMYKigqvVsflLE4Re53ASm96fDkjsQFLQ6VyD2iFRa9PE0keG3V/S8Tpt/51mN4v1PgKaXUh7FeFK2aXpIMcVwyyH31QD4zfCfAOwIC1DylLMD0Z2eLlVVvQCkmORyuVYkRQC9qqrW+zMc5ziOOBWjwyMN6DE4U9k78t/80n3ha+1ve9UfekbX7kPxigC7Ros8yqs7t8czw1/WeBcRLSoZAISsZpfA7t2+XRtN2wCFiLzcK5ZH7QTglHtrcLguJABgC2wDDdGEADD9qaGGrc9u364r2kf65z4iok3c3UJuZ09rcepoVqWtXb6iPT/YAIfc11qse/loDoCuTSHB4hBjO3e+a+1JeoAnRORTLqxcbXXE4ynd9B/VzlTH6VNXkxN/PwA8JaKWlekfNbDEgkEB+O2AtPX27dvjt566QfO6iGjT70RkdFuc3a2OeCgurkpYuloPZ7PZavgzfdxPcvMuKU0L/t4QPXXqXeuvM62PDNy8h22yXOOIx09WMz2UMvvTpQ2r/6x3A5A0IjKmkiLQsXPnqSqU771ch+WrAURXlzbhk97Kc6QgymVmucIBgWM29fu4CjZ0AjzPDsZEOVFmIqrneGs2ezUJSNHVNgASADjk1VZUlHuxikZXAwBWUDggtgMAAPAQAJ0BKhQAXwA/BWalT6ulIyIwDAFwIIlsAJ0zITsgGSB26VbJ/Q/3AbY3zAedj6QN4M5+H9o/hV/xtgIHqjAOzZ8N5kaQKaX4+tQfpMfs76AAyyqiNaT/9jFhvVZxYlhQZ6saO9XlNrizGjxcpOhd/hoJabZATc9RygKW52rLQE/EQ23cicbBaxQBqUh6wADQ4Jk8Ze9TV9QnsrN0cz0ASa/V4m92tXXUhqlMIwz+4QN/8P0DHNguGh9gy/FsFMLcrWB9+z/loJtSXjCubGVHmUjRStnjeVOqAEutyWWz+A2OYhak1ucA4sFhSDIVsc/gAcEW+jFTmwDiTPpLPlHWk2fVOCvx5BuMEpQ8K5C3m3jyH8H7Z68zjeyIp8rv9WQLbXv+BXCna0t5qaNdhttkVxosB3hR40wx+RbOX3bJykZLBLag/USCZx+QzFqD0I1T9fXxFzG33/WgSQG3Nrj7t1j8eAZ3xWD++mP5rx8wamyrSDpPkpv+uizKgWadn9jn0QuAN8GNS8crBAPyi7l8AiYnHFQM3Lh8HLw4o5ZkOSSpI0wZqNN6tHZRSRx/Eq7U+Z9oM2864lTILgbwdrksI3eoBQJo7CP5M+EXkS5Csln3z/o/+pENqdt0Pl51W8B5Epr21POE1/zLCXvYZ5AoZQLuF85Mp3b0x98SUpOjiSRXa+RMxmbIJWRhl/oh7tX/wh7mfLbB3WrP9FaTf6WtxUrhV6RE/D+bbXG3Y1nEnWpAPY4jdHMm7wEmHXLCWlleQvusBDQkJfcEUfig9HUpvYNrDjTW9Ih5/wJ3rYjjLcpdNrfjmPE+yHiGowhSbT1b+oOsRIIPmnwuk7uRTzBNQ8+JRpcYdhz7koNvSxmbbCtLhyTnlSMpmg/A9UcU1bjbVcAd9suhvXKvME0zzX2kQhAEU51+BBbmQ8v48NeGBp47MdRugO3r+dDIbAflhReLdLFEa7XAvVpDsR+jcsZepk/KyTmHNsRz9hvnfTC0anSvp58XHbL5FC5xYdPmV4Zw/40Ahh+jhlhJcT5n0oOdwirfLWpeUD4PqNlvdt2qL1Ax384fS+YzjYoLvpHutF9X4OBCCL0ysLQ6iEznO84/trCywOIhLbLzdHyawVZ6RhNZVvYjQHcOcI58DbZ+jljW4SIN9mpJpqaL6ThPGazIUbjp3i3R36artWzuJPBMwv473b/ce40XeddDwEaovF4dHDnFW76VYCUjgozLnJHT+hJySzW8SVg76V5HXkR/e70N68AA",
+      "src": "/media/marks/mark-umrt-wordmark-512.webp",
+      "srcSet": "/media/marks/mark-umrt-wordmark-128.webp 128w, /media/marks/mark-umrt-wordmark-256.webp 256w, /media/marks/mark-umrt-wordmark-512.webp 512w",
+      "variants": [
+        {
+          "width": 128,
+          "height": 607,
+          "url": "/media/marks/mark-umrt-wordmark-128.webp",
+          "bytes": 36844
+        },
+        {
+          "width": 256,
+          "height": 1215,
+          "url": "/media/marks/mark-umrt-wordmark-256.webp",
+          "bytes": 75086
+        },
+        {
+          "width": 512,
+          "height": 2429,
+          "url": "/media/marks/mark-umrt-wordmark-512.webp",
+          "bytes": 142012
+        }
+      ]
+    },
+    {
+      "id": "mark-uiu",
+      "collection": "marks",
+      "kind": "image",
+      "order": 113,
+      "width": 1080,
+      "height": 1080,
+      "aspectRatio": 1,
+      "alt": "United International University emblem.",
+      "caption": "United International University",
+      "tags": [
+        "mark",
+        "partner"
+      ],
+      "hasAlpha": true,
+      "blurDataUrl": "data:image/webp;base64,UklGRtgAAABXRUJQVlA4WAoAAAAQAAAAEwAAEwAAQUxQSFUAAAARX6CobSQ3t//edw/MRUQAvn7WGe0fbCLbdnJ+IFbcjhJUIIBBAigICqKDJwnw+AVE9D9JRq6RBPBV52MWgb8+7/UOwNuO87R56Gw49msJQO8kiWQAAFZQOCBcAAAAEAQAnQEqFAAUAD8JdrFRq6ekorAYCAFwIQlkAM2QEUAYsVIHW+m0KQAA/sNd+fd/upkTq8D5dyH+MxMXRzBjvwxUjVglWpVpRW0x3XzsZyUBrG0q63dXvhsTBAA=",
+      "src": "/media/marks/mark-uiu-512.webp",
+      "srcSet": "/media/marks/mark-uiu-128.webp 128w, /media/marks/mark-uiu-256.webp 256w, /media/marks/mark-uiu-512.webp 512w",
+      "variants": [
+        {
+          "width": 128,
+          "height": 128,
+          "url": "/media/marks/mark-uiu-128.webp",
+          "bytes": 2388
+        },
+        {
+          "width": 256,
+          "height": 256,
+          "url": "/media/marks/mark-uiu-256.webp",
+          "bytes": 5734
+        },
+        {
+          "width": 512,
+          "height": 512,
+          "url": "/media/marks/mark-uiu-512.webp",
+          "bytes": 12530
+        }
+      ]
+    },
+    {
+      "id": "mark-cair",
+      "collection": "marks",
+      "kind": "image",
+      "order": 114,
+      "width": 1080,
+      "height": 1080,
+      "aspectRatio": 1,
+      "alt": "Center for Advanced Intelligent Robotics emblem.",
+      "caption": "Center for Advanced Intelligent Robotics",
+      "tags": [
+        "mark",
+        "partner"
+      ],
+      "hasAlpha": true,
+      "blurDataUrl": "data:image/webp;base64,UklGRqoAAABXRUJQVlA4WAoAAAAQAAAAEwAAEwAAQUxQSFcAAAARZ6CwbSM1dIzPHxEBur5Ftvk4B45q23aaAwo+DjoK6rB3hkjoMP8GKHEQCbEQkYmAiP4nPxYaACBeH1URChAfb9cZXUD/9nkgK4DztUoZAXhDPuQOfwgAVlA4ICwAAACQAgCdASoUABQALs2EwmEjq6uri4DMS0gAB7/6gAD+8wqS///QfG/mpigAAA==",
+      "src": "/media/marks/mark-cair-512.webp",
+      "srcSet": "/media/marks/mark-cair-128.webp 128w, /media/marks/mark-cair-256.webp 256w, /media/marks/mark-cair-512.webp 512w",
+      "variants": [
+        {
+          "width": 128,
+          "height": 128,
+          "url": "/media/marks/mark-cair-128.webp",
+          "bytes": 1868
+        },
+        {
+          "width": 256,
+          "height": 256,
+          "url": "/media/marks/mark-cair-256.webp",
+          "bytes": 5204
+        },
+        {
+          "width": 512,
+          "height": 512,
+          "url": "/media/marks/mark-cair-512.webp",
+          "bytes": 12888
+        }
+      ]
+    },
+    {
+      "id": "film-promo",
+      "collection": "film",
+      "kind": "video",
+      "order": 115,
+      "width": 1920,
+      "height": 1080,
+      "aspectRatio": 1.77778,
+      "alt": "UIU Mars Rover Team promotional film.",
+      "title": "The machine, the crew, the distance",
+      "caption": "UMRT promotional film.",
+      "tags": [
+        "film",
+        "promo"
+      ],
+      "durationSeconds": 75.31,
+      "blurDataUrl": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAADQAwCdASoUAAsAPwlwr1ArpiQisAgBcCEJYwAAW+kddN2Xk/NOC1AA/vDJXA66mdck+U0psXqZu09FOyu2140HT8+IRMEfSAvPBJ9KTAA=",
+      "src": "/media/film/film-promo-poster-1920.webp",
+      "srcSet": "/media/film/film-promo-poster-640.webp 640w, /media/film/film-promo-poster-1280.webp 1280w, /media/film/film-promo-poster-1920.webp 1920w",
+      "variants": [
+        {
+          "width": 640,
+          "height": 360,
+          "url": "/media/film/film-promo-poster-640.webp",
+          "bytes": 4824
+        },
+        {
+          "width": 1280,
+          "height": 720,
+          "url": "/media/film/film-promo-poster-1280.webp",
+          "bytes": 12366
+        },
+        {
+          "width": 1920,
+          "height": 1080,
+          "url": "/media/film/film-promo-poster-1920.webp",
+          "bytes": 23348
+        }
+      ],
+      "sources": [
+        {
+          "height": 1080,
+          "url": "/media/film/film-promo-1080p.mp4",
+          "type": "video/mp4",
+          "bytes": 22534167
+        },
+        {
+          "height": 720,
+          "url": "/media/film/film-promo-720p.mp4",
+          "type": "video/mp4",
+          "bytes": 8693524
+        }
+      ]
+    },
+    {
+      "id": "film-final-cut",
+      "collection": "film",
+      "kind": "video",
+      "order": 116,
+      "width": 1920,
+      "height": 1080,
+      "aspectRatio": 1.77778,
+      "alt": "UIU Mars Rover Team mission film.",
+      "title": "Mission cut",
+      "caption": "Mission film, final cut.",
+      "tags": [
+        "film"
+      ],
+      "durationSeconds": 34.48,
+      "blurDataUrl": "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAACwAwCdASoUAAsAPwlur0+rpiQiMAgBcCEJQBWGUAAxsd46tqN1AAD+7OYlI90i+KNL+dNkWFPbjFZdVBShNGaNsapl16z03tLDuWgtBzKbmLgDOlT8Ev9CIgsdPjQVc35Kx6Fi54jVFux3lOT37d3rqjl1QAAA",
+      "src": "/media/film/film-final-cut-poster-1920.webp",
+      "srcSet": "/media/film/film-final-cut-poster-640.webp 640w, /media/film/film-final-cut-poster-1280.webp 1280w, /media/film/film-final-cut-poster-1920.webp 1920w",
+      "variants": [
+        {
+          "width": 640,
+          "height": 360,
+          "url": "/media/film/film-final-cut-poster-640.webp",
+          "bytes": 54640
+        },
+        {
+          "width": 1280,
+          "height": 720,
+          "url": "/media/film/film-final-cut-poster-1280.webp",
+          "bytes": 153444
+        },
+        {
+          "width": 1920,
+          "height": 1080,
+          "url": "/media/film/film-final-cut-poster-1920.webp",
+          "bytes": 247886
+        }
+      ],
+      "sources": [
+        {
+          "height": 1080,
+          "url": "/media/film/film-final-cut-1080p.mp4",
+          "type": "video/mp4",
+          "bytes": 21035911
+        },
+        {
+          "height": 720,
+          "url": "/media/film/film-final-cut-720p.mp4",
+          "type": "video/mp4",
+          "bytes": 7495014
+        }
+      ]
+    }
+  ]
+}

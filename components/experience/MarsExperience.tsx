@@ -9,6 +9,7 @@ import { PremiumNavbar } from '@/components/navbar';
 import { TeardownOverlay } from './TeardownOverlay';
 import { MissionLoader } from './MissionLoader';
 import { SolarCalibrationPanel } from './SolarCalibrationPanel';
+import { MissionAppendix } from '@/components/home/MissionAppendix';
 import { getReducedMotion } from '@/lib/performance';
 import { phases } from '@/lib/scrollTimeline';
 
@@ -43,6 +44,10 @@ export default function MarsExperience() {
   const [showDismantleButton, setShowDismantleButton] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [loaderVisible, setLoaderVisible] = useState(true);
+  // True once the opaque post-mission sections have taken the viewport. The
+  // rover canvas is still mounted behind them but has nothing to show, so it
+  // stops rendering entirely.
+  const [appendixCovering, setAppendixCovering] = useState(false);
 
   const dismantleProgressRef = useRef(0);
   const dismantleTimelineRef = useRef(0);
@@ -172,8 +177,13 @@ export default function MarsExperience() {
   const completeLoader = useCallback(() => setLoaderVisible(false), []);
 
   const measureScrollableDistance = useCallback(() => {
-    const footerTop = rootRef.current?.querySelector<HTMLElement>('[data-page-footer]')?.offsetTop;
-    const heroEnd = footerTop ?? document.documentElement.scrollHeight;
+    // The mission timeline ends at its own sentinel, not at the footer. Any
+    // section appended after the rover experience must not stretch the
+    // 0..1 progress that drives the camera, hero copy and teardown.
+    const root = rootRef.current;
+    const missionEnd = root?.querySelector<HTMLElement>('[data-mission-end]')?.offsetTop;
+    const footerTop = root?.querySelector<HTMLElement>('[data-page-footer]')?.offsetTop;
+    const heroEnd = missionEnd ?? footerTop ?? document.documentElement.scrollHeight;
     scrollableDistanceRef.current = Math.max(1, heroEnd - window.innerHeight);
   }, []);
 
@@ -439,7 +449,9 @@ export default function MarsExperience() {
       <div ref={cursorRef} className="mission-custom-cursor" aria-hidden="true"><i /><b /><span>SURFACE / TRACE</span></div>
       {loaderVisible && <MissionLoader ready={sceneReady} onComplete={completeLoader} />}
       <PremiumNavbar />
-      {!loaderVisible && <SolarCalibrationPanel />}
+      {/* A mission-scoped control: it has nothing to calibrate once the
+          reader is past the rover and into the appendix. */}
+      {!loaderVisible && !appendixCovering && <SolarCalibrationPanel />}
 
       <div className={`mission-canvas ${freeExplore ? 'pointer-events-auto' : 'pointer-events-none'}`}>
         <SceneCanvas
@@ -449,6 +461,7 @@ export default function MarsExperience() {
           dismantleProgressRef={dismantleProgressRef}
           dismantleTimelineRef={dismantleTimelineRef}
           dismantleActive={dismantleActive}
+          suspended={appendixCovering}
           onReady={() => setSceneReady(true)}
         />
       </div>
@@ -456,12 +469,14 @@ export default function MarsExperience() {
       <HeroOverlay progress={uiProgress} />
 
       <TeardownOverlay
-        visible={showDismantleButton}
+        visible={showDismantleButton && !appendixCovering}
         playing={manualDismantle}
         progress={scrubDismantle}
         onScrub={scrubTeardown}
         onTrigger={triggerDismantle}
       />
+
+      <MissionAppendix onVisibilityChange={setAppendixCovering} />
 
       <SiteFooter data-page-footer />
     </div>

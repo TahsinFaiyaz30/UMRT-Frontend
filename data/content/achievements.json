@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "revision": "arch-2026-09-02",
+  "resource": "achievements",
+  "records": [
+    {
+      "id": "iut-rover-summit-2026",
+      "year": "2026",
+      "date": "2026-07-11",
+      "title": "IUT ROVER SUMMIT",
+      "category": "Outreach",
+      "metric": "SUMMIT / 26",
+      "description": "The crew brought the platform to the IUT Rover Summit and took the stage for its panel discussion — a national audience, an open bench, and questions from every direction.",
+      "media": "iut26-crew-rover",
+      "featured": true
+    },
+    {
+      "id": "ieee-bangladesh-2026",
+      "year": "2026",
+      "date": "2026-06-13",
+      "title": "IEEE SHOWCASE",
+      "category": "Outreach",
+      "metric": "IEEE / BD",
+      "description": "The rover was presented to the IEEE Bangladesh community with its instrument deck and ground station opened up for inspection.",
+      "media": "ieeb26-stand"
+    },
+    {
+      "id": "campus-return-2026",
+      "year": "2026",
+      "date": "2026-06-07",
+      "title": "CAMPUS RETURN",
+      "category": "Outreach",
+      "metric": "UIU / HOME",
+      "description": "United International University turned out for the team's return from the podium: garlands, a commemorative plaque, and several hundred students recording every step of it.",
+      "media": "uiu26-welcome-crowd",
+      "featured": true
+    },
+    {
+      "id": "urc-2026-third-worldwide",
+      "year": "2026",
+      "date": "2026-05-31",
+      "title": "3RD WORLDWIDE",
+      "category": "Field result",
+      "metric": "URC / 03",
+      "description": "UMRT took third place at the University Rover Challenge 2026 — the first Asian team on the podium in the competition's twenty-year history — and was recognised for the Best Autonomous System.",
+      "media": "urc26-team-banner",
+      "featured": true
+    },
+    {
+      "id": "urc-2026-best-autonomous",
+      "year": "2026",
+      "date": "2026-05-30",
+      "title": "BEST AUTONOMY",
+      "category": "Autonomy",
+      "metric": "AUTO / 01",
+      "description": "The autonomous stack took the competition's Best Autonomous System recognition: navigating, identifying and reaching markers across open desert without an operator in the loop.",
+      "media": "urc26-podium-announcement",
+      "featured": true
+    },
+    {
+      "id": "bear-summit-2026",
+      "year": "2026",
+      "date": "2026-05-04",
+      "title": "BEAR SUMMIT",
+      "category": "Outreach",
+      "metric": "SUMMIT / 01",
+      "description": "A full exhibition build-out where the platform spent the weekend being touched, questioned, and photographed by a public that had never stood next to a rover.",
+      "media": "bear26-visitor-child"
+    },
+    {
+      "id": "udayan-science-carnival-2026",
+      "year": "2026",
+      "date": "2026-04-09",
+      "title": "SCIENCE CARNIVAL",
+      "category": "Outreach",
+      "metric": "UDAYAN / 26",
+      "description": "UMRT represented United International University at the Udayan Science Carnival, driving the rover through a courtyard packed with school students.",
+      "media": "udayan26-students"
+    },
+    {
+      "id": "terrain-validation-2026",
+      "year": "2026",
+      "date": "2026-03-31",
+      "title": "TERRAIN TRIALS",
+      "category": "Engineering",
+      "metric": "6 × 6",
+      "description": "Weeks of traverse testing on excavated ground: gradient limits, wheel slip, and recovery behaviour measured before the platform was cleared to ship.",
+      "media": "rover-terrain-climb"
+    },
+    {
+      "id": "integration-window-2026",
+      "year": "2026",
+      "date": "2026-02-27",
+      "title": "INTEGRATION",
+      "category": "Engineering",
+      "metric": "04:05",
+      "description": "The final integration window ran through the night — power, autonomy, comms, and the science payload brought onto one chassis for the first time.",
+      "media": "rover-studio-night"
+    },
+    {
+      "id": "urc-2025-top-5",
+      "year": "2025",
+      "date": "2025-05-30",
+      "title": "URC TOP 5",
+      "category": "Field result",
+      "metric": "TOP 05",
+      "description": "After rigorous testing in harsh desert environments, the rover showcased advanced autonomous capability and secured a top-five finish.",
+      "media": "urc26-rover-field",
+      "featured": true
+    },
+    {
+      "id": "autonomy-innovation-2024",
+      "year": "2024",
+      "date": "2024-06-01",
+      "title": "INNOVATION",
+      "category": "Autonomy",
+      "metric": "SLAM / 01",
+      "description": "Recognized for real-time SLAM and obstacle avoidance that sharpened the rover's spatial awareness in uncertain terrain.",
+      "media": "rover-field-open"
+    },
+    {
+      "id": "urc-2024-top-10",
+      "year": "2024",
+      "date": "2024-05-31",
+      "title": "URC TOP 10",
+      "category": "Field result",
+      "metric": "TOP 10",
+      "description": "Mechanical reliability and precise manipulator control carried UMRT into the international top ten.",
+      "media": "urc26-team-rovers"
+    },
+    {
+      "id": "erc-poland-2023",
+      "year": "2023",
+      "date": "2023-09-15",
+      "title": "ERC POLAND",
+      "category": "International",
+      "metric": "ERC / PL",
+      "description": "UMRT entered the European Rover Challenge and completed complex maintenance tasks under severe time pressure.",
+      "media": "rover-field-camp"
+    },
+    {
+      "id": "best-rookie-2022",
+      "year": "2022",
+      "date": "2022-06-04",
+      "title": "BEST ROOKIE",
+      "category": "Award",
+      "metric": "ROOKIE / 01",
+      "description": "A robust suspension and determined debut earned the team the competition's Best Rookie distinction.",
+      "media": "rover-sunset-horizon",
+      "featured": true
+    },
+    {
+      "id": "urc-qualification-2022",
+      "year": "2022",
+      "date": "2022-02-18",
+      "title": "URC QUAL",
+      "category": "Qualification",
+      "metric": "URC / GO",
+      "description": "The team qualified for the University Rover Challenge for the first time after thousands of hours of design and manufacturing.",
+      "media": "rover-sunset-playa"
+    },
+    {
+      "id": "rocker-bogie-prototype-2021",
+      "year": "2021",
+      "date": "2021-11-02",
+      "title": "PROTOTYPE",
+      "category": "Engineering",
+      "metric": "6 × 6",
+      "description": "The first six-wheel rocker-bogie prototype proved the drive system across demanding local terrain.",
+      "media": "rover-terrain-traverse"
+    },
+    {
+      "id": "founded-2020",
+      "year": "2020",
+      "date": "2020-01-15",
+      "title": "FOUNDED",
+      "category": "Origin",
+      "metric": "T−00",
+      "description": "UMRT formed around a shared mission: push student engineering beyond the road and toward planetary exploration.",
+      "media": "rover-grass-trial"
+    }
+  ]
+}

@@ -138,3 +138,14 @@ dist
 
 .openai
 .puku
+
+# Camera originals for the media pipeline (~1.3 GB). Only the derivatives in
+# public/media/ and data/media-manifest.json are committed. Regenerate with
+# `node scripts/build-media-library.mjs`.
+/RESOURCES/
+
+# Scratch directory used while inspecting source assets.
+/.preview-tmp/
+
+
+RESOURCES/
