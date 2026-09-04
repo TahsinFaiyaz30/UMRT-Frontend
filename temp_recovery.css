@@ -1,0 +1,2603 @@
+
+/* REPLACE CALL */
+@keyframes teardown-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ========================================================================== */
+/* TEAM MODULE                                                                 */
+/* ========================================================================== */
+
+:root {
+  --deep-space: #08090D;
+  --carbon: #111318;
+  --glass: rgba(17, 19, 24, 0.75);
+  --mars-accent: #E03E1A;
+  --cyan-laser: #00F0FF;
+  --steel: #2A2E39;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Team page base                                                              */
+/* -------------------------------------------------------------------------- */
+
+.team-page {
+  min-height: 100vh;
+  background: var(--deep-space);
+  color: #e8e4dd;
+  padding-top: 80px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Section headers                                                             */
+/* -------------------------------------------------------------------------- */
+
+.team-section-header {
+  text-align: center;
+  padding: 4rem 1.5rem 3rem;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.team-section-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan-laser), transparent);
+  margin-bottom: 1.5rem;
+  transform-origin: center;
+}
+
+.team-section-eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  color: var(--cyan-laser);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.team-section-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0 0 1rem;
+  background: linear-gradient(135deg, #fff 40%, var(--cyan-laser) 120%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.team-section-subtitle {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: rgba(232, 228, 221, 0.6);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Avatar placeholder                                                          */
+/* -------------------------------------------------------------------------- */
+
+.team-avatar-frame {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--steel);
+}
+
+.team-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.team-avatar-placeholder {
+  background: linear-gradient(135deg, #0d0f14, #151820);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.team-avatar-grid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--cyan-laser);
+}
+
+.team-avatar-glyph {
+  position: relative;
+  width: 40%;
+  height: 40%;
+  color: rgba(255, 255, 255, 0.12);
+}
+
+.team-avatar-label {
+  position: absolute;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  color: var(--cyan-laser);
+  opacity: 0.5;
+  text-transform: uppercase;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Member card                                                                 */
+/* -------------------------------------------------------------------------- */
+
+.team-member-card {
+  position: relative;
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 14px;
+  border: 1px solid var(--steel);
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  overflow: hidden;
+}
+
+.team-member-card:hover,
+.team-member-card:focus-visible {
+  border-color: rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 30px -10px rgba(0, 240, 255, 0.15);
+  outline: none;
+}
+
+.team-card-glow {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.08), transparent 70%);
+  pointer-events: none;
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+
+.team-member-card:hover .team-card-glow {
+  opacity: 1;
+}
+
+.team-card-info {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.team-card-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: #fff;
+}
+
+.team-card-role {
+  font-size: 0.8rem;
+  color: rgba(232, 228, 221, 0.6);
+  margin: 0;
+}
+
+.team-card-tag {
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--mars-accent);
+  background: rgba(224, 62, 26, 0.1);
+  border: 1px solid rgba(224, 62, 26, 0.2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  width: fit-content;
+  margin-top: 4px;
+}
+
+.team-card-focus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.team-pill {
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  color: var(--cyan-laser);
+  background: rgba(0, 240, 255, 0.06);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.team-card-socials {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.team-card-socials a {
+  color: rgba(232, 228, 221, 0.4);
+  transition: color 0.2s;
+}
+
+.team-card-socials a:hover {
+  color: var(--cyan-laser);
+}
+
+.team-social-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* -- Card variants -- */
+
+.team-member-card--hero {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 1.5rem;
+  border-color: rgba(224, 62, 26, 0.2);
+  background: linear-gradient(135deg, var(--glass), rgba(224, 62, 26, 0.03));
+}
+
+.team-member-card--hero .team-card-info {
+  align-items: center;
+}
+
+.team-member-card--hero .team-card-name {
+  font-size: 1.15rem;
+}
+
+.team-member-card--hero:hover {
+  border-color: rgba(224, 62, 26, 0.4);
+  box-shadow: 0 0 40px -12px rgba(224, 62, 26, 0.2);
+}
+
+.team-member-card--compact {
+  padding: 0.75rem 1rem;
+  gap: 0.75rem;
+}
+
+.team-member-card--compact .team-card-name {
+  font-size: 0.85rem;
+}
+
+.team-member-card--compact .team-card-role {
+  font-size: 0.7rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* About divisions                                                             */
+/* -------------------------------------------------------------------------- */
+
+.team-about {
+  padding-bottom: 6rem;
+}
+
+.team-about-grid {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.team-division-card {
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid var(--steel);
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  padding: 2rem 2rem 2rem 2.5rem;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.team-division-card:hover {
+  border-color: rgba(0, 240, 255, 0.25);
+}
+
+.team-division-stripe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--mars-accent), var(--cyan-laser));
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.team-division-card:hover .team-division-stripe {
+  opacity: 1;
+}
+
+.team-division-card--alt .team-division-stripe {
+  background: linear-gradient(180deg, var(--cyan-laser), var(--mars-accent));
+}
+
+.team-division-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.team-division-icon {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  color: var(--cyan-laser);
+  opacity: 0.7;
+}
+
+.team-division-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.team-division-code {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--cyan-laser);
+  text-transform: uppercase;
+}
+
+.team-division-desc {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: rgba(232, 228, 221, 0.7);
+  margin: 0 0 1.25rem;
+}
+
+.team-division-highlights {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.team-division-highlights li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: rgba(232, 228, 221, 0.55);
+  line-height: 1.5;
+}
+
+.team-division-bullet {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mars-accent);
+  flex-shrink: 0;
+  margin-top: 6px;
+  opacity: 0.6;
+}
+
+.team-division-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.team-spec-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--steel);
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: rgba(42, 46, 57, 0.3);
+}
+
+.team-spec-pill code {
+  color: rgba(232, 228, 221, 0.4);
+}
+
+.team-spec-pill strong {
+  color: var(--cyan-laser);
+  font-weight: 500;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Leadership tiers                                                            */
+/* -------------------------------------------------------------------------- */
+
+.team-leads {
+  padding-bottom: 6rem;
+}
+
+.team-tier {
+  max-width: 1100px;
+  margin: 0 auto 3rem;
+  padding: 0 1.5rem;
+}
+
+.team-tier-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: rgba(232, 228, 221, 0.4);
+  text-transform: uppercase;
+}
+
+.team-tier-badge {
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  color: var(--cyan-laser);
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+.team-tier-badge--cmd {
+  color: var(--mars-accent);
+  background: rgba(224, 62, 26, 0.08);
+  border-color: rgba(224, 62, 26, 0.2);
+}
+
+.team-tier-badge--sys {
+  color: #d8ff4f;
+  background: rgba(216, 255, 79, 0.06);
+  border-color: rgba(216, 255, 79, 0.15);
+}
+
+.team-tier-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.team-tier-grid--advisors {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.team-tier-grid--command {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.team-tier-grid--leads {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+/* -------------------------------------------------------------------------- */
+/* Org tree                                                                    */
+/* -------------------------------------------------------------------------- */
+
+.team-tree {
+  position: relative;
+  padding-bottom: 6rem;
+}
+
+.tree-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--mars-accent), var(--cyan-laser));
+  z-index: 999;
+  pointer-events: none;
+}
+
+/* Desktop tree */
+.tree-desktop {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tree-tier {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.tree-tier-label {
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  color: rgba(232, 228, 221, 0.3);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.tree-tier-nodes {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.tree-tier--advisors .tree-tier-nodes,
+.tree-tier--command .tree-tier-nodes {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.tree-tier--senior .tree-tier-nodes {
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+/* SVG connectors */
+.tree-connector {
+  width: 2px;
+  height: 60px;
+  display: block;
+  margin: 0 auto;
+}
+
+.tree-connector line {
+  stroke: var(--steel);
+  transition: stroke 0.6s ease;
+}
+
+.tree-connector--lit line {
+  stroke: var(--cyan-laser);
+  filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.4));
+}
+
+.tree-connector--short {
+  height: 30px;
+}
+
+.tree-split-connector {
+  width: 100%;
+  max-width: 900px;
+  height: 30px;
+  display: block;
+  margin: 0 auto;
+}
+
+.tree-split-connector line {
+  stroke: var(--steel);
+  transition: stroke 0.6s ease;
+}
+
+.tree-split-connector.tree-connector--lit line {
+  stroke: var(--cyan-laser);
+  filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.4));
+}
+
+/* Department branches */
+.tree-branches {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.tree-branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(42, 46, 57, 0.5);
+  background: rgba(8, 9, 13, 0.5);
+  transition: border-color 0.3s;
+}
+
+.tree-branch:hover {
+  border-color: rgba(0, 240, 255, 0.15);
+}
+
+.tree-branch-header {
+  margin-bottom: 0.5rem;
+}
+
+.tree-branch-code {
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  color: var(--cyan-laser);
+  display: block;
+}
+
+.tree-branch-name {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  display: block;
+  margin-top: 2px;
+}
+
+.tree-member-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+/* Mobile tree */
+.tree-mobile {
+  display: none;
+  padding: 0 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.tree-mobile-section {
+  margin-bottom: 1.5rem;
+}
+
+.tree-mobile-label {
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  color: var(--cyan-laser);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.tree-mobile-section > .team-member-card {
+  margin-bottom: 0.5rem;
+}
+
+.tree-mobile-spine {
+  width: 2px;
+  height: 40px;
+  background: linear-gradient(180deg, var(--cyan-laser) 0%, transparent 100%);
+  margin: 0 auto 1rem;
+  opacity: 0.4;
+}
+
+/* Accordion */
+.tree-accordion {
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--steel);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(17, 19, 24, 0.5);
+}
+
+.tree-accordion-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  color: #e8e4dd;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.tree-accordion-trigger:hover {
+  background: rgba(0, 240, 255, 0.03);
+}
+
+.tree-accordion-trigger code {
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  color: var(--cyan-laser);
+}
+
+.tree-accordion-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--steel);
+  transition: background 0.3s;
+}
+
+.tree-accordion-trigger--open .tree-accordion-dot {
+  background: var(--cyan-laser);
+  box-shadow: 0 0 6px rgba(0, 240, 255, 0.5);
+}
+
+.tree-accordion-chevron {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  transition: transform 0.3s;
+  opacity: 0.4;
+}
+
+.tree-accordion-trigger--open .tree-accordion-chevron {
+  transform: rotate(180deg);
+}
+
+.tree-accordion-panel {
+  padding: 0.5rem 0.75rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  overflow: hidden;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Inspect drawer                                                              */
+/* -------------------------------------------------------------------------- */
+
+.team-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+}
+
+.team-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(420px, 90vw);
+  height: 100vh;
+  background: linear-gradient(180deg, var(--carbon) 0%, var(--deep-space) 100%);
+  border-left: 1px solid var(--steel);
+  z-index: 1001;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.team-drawer-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: 1px solid var(--steel);
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  color: rgba(232, 228, 221, 0.5);
+  transition: color 0.2s, border-color 0.2s;
+  z-index: 1;
+}
+
+.team-drawer-close:hover {
+  color: #fff;
+  border-color: rgba(232, 228, 221, 0.3);
+}
+
+.team-drawer-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.team-drawer-content {
+  padding: 3rem 1.5rem 2rem;
+}
+
+.team-drawer-header {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.team-drawer-scanline {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 240, 255, 0.02) 2px,
+    rgba(0, 240, 255, 0.02) 4px
+  );
+  pointer-events: none;
+  border-radius: 12px;
+}
+
+.team-drawer-identity {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.team-drawer-tag {
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  color: var(--mars-accent);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.team-drawer-identity h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+  color: #fff;
+}
+
+.team-drawer-role {
+  font-size: 0.85rem;
+  color: rgba(232, 228, 221, 0.5);
+  margin: 0;
+}
+
+.team-drawer-section {
+  margin-bottom: 1.5rem;
+}
+
+.team-drawer-label {
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
+  color: rgba(232, 228, 221, 0.35);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.team-drawer-section p {
+  font-size: 0.85rem;
+  color: rgba(232, 228, 221, 0.7);
+  margin: 0;
+}
+
+.team-drawer-section code {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: var(--cyan-laser);
+}
+
+.team-drawer-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.team-drawer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.team-drawer-links a {
+  font-size: 0.8rem;
+  color: var(--cyan-laser);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.team-drawer-links a:hover {
+  color: #fff;
+}
+
+.team-drawer-status {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-body);
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+  color: rgba(232, 228, 221, 0.2);
+  text-transform: uppercase;
+  border-top: 1px solid var(--steel);
+  padding-top: 1rem;
+  margin-top: 2rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Sticky HUD                                                                  */
+/* -------------------------------------------------------------------------- */
+
+.team-hud {
+  position: fixed;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: none;
+}
+
+.team-hud-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0.75rem;
+}
+
+.team-hud-header span {
+  font-family: var(--font-body);
+  font-size: 0.5rem;
+  letter-spacing: 0.15em;
+  color: var(--cyan-laser);
+  opacity: 0.5;
+}
+
+.team-hud-pulse {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--cyan-laser);
+  animation: signal-pulse 2s ease-in-out infinite;
+}
+
+.team-hud-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.team-hud-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: rgba(232, 228, 221, 0.35);
+  transition: color 0.2s, background 0.2s;
+}
+
+.team-hud-item:hover {
+  color: rgba(232, 228, 221, 0.7);
+  background: rgba(42, 46, 57, 0.3);
+}
+
+.team-hud-item--active {
+  color: var(--cyan-laser) !important;
+}
+
+.team-hud-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--steel);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.team-hud-item--active .team-hud-dot {
+  background: var(--cyan-laser);
+  box-shadow: 0 0 6px rgba(0, 240, 255, 0.6);
+}
+
+.team-hud-code {
+  font-family: var(--font-body);
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+}
+
+.team-hud-label {
+  font-size: 0.55rem;
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Team tree loader                                                            */
+/* -------------------------------------------------------------------------- */
+
+.team-tree-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.team-tree-loader-inner {
+  text-align: center;
+}
+
+.team-tree-loader-inner span {
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--cyan-laser);
+  opacity: 0.6;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.team-tree-loader-bar {
+  width: 200px;
+  height: 2px;
+  background: var(--steel);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.team-tree-loader-bar::after {
+  content: '';
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: var(--cyan-laser);
+  animation: tree-loader-slide 1.2s ease-in-out infinite;
+}
+
+@keyframes tree-loader-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Team navbar dropdown                                                        */
+/* -------------------------------------------------------------------------- */
+
+.umrt-team-trigger {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  position: relative;
+}
+
+.umrt-team-chevron {
+  width: 12px;
+  height: 12px;
+  opacity: 0.5;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+.umrt-team-trigger:hover .umrt-team-chevron {
+  opacity: 1;
+  transform: rotate(180deg);
+}
+
+.umrt-team-dropdown {
+  position: absolute;
+  right: 160px;
+  top: 100%;
+  padding-top: 12px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 200;
+}
+
+.umrt-team-trigger:hover ~ .umrt-team-dropdown,
+.umrt-team-dropdown:hover {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.umrt-team-dropdown-inner {
+  width: 360px;
+  background: rgba(17, 19, 24, 0.92);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--steel);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.7);
+}
+
+.umrt-team-dropdown-head {
+  position: relative;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(42, 46, 57, 0.5);
+}
+
+.umrt-team-dropdown-head span {
+  font-family: var(--font-body);
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  color: rgba(232, 228, 221, 0.3);
+}
+
+.umrt-team-dropdown-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan-laser), var(--mars-accent), transparent);
+  opacity: 0.6;
+}
+
+.umrt-team-dropdown-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: #e8e4dd;
+  transition: background 0.2s;
+  border-bottom: 1px solid rgba(42, 46, 57, 0.3);
+}
+
+.umrt-team-dropdown-link:last-child {
+  border-bottom: none;
+}
+
+.umrt-team-dropdown-link:hover {
+  background: rgba(0, 240, 255, 0.04);
+}
+
+.umrt-team-dropdown-code {
+  font-family: var(--font-body);
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  color: var(--cyan-laser);
+  background: rgba(0, 240, 255, 0.06);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 4px;
+  padding: 4px 8px;
+  flex-shrink: 0;
+}
+
+.umrt-team-dropdown-link strong {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.umrt-team-dropdown-link small {
+  font-size: 0.65rem;
+  color: rgba(232, 228, 221, 0.45);
+  line-height: 1.4;
+  display: block;
+}
+
+.umrt-team-dropdown-arrow {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s, transform 0.2s;
+  color: var(--cyan-laser);
+}
+
+.umrt-team-dropdown-link:hover .umrt-team-dropdown-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Mobile team divider */
+.umrt-mobile-divider {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  color: var(--cyan-laser);
+  opacity: 0.4;
+  padding: 1rem 0 0.25rem;
+  border-top: 1px solid var(--steel);
+  margin-top: 0.5rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Responsive                                                                  */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .tree-desktop {
+    display: none;
+  }
+
+  .tree-mobile {
+    display: block;
+  }
+
+  .team-about-grid {
+    padding: 0 1rem;
+  }
+
+  .team-division-card {
+    padding: 1.5rem 1.5rem 1.5rem 2rem;
+  }
+
+  .team-tier {
+    padding: 0 1rem;
+  }
+
+  .umrt-team-dropdown {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .team-hud {
+    display: block;
+  }
+}
+
+@media (min-width: 1024px) {
+  .tree-branches {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1023px) and (min-width: 769px) {
+  .tree-branches {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* MULTI REPLACE CALL */
+[
+  {
+    "AllowMultiple": false,
+    "EndLine": 3505,
+    "ReplacementContent": "/* ========================================================================== */\n/* TEAM MODULE                                                                 */\n/* ========================================================================== */\n\n/* We will reuse core UMRT vars: --ink, --paper, --signal, --solar, --rust */\n\n/* -------------------------------------------------------------------------- */\n/* Team page base                                                              */\n/* -------------------------------------------------------------------------- */\n\n.team-page {\n  width: 100%;\n  background: var(--ink);\n  color: var(--paper);\n  padding-top: 100px;\n}\n\n.team-page-content {\n  display: flex;\n  flex-direction: column;\n  gap: 8rem; /* Spatial UI: massive separation between views */\n}\n\n/* -------------------------------------------------------------------------- */\n/* Section headers                                                             */\n/* -------------------------------------------------------------------------- */\n\n.team-section-header {\n  text-align: center;\n  padding: 4rem 1.5rem 3rem;\n  max-width: 720px;\n  margin: 0 auto;\n}\n\n.team-section-line {\n  height: 1px;\n  background: linear-gradient(90deg, transparent, var(--signal), transparent);\n  margin-bottom: 1.5rem;\n  transform-origin: center;\n}\n\n.team-section-eyebrow {\n  font-family: var(--font-body);\n  font-size: 0.65rem;\n  letter-spacing: 0.25em;\n  color: var(--signal);\n  text-transform: uppercase;\n  margin-bottom: 0.75rem;\n}\n\n.team-section-title {\n  font-family: var(--font-display);\n  font-size: clamp(2rem, 5vw, 3.5rem);\n  font-weight: 700;\n  line-height: 1.1;\n  margin: 0 0 1rem;\n  color: var(--paper);\n}\n\n.team-section-subtitle {\n  font-size: 1rem;\n  line-height: 1.7;\n  color: rgba(242, 239, 232, 0.6); /* --paper base */\n  max-width: 560px;\n  margin: 0 auto;\n}\n\n/* -------------------------------------------------------------------------- */\n/* Avatar placeholder                                                          */\n/* -------------------------------------------------------------------------- */\n\n.team-avatar-frame {\n  position: relative;\n  border-radius: 16px; /* slightly rounder */\n  overflow: hidden;\n  flex-shrink: 0;\n  border: 1px solid rgba(255, 255, 255, 0.1);\n}\n\n.team-avatar-img {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n  display: block;\n}\n\n.team-avatar-placeholder {\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n\n.team-avatar-grid {\n  position: absolute;\n  inset: 0;\n  width: 100%;\n  height: 100%;\n  color: var(--signal);\n}\n\n.team-avatar-glyph {\n  position: relative;\n  width: 40%;\n  height: 40%;\n  color: rgba(255, 255, 255, 0.12);\n}\n\n.team-avatar-label {\n  position: absolute;\n  bottom: 8px;\n  left: 0;\n  right: 0;\n  text-align: center;\n  font-family: var(--font-body);\n  font-size: 7px;\n  letter-spacing: 0.12em;\n  color: var(--signal);\n  opacity: 0.5;\n  text-transform: uppercase;\n}\n\n/* -------------------------------------------------------------------------- */\n/* Member card (Spatial UI adjustments)                                        */\n/* -------------------------------------------------------------------------- */\n\n.team-member-card {\n  position: relative;\n  display: flex;\n  gap: 1.25rem;\n  padding: 1.5rem; /* Spatial UI: more breathing room */\n  border-radius: 16px;\n  border: 1px solid rgba(255, 255, 255, 0.08);\n  background: rgba(255, 255, 255, 0.02);\n  backdrop-filter: blur(24px); /* Spatial UI: deeper blur */\n  cursor: pointer;\n  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);\n  overflow: hidden;\n}\n\n.team-member-card:hover,\n.team-member-card:focus-visible {\n  border-color: rgba(216, 255, 79, 0.3); /* --signal */\n  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(216, 255, 79, 0.1);\n  transform: translateY(-4px); /* Spatial lift */\n  outline: none;\n}\n\n.team-card-glow {\n  position: absolute;\n  top: -20px;\n  right: -20px;\n  width: 100px;\n  height: 100px;\n  border-radius: 50%;\n  background: radial-gradient(circle, rgba(216, 255, 79, 0.1), transparent 70%); /* --signal */\n  pointer-events: none;\n  transition: opacity 0.3s;\n  opacity: 0;\n}\n\n.team-member-card:hover .team-card-glow {\n  opacity: 1;\n}\n\n.team-card-info {\n  min-width: 0;\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  gap: 0.25rem;\n}\n\n.team-card-name {\n  font-family: var(--font-display);\n  font-size: 1.1rem;\n  font-weight: 600;\n  margin: 0;\n  color: var(--paper);\n}\n\n.team-card-role {\n  font-size: 0.85rem;\n  color: rgba(242, 239, 232, 0.6);\n  margin: 0;\n}\n\n.team-card-tag {\n  font-family: var(--font-body);\n  font-size: 0.65rem;\n  letter-spacing: 0.08em;\n  color: var(--solar);\n  background: rgba(255, 90, 31, 0.1); /* --solar */\n  border: 1px solid rgba(255, 90, 31, 0.2);\n  border-radius: 6px;\n  padding: 4px 8px;\n  width: fit-content;\n  margin-top: 6px;\n}\n\n.team-card-focus {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-top: 10px;\n}\n\n.team-pill {\n  font-family: var(--font-body);\n  font-size: 0.65rem;\n  letter-spacing: 0.06em;\n  color: var(--signal);\n  background: rgba(216, 255, 79, 0.06);\n  border: 1px solid rgba(216, 255, 79, 0.15);\n  border-radius: 999px;\n  padding: 3px 10px;\n}\n\n.team-card-socials {\n  display: flex;\n  gap: 12px;\n  margin-top: 12px;\n}\n\n.team-card-socials a {\n  color: rgba(242, 239, 232, 0.4);\n  transition: color 0.2s;\n}\n\n.team-card-socials a:hover {\n  color: var(--signal);\n}\n\n.team-social-icon {\n  width: 16px;\n  height: 16px;\n}\n\n/* -- Card variants -- */\n\n.team-member-card--hero {\n  flex-direction: column;\n  align-items: center;\n  text-align: center;\n  padding: 2.5rem 2rem;\n  border-color: rgba(255, 90, 31, 0.2); /* --solar */\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 90, 31, 0.05));\n}\n\n.team-member-card--hero .team-card-info {\n  align-items: center;\n}\n\n.team-member-card--hero .team-card-name {\n  font-size: 1.25rem;\n}\n\n.team-member-card--hero:hover {\n  border-color: rgba(255, 90, 31, 0.4);\n  box-shadow: 0 10px 50px -10px rgba(255, 90, 31, 0.2), inset 0 0 0 1px rgba(255, 90, 31, 0.1);\n}\n\n.team-member-card--compact {\n  padding: 1rem 1.25rem;\n  gap: 1rem;\n  border-radius: 12px;\n}\n\n.team-member-card--compact .team-card-name {\n  font-size: 0.9rem;\n}\n\n.team-member-card--compact .team-card-role {\n  font-size: 0.75rem;\n}\n\n/* -------------------------------------------------------------------------- */\n/* About divisions (Zig-zag layout)                                            */\n/* -------------------------------------------------------------------------- */\n\n.team-about {\n  padding-bottom: 4rem;\n}\n\n.team-about-list {\n  max-width: 1200px;\n  margin: 0 auto;\n  padding: 0 1.5rem;\n  display: flex;\n  flex-direction: column;\n  gap: 8rem; /* Spatial UI: huge gaps between alternating rows */\n}\n\n/* Single zigzag block */\n.team-division-block {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 4rem;\n  align-items: center;\n}\n\n/* Reverse for odd blocks (picture left, text right) */\n.team-division-block:nth-child(even) {\n  direction: rtl; /* simple way to flip grid items */\n}\n\n.team-division-block:nth-child(even) > * {\n  direction: ltr; /* reset content direction */\n}\n\n/* Graphic pane */\n.team-division-graphic {\n  position: relative;\n  width: 100%;\n  aspect-ratio: 1;\n  border-radius: 24px;\n  background: rgba(255, 255, 255, 0.02);\n  border: 1px solid rgba(255, 255, 255, 0.05);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  overflow: hidden;\n  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);\n}\n\n.team-division-graphic svg {\n  width: 50%;\n  height: 50%;\n  color: var(--signal);\n  opacity: 0.2;\n}\n\n/* Content pane */\n.team-division-content {\n  display: flex;\n  flex-direction: column;\n  gap: 1.5rem;\n}\n\n.team-division-head {\n  display: flex;\n  flex-direction: column;\n  gap: 0.5rem;\n}\n\n.team-division-code {\n  font-family: var(--font-body);\n  font-size: 0.75rem;\n  letter-spacing: 0.15em;\n  color: var(--signal);\n  text-transform: uppercase;\n}\n\n.team-division-name {\n  font-family: var(--font-display);\n  font-size: 2.5rem;\n  font-weight: 700;\n  line-height: 1.1;\n  color: var(--paper);\n}\n\n.team-division-desc {\n  font-size: 1.05rem;\n  line-height: 1.8;\n  color: rgba(242, 239, 232, 0.7);\n  margin: 0;\n}\n\n.team-division-highlights {\n  list-style: none;\n  padding: 0;\n  margin: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 0.75rem;\n}\n\n.team-division-highlights li {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  font-size: 0.95rem;\n  color: rgba(242, 239, 232, 0.6);\n  line-height: 1.6;\n}\n\n.team-division-bullet {\n  width: 8px;\n  height: 8px;\n  border-radius: 50%;\n  background: var(--solar);\n  flex-shrink: 0;\n  margin-top: 6px;\n  box-shadow: 0 0 10px rgba(255, 90, 31, 0.5);\n}\n\n.team-division-specs {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n  margin-top: 1rem;\n}\n\n.team-spec-pill {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-family: var(--font-body);\n  font-size: 0.75rem;\n  letter-spacing: 0.08em;\n  border: 1px solid rgba(255, 255, 255, 0.1);\n  border-radius: 8px;\n  padding: 6px 14px;\n  background: rgba(255, 255, 255, 0.03);\n}\n\n.team-spec-pill code {\n  color: rgba(242, 239, 232, 0.4);\n}\n\n.team-spec-pill strong {\n  color: var(--signal);\n  font-weight: 500;\n}\n\n/* -------------------------------------------------------------------------- */\n/* Leadership tiers                                                            */\n/* -------------------------------------------------------------------------- */\n\n.team-leads {\n  padding-bottom: 4rem;\n}\n\n.team-tier {\n  max-width: 1200px; /* Widened for spatial layout */\n  margin: 0 auto 5rem;\n  padding: 0 1.5rem;\n}\n\n.team-tier-label {\n  display: flex;\n  align-items: center;\n  gap: 1rem;\n  margin-bottom: 2rem;\n  font-family: var(--font-body);\n  font-size: 0.75rem;\n  letter-spacing: 0.2em;\n  color: rgba(242, 239, 232, 0.4);\n  text-transform: uppercase;\n}\n\n.team-tier-badge {\n  font-family: var(--font-body);\n  font-size: 0.6rem;\n  letter-spacing: 0.12em;\n  color: var(--signal);\n  background: rgba(216, 255, 79, 0.08);\n  border: 1px solid rgba(216, 255, 79, 0.2);\n  border-radius: 6px;\n  padding: 4px 10px;\n}\n\n.team-tier-badge--cmd {\n  color: var(--solar);\n  background: rgba(255, 90, 31, 0.08);\n  border-color: rgba(255, 90, 31, 0.2);\n}\n\n.team-tier-badge--sys {\n  color: var(--paper);\n  background: rgba(255, 255, 255, 0.05);\n  border-color: rgba(255, 255, 255, 0.15);\n}\n\n.team-tier-grid {\n  display: grid;\n  gap: 1.5rem; /* Spatial UI */\n}\n\n.team-tier-grid--advisors {\n  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));\n}\n\n.team-tier-grid--command {\n  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));\n}\n\n.team-tier-grid--leads {\n  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));\n}\n\n/* -------------------------------------------------------------------------- */\n/* Org tree                                                                    */\n/* -------------------------------------------------------------------------- */\n\n.team-tree {\n  position: relative;\n  padding-bottom: 8rem;\n}\n\n.tree-progress {\n  position: fixed;\n  top: 0;\n  left: 0;\n  height: 2px;\n  background: linear-gradient(90deg, var(--solar), var(--signal));\n  z-index: 999;\n  pointer-events: none;\n}\n\n/* Desktop tree */\n.tree-desktop {\n  max-width: 1200px;\n  margin: 0 auto;\n  padding: 0 1.5rem;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n}\n\n.tree-tier {\n  width: 100%;\n  text-align: center;\n  margin-bottom: 1rem;\n}\n\n.tree-tier-label {\n  font-family: var(--font-body);\n  font-size: 0.65rem;\n  letter-spacing: 0.2em;\n  color: rgba(242, 239, 232, 0.3);\n  text-transform: uppercase;\n  margin-bottom: 1.5rem;\n}\n\n.tree-tier-nodes {\n  display: flex;\n  justify-content: center;\n  gap: 1.5rem;\n  flex-wrap: wrap;\n}\n\n.tree-tier--advisors .tree-tier-nodes,\n.tree-tier--command .tree-tier-nodes {\n  max-width: 800px;\n  margin: 0 auto;\n}\n\n.tree-tier--senior .tree-tier-nodes {\n  max-width: 400px;\n  margin: 0 auto;\n}\n\n/* SVG connectors */\n.tree-connector {\n  width: 2px;\n  height: 80px;\n  display: block;\n  margin: 0 auto;\n}\n\n.tree-connector line {\n  stroke: rgba(255, 255, 255, 0.1);\n  stroke-width: 2;\n  /* stroke-dashoffset controlled by Framer Motion inline */\n}\n\n/* The glowing drawn path that sits on top */\n.tree-connector-glow {\n  stroke: var(--signal);\n  stroke-width: 2;\n  filter: drop-shadow(0 0 6px rgba(216, 255, 79, 0.6));\n}\n\n.tree-connector--short {\n  height: 40px;\n}\n\n.tree-split-connector {\n  width: 100%;\n  max-width: 1000px;\n  height: 40px;\n  display: block;\n  margin: 0 auto;\n}\n\n.tree-split-connector path {\n  stroke: rgba(255, 255, 255, 0.1);\n  stroke-width: 2;\n  fill: none;\n}\n\n.tree-split-connector .tree-connector-glow {\n  stroke: var(--signal);\n}\n\n/* Department branches */\n.tree-branches {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 2rem;\n  width: 100%;\n  margin-top: 1rem;\n}\n\n.tree-branch {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  text-align: center;\n  padding: 1.5rem;\n  border-radius: 16px;\n  border: 1px solid rgba(255, 255, 255, 0.05);\n  background: rgba(255, 255, 255, 0.01);\n  transition: border-color 0.3s;\n}\n\n.tree-branch:hover {\n  border-color: rgba(216, 255, 79, 0.15); /* --signal */\n}\n\n.tree-branch-header {\n  margin-bottom: 1rem;\n}\n\n.tree-branch-code {\n  font-family: var(--font-body);\n  font-size: 0.65rem;\n  letter-spacing: 0.15em;\n  color: var(--signal);\n  display: block;\n}\n\n.tree-branch-name {\n  font-family: var(--font-display);\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--paper);\n  display: block;\n  margin-top: 4px;\n}\n\n.tree-member-cluster {\n  display: flex;\n  flex-direction: column;\n  gap: 0.75rem;\n  width: 100%;\n}\n\n/* Mobile tree */\n.tree-mobile {\n  display: none;\n  padding: 0 1.5rem;\n  max-width: 600px;\n  margin: 0 auto;\n}\n\n.tree-mobile-section {\n  margin-bottom: 2rem;\n}\n\n.tree-mobile-label {\n  font-family: var(--font-body);\n  font-size: 0.65rem;\n  letter-spacing: 0.2em;\n  color: var(--signal);\n  text-transform: uppercase;\n  margin-bottom: 1rem;\n}\n\n.tree-mobile-section > .team-member-card {\n  margin-bottom: 0.75rem;\n}\n\n.tree-mobile-spine {\n  width: 2px;\n  height: 60px;\n  background: linear-gradient(180deg, var(--signal) 0%, transparent 100%);\n  margin: 0 auto 1.5rem;\n  opacity: 0.4;\n}\n\n/* Accordion */\n.tree-accordion {\n  margin-bottom: 0.75rem;\n  border: 1px solid rgba(255, 255, 255, 0.08);\n  border-radius: 12px;\n  overflow: hidden;\n  background: rgba(255, 255, 255, 0.02);\n}\n\n.tree-accordion-trigger {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  gap: 0.75rem;\n  padding: 1rem 1.25rem;\n  background: none;\n  border: none;\n  color: var(--paper);\n  font-family: var(--font-display);\n  font-size: 0.9rem;\n  cursor: pointer;\n  text-align: left;\n  transition: background 0.2s;\n}\n\n.tree-accordion-trigger:hover {\n  background: rgba(255, 255, 255, 0.04);\n}\n\n.tree-accordion-trigger code {\n  font-family: var(--font-body);\n  font-size: 0.65rem;\n  letter-spacing: 0.1em;\n  color: var(--signal);\n}\n\n.tree-accordion-dot {\n  width: 8px;\n  height: 8px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.2);\n  transition: background 0.3s;\n}\n\n.tree-accordion-trigger--open .tree-accordion-dot {\n  background: var(--signal);\n  box-shadow: 0 0 8px rgba(216, 255, 79, 0.6);\n}\n\n.tree-accordion-chevron {\n  width: 18px;\n  height: 18px;\n  margin-left: auto;\n  transition: transform 0.3s;\n  opacity: 0.4;\n}\n\n.tree-accordion-trigger--open .tree-accordion-chevron {\n  transform: rotate(180deg);\n}\n\n.tree-accordion-panel {\n  padding: 0.5rem 1rem 1rem;\n  display: flex;\n  flex-direction: column;\n  gap: 0.5rem;\n  overflow: hidden;\n}\n\n/* -------------------------------------------------------------------------- */\n/* Inspect drawer                                                              */\n/* -------------------------------------------------------------------------- */\n\n.team-drawer-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.7);\n  backdrop-filter: blur(8px);\n  z-index: 1000;\n}\n\n.team-drawer {\n  position: fixed;\n  top: 0;\n  right: 0;\n  width: min(460px, 90vw); /* Spatial UI: wider */\n  height: 100vh;\n  background: rgba(7, 6, 4, 0.95); /* --ink base */\n  backdrop-filter: blur(24px);\n  border-left: 1px solid rgba(255, 255, 255, 0.1);\n  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.8);\n  z-index: 1001;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n}\n\n.team-drawer-close {\n  position: absolute;\n  top: 1.5rem;\n  right: 1.5rem;\n  background: rgba(255, 255, 255, 0.05);\n  border: 1px solid rgba(255, 255, 255, 0.1);\n  border-radius: 8px;\n  padding: 8px;\n  cursor: pointer;\n  color: rgba(242, 239, 232, 0.6);\n  transition: all 0.2s;\n  z-index: 1;\n}\n\n.team-drawer-close:hover {\n  color: var(--paper);\n  background: rgba(255, 255, 255, 0.1);\n}\n\n.team-drawer-close svg {\n  width: 20px;\n  height: 20px;\n}\n\n.team-drawer-content {\n  padding: 4rem 2rem 2rem;\n}\n\n.team-drawer-header {\n  position: relative;\n  display: flex;\n  justify-content: center;\n  margin-bottom: 2rem;\n}\n\n.team-drawer-scanline {\n  position: absolute;\n  inset: 0;\n  background: repeating-linear-gradient(\n    0deg,\n    transparent,\n    transparent 2px,\n    rgba(216, 255, 79, 0.03) 2px,\n    rgba(216, 255, 79, 0.03) 4px\n  );\n  pointer-events: none;\n  border-radius: 16px;\n}\n\n.team-drawer-identity {\n  text-align: center;\n  margin-bottom: 2.5rem;\n}\n\n.team-drawer-tag {\n  font-family: var(--font-body);\n  font-size: 0.65rem;\n  letter-spacing: 0.12em;\n  color: var(--solar);\n  display: block;\n  margin-bottom: 0.75rem;\n}\n\n.team-drawer-identity h2 {\n  font-family: var(--font-display);\n  font-size: 1.75rem;\n  font-weight: 700;\n  margin: 0 0 0.5rem;\n  color: var(--paper);\n}\n\n.team-drawer-role {\n  font-size: 0.95rem;\n  color: rgba(242, 239, 232, 0.6);\n  margin: 0;\n}\n\n.team-drawer-section {\n  margin-bottom: 2rem;\n}\n\n.team-drawer-label {\n  font-family: var(--font-body);\n  font-size: 0.65rem;\n  letter-spacing: 0.18em;\n  color: rgba(242, 239, 232, 0.4);\n  text-transform: uppercase;\n  display: block;\n  margin-bottom: 0.75rem;\n}\n\n.team-drawer-section p {\n  font-size: 0.95rem;\n  color: rgba(242, 239, 232, 0.8);\n  margin: 0;\n  line-height: 1.6;\n}\n\n.team-drawer-section code {\n  font-family: var(--font-body);\n  font-size: 0.75rem;\n  color: var(--signal);\n}\n\n.team-drawer-pills {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n\n.team-drawer-links {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n\n.team-drawer-links a {\n  font-size: 0.9rem;\n  color: var(--signal);\n  text-decoration: none;\n  transition: color 0.2s;\n}\n\n.team-drawer-links a:hover {\n  color: var(--paper);\n}\n\n.team-drawer-status {\n  display: flex;\n  justify-content: space-between;\n  font-family: var(--font-body);\n  font-size: 0.55rem;\n  letter-spacing: 0.12em;\n  color: rgba(242, 239, 232, 0.3);\n  text-transform: uppercase;\n  border-top: 1px solid rgba(255, 255, 255, 0.1);\n  padding-top: 1.5rem;\n  margin-top: 3rem;\n}\n\n/* -------------------------------------------------------------------------- */\n/* Sticky HUD                                                                  */\n/* -------------------------------------------------------------------------- */\n\n.team-hud {\n  position: fixed;\n  right: 2rem;\n  top: 50%;\n  transform: translateY(-50%);\n  z-index: 100;\n  display: none;\n  background: rgba(7, 6, 4, 0.6); /* --ink */\n  backdrop-filter: blur(12px);\n  padding: 1rem;\n  border-radius: 12px;\n  border: 1px solid rgba(255, 255, 255, 0.05);\n}\n\n.team-hud-header {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin-bottom: 1rem;\n}\n\n.team-hud-header span {\n  font-family: var(--font-body);\n  font-size: 0.55rem;\n  letter-spacing: 0.15em;\n  color: var(--signal);\n  opacity: 0.6;\n}\n\n.team-hud-pulse {\n  width: 6px;\n  height: 6px;\n  border-radius: 50%;\n  background: var(--signal);\n  animation: signal-pulse 2s ease-in-out infinite;\n}\n\n.team-hud-list {\n  list-style: none;\n  padding: 0;\n  margin: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n\n.team-hud-item {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  background: none;\n  border: none;\n  padding: 6px 10px;\n  border-radius: 8px;\n  cursor: pointer;\n  color: rgba(242, 239, 232, 0.4);\n  transition: all 0.2s;\n}\n\n.team-hud-item:hover {\n  color: rgba(242, 239, 232, 0.8);\n  background: rgba(255, 255, 255, 0.05);\n}\n\n.team-hud-item--active {\n  color: var(--signal) !important;\n  background: rgba(216, 255, 79, 0.05);\n}\n\n.team-hud-dot {\n  width: 6px;\n  height: 6px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.2);\n  transition: all 0.3s;\n}\n\n.team-hud-item--active .team-hud-dot {\n  background: var(--signal);\n  box-shadow: 0 0 8px rgba(216, 255, 79, 0.6);\n}\n\n.team-hud-code {\n  font-family: var(--font-body);\n  font-size: 0.55rem;\n  letter-spacing: 0.1em;\n}\n\n.team-hud-label {\n  font-size: 0.65rem;\n  white-space: nowrap;\n}\n\n/* -------------------------------------------------------------------------- */\n/* Team tree loader                                                            */\n/* -------------------------------------------------------------------------- */\n\n.team-tree-loader {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  min-height: 60vh;\n}\n\n.team-tree-loader-inner {\n  text-align: center;\n}\n\n.team-tree-loader-inner span {\n  font-family: var(--font-body);\n  font-size: 0.65rem;\n  letter-spacing: 0.2em;\n  color: var(--signal);\n  opacity: 0.8;\n  display: block;\n  margin-bottom: 1.25rem;\n}\n\n.team-tree-loader-bar {\n  width: 240px;\n  height: 2px;\n  background: rgba(255, 255, 255, 0.1);\n  border-radius: 2px;\n  overflow: hidden;\n  margin: 0 auto;\n}\n\n.team-tree-loader-bar::after {\n  content: '';\n  display: block;\n  width: 40%;\n  height: 100%;\n  background: var(--signal);\n  animation: tree-loader-slide 1.2s ease-in-out infinite;\n}\n\n@keyframes tree-loader-slide {\n  0% { transform: translateX(-100%); }\n  100% { transform: translateX(350%); }\n}\n\n/* -------------------------------------------------------------------------- */\n/* Team navbar dropdown (Fixes)                                                */\n/* -------------------------------------------------------------------------- */\n\n.umrt-team-trigger {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  cursor: pointer;\n  position: relative;\n  /* Add padding bottom so hovering from trigger to dropdown doesn't lose focus */\n  padding-bottom: 20px;\n  margin-bottom: -20px;\n}\n\n.umrt-team-chevron {\n  width: 14px;\n  height: 14px;\n  opacity: 0.5;\n  transition: transform 0.3s, opacity 0.3s;\n}\n\n.umrt-team-trigger:hover .umrt-team-chevron,\n.umrt-team-dropdown:hover ~ .umrt-team-trigger .umrt-team-chevron {\n  opacity: 1;\n  transform: rotate(180deg);\n}\n\n.umrt-team-dropdown {\n  position: absolute;\n  right: 160px;\n  top: calc(100% + 12px);\n  pointer-events: none;\n  opacity: 0;\n  transform: translateY(-8px);\n  transition: opacity 0.3s ease, transform 0.3s ease;\n  z-index: 1000; /* Ensure above all page content */\n}\n\n.umrt-team-trigger:hover ~ .umrt-team-dropdown,\n.umrt-team-dropdown:hover {\n  pointer-events: auto;\n  opacity: 1;\n  transform: translateY(0);\n}\n\n/* Creates a bridge so mouse doesn't lose hover */\n.umrt-team-dropdown::before {\n  content: '';\n  position: absolute;\n  top: -20px;\n  left: 0;\n  right: 0;\n  height: 20px;\n}\n\n.umrt-team-dropdown-inner {\n  width: 380px;\n  background: rgba(7, 6, 4, 0.95); /* --ink */\n  backdrop-filter: blur(24px);\n  border: 1px solid rgba(255, 255, 255, 0.1);\n  border-radius: 16px;\n  overflow: hidden;\n  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8);\n}\n\n.umrt-team-dropdown-head {\n  position: relative;\n  padding: 16px 20px;\n  border-bottom: 1px solid rgba(255, 255, 255, 0.1);\n}\n\n.umrt-team-dropdown-head span {\n  font-family: var(--font-body);\n  font-size: 0.55rem;\n  letter-spacing: 0.2em;\n  color: rgba(242, 239, 232, 0.4);\n}\n\n.umrt-team-dropdown-glow {\n  position: absolute;\n  top: 0;\n  left: 0;\n  right: 0;\n  height: 2px;\n  background: linear-gradient(90deg, transparent, var(--signal), var(--solar), transparent);\n  opacity: 0.8;\n}\n\n.umrt-team-dropdown-link {\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  padding: 16px 20px;\n  text-decoration: none;\n  color: var(--paper);\n  transition: background 0.2s;\n  border-bottom: 1px solid rgba(255, 255, 255, 0.05);\n}\n\n.umrt-team-dropdown-link:last-child {\n  border-bottom: none;\n}\n\n.umrt-team-dropdown-link:hover {\n  background: rgba(216, 255, 79, 0.05); /* --signal */\n}\n\n.umrt-team-dropdown-code {\n  font-family: var(--font-body);\n  font-size: 0.55rem;\n  letter-spacing: 0.1em;\n  color: var(--signal);\n  background: rgba(216, 255, 79, 0.08);\n  border: 1px solid rgba(216, 255, 79, 0.2);\n  border-radius: 6px;\n  padding: 6px 10px;\n  flex-shrink: 0;\n}\n\n.umrt-team-dropdown-link strong {\n  font-family: var(--font-display);\n  font-size: 0.95rem;\n  font-weight: 600;\n  display: block;\n  margin-bottom: 4px;\n}\n\n.umrt-team-dropdown-link small {\n  font-size: 0.75rem;\n  color: rgba(242, 239, 232, 0.5);\n  line-height: 1.5;\n  display: block;\n}\n\n.umrt-team-dropdown-arrow {\n  width: 18px;\n  height: 18px;\n  margin-left: auto;\n  flex-shrink: 0;\n  opacity: 0;\n  transform: translateX(-8px);\n  transition: opacity 0.3s, transform 0.3s;\n  color: var(--signal);\n}\n\n.umrt-team-dropdown-link:hover .umrt-team-dropdown-arrow {\n  opacity: 1;\n  transform: translateX(0);\n}\n\n/* Mobile team divider */\n.umrt-mobile-divider {\n  display: block;\n  font-family: var(--font-body);\n  font-size: 0.6rem;\n  letter-spacing: 0.2em;\n  color: var(--signal);\n  opacity: 0.5;\n  padding: 1.25rem 0 0.5rem;\n  border-top: 1px solid rgba(255, 255, 255, 0.1);\n  margin-top: 0.75rem;\n}\n\n/* -------------------------------------------------------------------------- */\n/* Responsive                                                                  */\n/* -------------------------------------------------------------------------- */\n\n@media (max-width: 768px) {\n  .team-page-content {\n    gap: 4rem;\n  }\n  \n  .team-about-list {\n    gap: 4rem;\n  }\n  \n  .team-division-block {\n    grid-template-columns: 1fr;\n    gap: 2rem;\n  }\n  \n  .team-division-block:nth-child(even) {\n    direction: ltr; /* Reset flip on mobile so graphic is always on top */\n  }\n\n  .tree-desktop {\n    display: none;\n  }\n\n  .tree-mobile {\n    display: block;\n  }\n\n  .umrt-team-dropdown {\n    display: none; /* Desktop only */\n  }\n}\n\n@media (min-width: 769px) {\n  .team-hud {\n    display: block;\n  }\n}\n\n@media (min-width: 1024px) {\n  .tree-branches {\n    grid-template-columns: repeat(3, 1fr);\n  }\n}\n\n@media (max-width: 1023px) and (min-width: 769px) {\n  .tree-branches {\n    grid-template-columns: repeat(2, 1fr);\n  }\n}\n",
+    "StartLine": 2260,
+    "TargetContent": "/* ========================================================================== */"
+  }
+]
+/* MULTI REPLACE CALL */
+[
+  {
+    "AllowMultiple": false,
+    "EndLine": 2263,
+    "ReplacementContent": "/* ========================================================================== */\n/* TEAM MODULE                                                                 */\n/* ========================================================================== */",
+    "StartLine": 2260,
+    "TargetContent": "/* ========================================================================== */\n/* TEAM MODULE                                                                 */\n/* ========================================================================== */"
+  }
+]
+/* REPLACE CALL */
+@keyframes teardown-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ========================================================================== */
+/* TEAM MODULE                                                                 */
+/* ========================================================================== */
+
+/* -------------------------------------------------------------------------- */
+/* Team page base                                                              */
+/* -------------------------------------------------------------------------- */
+
+.team-page {
+  width: 100%;
+  background: var(--ink);
+  color: var(--paper);
+  padding-top: 100px;
+}
+
+.team-page-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Section headers                                                             */
+/* -------------------------------------------------------------------------- */
+
+.team-section-header {
+  text-align: center;
+  padding: 4rem 1.5rem 3rem;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.team-section-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--signal), transparent);
+  margin-bottom: 1.5rem;
+  transform-origin: center;
+}
+
+.team-section-eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  color: var(--signal);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.team-section-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0 0 1rem;
+  color: var(--paper);
+}
+
+.team-section-subtitle {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: rgba(242, 239, 232, 0.6);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Avatar placeholder                                                          */
+/* -------------------------------------------------------------------------- */
+
+.team-avatar-frame {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.team-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.team-avatar-placeholder {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.team-avatar-grid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--signal);
+}
+
+.team-avatar-glyph {
+  position: relative;
+  width: 40%;
+  height: 40%;
+  color: rgba(255, 255, 255, 0.12);
+}
+
+.team-avatar-label {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  color: var(--signal);
+  opacity: 0.5;
+  text-transform: uppercase;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Member card                                                                 */
+/* -------------------------------------------------------------------------- */
+
+.team-member-card {
+  position: relative;
+  display: flex;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(24px);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  overflow: hidden;
+}
+
+.team-member-card:hover,
+.team-member-card:focus-visible {
+  border-color: rgba(216, 255, 79, 0.3);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(216, 255, 79, 0.1);
+  transform: translateY(-4px);
+  outline: none;
+}
+
+.team-card-glow {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(216, 255, 79, 0.1), transparent 70%);
+  pointer-events: none;
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+
+.team-member-card:hover .team-card-glow {
+  opacity: 1;
+}
+
+.team-card-info {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.team-card-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--paper);
+}
+
+.team-card-role {
+  font-size: 0.85rem;
+  color: rgba(242, 239, 232, 0.6);
+  margin: 0;
+}
+
+.team-card-tag {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: var(--solar);
+  background: rgba(255, 90, 31, 0.1);
+  border: 1px solid rgba(255, 90, 31, 0.2);
+  border-radius: 6px;
+  padding: 4px 8px;
+  width: fit-content;
+  margin-top: 6px;
+}
+
+.team-card-focus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.team-pill {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  color: var(--signal);
+  background: rgba(216, 255, 79, 0.06);
+  border: 1px solid rgba(216, 255, 79, 0.15);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.team-card-socials {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.team-card-socials a {
+  color: rgba(242, 239, 232, 0.4);
+  transition: color 0.2s;
+}
+
+.team-card-socials a:hover {
+  color: var(--signal);
+}
+
+.team-social-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.team-member-card--hero {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2.5rem 2rem;
+  border-color: rgba(255, 90, 31, 0.2);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 90, 31, 0.05));
+}
+
+.team-member-card--hero .team-card-info {
+  align-items: center;
+}
+
+.team-member-card--hero .team-card-name {
+  font-size: 1.25rem;
+}
+
+.team-member-card--hero:hover {
+  border-color: rgba(255, 90, 31, 0.4);
+  box-shadow: 0 10px 50px -10px rgba(255, 90, 31, 0.2), inset 0 0 0 1px rgba(255, 90, 31, 0.1);
+}
+
+.team-member-card--compact {
+  padding: 1rem 1.25rem;
+  gap: 1rem;
+  border-radius: 12px;
+}
+
+.team-member-card--compact .team-card-name {
+  font-size: 0.9rem;
+}
+
+.team-member-card--compact .team-card-role {
+  font-size: 0.75rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* About divisions (Zig-zag)                                                   */
+/* -------------------------------------------------------------------------- */
+
+.team-about {
+  padding-bottom: 4rem;
+}
+
+.team-about-list {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8rem;
+}
+
+.team-division-block {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.team-division-block:nth-child(even) {
+  direction: rtl;
+}
+
+.team-division-block:nth-child(even) > * {
+  direction: ltr;
+}
+
+.team-division-graphic {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+}
+
+.team-division-graphic svg {
+  width: 50%;
+  height: 50%;
+  color: var(--signal);
+  opacity: 0.2;
+}
+
+.team-division-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.team-division-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.team-division-code {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  color: var(--signal);
+  text-transform: uppercase;
+}
+
+.team-division-name {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--paper);
+}
+
+.team-division-desc {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: rgba(242, 239, 232, 0.7);
+  margin: 0;
+}
+
+.team-division-highlights {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.team-division-highlights li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  color: rgba(242, 239, 232, 0.6);
+  line-height: 1.6;
+}
+
+.team-division-bullet {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--solar);
+  flex-shrink: 0;
+  margin-top: 6px;
+  box-shadow: 0 0 10px rgba(255, 90, 31, 0.5);
+}
+
+.team-division-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.team-spec-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.team-spec-pill code {
+  color: rgba(242, 239, 232, 0.4);
+}
+
+.team-spec-pill strong {
+  color: var(--signal);
+  font-weight: 500;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Leadership tiers                                                            */
+/* -------------------------------------------------------------------------- */
+
+.team-leads {
+  padding-bottom: 4rem;
+}
+
+.team-tier {
+  max-width: 1200px;
+  margin: 0 auto 5rem;
+  padding: 0 1.5rem;
+}
+
+.team-tier-label {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: rgba(242, 239, 232, 0.4);
+  text-transform: uppercase;
+}
+
+.team-tier-badge {
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  color: var(--signal);
+  background: rgba(216, 255, 79, 0.08);
+  border: 1px solid rgba(216, 255, 79, 0.2);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+.team-tier-badge--cmd {
+  color: var(--solar);
+  background: rgba(255, 90, 31, 0.08);
+  border-color: rgba(255, 90, 31, 0.2);
+}
+
+.team-tier-badge--sys {
+  color: var(--paper);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.team-tier-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.team-tier-grid--advisors {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.team-tier-grid--command {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.team-tier-grid--leads {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+/* -------------------------------------------------------------------------- */
+/* Org tree                                                                    */
+/* -------------------------------------------------------------------------- */
+
+.team-tree {
+  position: relative;
+  padding-bottom: 8rem;
+}
+
+.tree-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--solar), var(--signal));
+  z-index: 999;
+  pointer-events: none;
+}
+
+.tree-desktop {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tree-tier {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.tree-tier-label {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: rgba(242, 239, 232, 0.3);
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+
+.tree-tier-nodes {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.tree-tier--advisors .tree-tier-nodes,
+.tree-tier--command .tree-tier-nodes {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.tree-tier--senior .tree-tier-nodes {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.tree-connector {
+  width: 2px;
+  height: 80px;
+  display: block;
+  margin: 0 auto;
+}
+
+.tree-connector line {
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 2;
+}
+
+.tree-connector-glow {
+  stroke: var(--signal);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px rgba(216, 255, 79, 0.6));
+}
+
+.tree-connector--short {
+  height: 40px;
+}
+
+.tree-split-connector {
+  width: 100%;
+  max-width: 1000px;
+  height: 40px;
+  display: block;
+  margin: 0 auto;
+}
+
+.tree-split-connector path {
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 2;
+  fill: none;
+}
+
+.tree-split-connector .tree-connector-glow {
+  stroke: var(--signal);
+}
+
+.tree-branches {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.tree-branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.01);
+  transition: border-color 0.3s;
+}
+
+.tree-branch:hover {
+  border-color: rgba(216, 255, 79, 0.15);
+}
+
+.tree-branch-header {
+  margin-bottom: 1rem;
+}
+
+.tree-branch-code {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--signal);
+  display: block;
+}
+
+.tree-branch-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--paper);
+  display: block;
+  margin-top: 4px;
+}
+
+.tree-member-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.tree-mobile {
+  display: none;
+  padding: 0 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.tree-mobile-section {
+  margin-bottom: 2rem;
+}
+
+.tree-mobile-label {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--signal);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.tree-mobile-section > .team-member-card {
+  margin-bottom: 0.75rem;
+}
+
+.tree-mobile-spine {
+  width: 2px;
+  height: 60px;
+  background: linear-gradient(180deg, var(--signal) 0%, transparent 100%);
+  margin: 0 auto 1.5rem;
+  opacity: 0.4;
+}
+
+.tree-accordion {
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.tree-accordion-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: none;
+  border: none;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.tree-accordion-trigger:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tree-accordion-trigger code {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--signal);
+}
+
+.tree-accordion-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: background 0.3s;
+}
+
+.tree-accordion-trigger--open .tree-accordion-dot {
+  background: var(--signal);
+  box-shadow: 0 0 8px rgba(216, 255, 79, 0.6);
+}
+
+.tree-accordion-chevron {
+  width: 18px;
+  height: 18px;
+  margin-left: auto;
+  transition: transform 0.3s;
+  opacity: 0.4;
+}
+
+.tree-accordion-trigger--open .tree-accordion-chevron {
+  transform: rotate(180deg);
+}
+
+.tree-accordion-panel {
+  padding: 0.5rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Inspect drawer                                                              */
+/* -------------------------------------------------------------------------- */
+
+.team-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+}
+
+.team-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(460px, 90vw);
+  height: 100vh;
+  background: rgba(7, 6, 4, 0.95);
+  backdrop-filter: blur(24px);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.8);
+  z-index: 1001;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.team-drawer-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: rgba(242, 239, 232, 0.6);
+  transition: all 0.2s;
+  z-index: 1;
+}
+
+.team-drawer-close:hover {
+  color: var(--paper);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.team-drawer-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+.team-drawer-content {
+  padding: 4rem 2rem 2rem;
+}
+
+.team-drawer-header {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.team-drawer-scanline {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(216, 255, 79, 0.03) 2px,
+    rgba(216, 255, 79, 0.03) 4px
+  );
+  pointer-events: none;
+  border-radius: 16px;
+}
+
+.team-drawer-identity {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.team-drawer-tag {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: var(--solar);
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.team-drawer-identity h2 {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: var(--paper);
+}
+
+.team-drawer-role {
+  font-size: 0.95rem;
+  color: rgba(242, 239, 232, 0.6);
+  margin: 0;
+}
+
+.team-drawer-section {
+  margin-bottom: 2rem;
+}
+
+.team-drawer-label {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  color: rgba(242, 239, 232, 0.4);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.team-drawer-section p {
+  font-size: 0.95rem;
+  color: rgba(242, 239, 232, 0.8);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.team-drawer-section code {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--signal);
+}
+
+.team-drawer-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.team-drawer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.team-drawer-links a {
+  font-size: 0.9rem;
+  color: var(--signal);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.team-drawer-links a:hover {
+  color: var(--paper);
+}
+
+.team-drawer-status {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  color: rgba(242, 239, 232, 0.3);
+  text-transform: uppercase;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1.5rem;
+  margin-top: 3rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Sticky HUD                                                                  */
+/* -------------------------------------------------------------------------- */
+
+.team-hud {
+  position: fixed;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: none;
+  background: rgba(7, 6, 4, 0.6);
+  backdrop-filter: blur(12px);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.team-hud-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.team-hud-header span {
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  color: var(--signal);
+  opacity: 0.6;
+}
+
+.team-hud-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--signal);
+  animation: signal-pulse 2s ease-in-out infinite;
+}
+
+.team-hud-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.team-hud-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: rgba(242, 239, 232, 0.4);
+  transition: all 0.2s;
+}
+
+.team-hud-item:hover {
+  color: rgba(242, 239, 232, 0.8);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.team-hud-item--active {
+  color: var(--signal) !important;
+  background: rgba(216, 255, 79, 0.05);
+}
+
+.team-hud-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s;
+}
+
+.team-hud-item--active .team-hud-dot {
+  background: var(--signal);
+  box-shadow: 0 0 8px rgba(216, 255, 79, 0.6);
+}
+
+.team-hud-code {
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+}
+
+.team-hud-label {
+  font-size: 0.65rem;
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Team tree loader                                                            */
+/* -------------------------------------------------------------------------- */
+
+.team-tree-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.team-tree-loader-inner {
+  text-align: center;
+}
+
+.team-tree-loader-inner span {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--signal);
+  opacity: 0.8;
+  display: block;
+  margin-bottom: 1.25rem;
+}
+
+.team-tree-loader-bar {
+  width: 240px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.team-tree-loader-bar::after {
+  content: '';
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: var(--signal);
+  animation: tree-loader-slide 1.2s ease-in-out infinite;
+}
+
+@keyframes tree-loader-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Team navbar dropdown (Fixes)                                                */
+/* -------------------------------------------------------------------------- */
+
+.umrt-team-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  position: relative;
+  padding-bottom: 20px;
+  margin-bottom: -20px;
+}
+
+.umrt-team-chevron {
+  width: 14px;
+  height: 14px;
+  opacity: 0.5;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+.umrt-team-trigger:hover .umrt-team-chevron,
+.umrt-team-dropdown:hover ~ .umrt-team-trigger .umrt-team-chevron {
+  opacity: 1;
+  transform: rotate(180deg);
+}
+
+.umrt-team-dropdown {
+  position: absolute;
+  right: 160px;
+  top: calc(100% + 12px);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 1000;
+}
+
+.umrt-team-trigger:hover ~ .umrt-team-dropdown,
+.umrt-team-dropdown:hover {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.umrt-team-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 0;
+  right: 0;
+  height: 20px;
+}
+
+.umrt-team-dropdown-inner {
+  width: 380px;
+  background: rgba(7, 6, 4, 0.95);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8);
+}
+
+.umrt-team-dropdown-head {
+  position: relative;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.umrt-team-dropdown-head span {
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  color: rgba(242, 239, 232, 0.4);
+}
+
+.umrt-team-dropdown-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--signal), var(--solar), transparent);
+  opacity: 0.8;
+}
+
+.umrt-team-dropdown-link {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  text-decoration: none;
+  color: var(--paper);
+  transition: background 0.2s;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.umrt-team-dropdown-link:last-child {
+  border-bottom: none;
+}
+
+.umrt-team-dropdown-link:hover {
+  background: rgba(216, 255, 79, 0.05);
+}
+
+.umrt-team-dropdown-code {
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  color: var(--signal);
+  background: rgba(216, 255, 79, 0.08);
+  border: 1px solid rgba(216, 255, 79, 0.2);
+  border-radius: 6px;
+  padding: 6px 10px;
+  flex-shrink: 0;
+}
+
+.umrt-team-dropdown-link strong {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.umrt-team-dropdown-link small {
+  font-size: 0.75rem;
+  color: rgba(242, 239, 232, 0.5);
+  line-height: 1.5;
+  display: block;
+}
+
+.umrt-team-dropdown-arrow {
+  width: 18px;
+  height: 18px;
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.3s, transform 0.3s;
+  color: var(--signal);
+}
+
+.umrt-team-dropdown-link:hover .umrt-team-dropdown-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.umrt-mobile-divider {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--signal);
+  opacity: 0.5;
+  padding: 1.25rem 0 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 0.75rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Responsive                                                                  */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .team-page-content {
+    gap: 4rem;
+  }
+  
+  .team-about-list {
+    gap: 4rem;
+  }
+  
+  .team-division-block {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .team-division-block:nth-child(even) {
+    direction: ltr;
+  }
+
+  .tree-desktop {
+    display: none;
+  }
+
+  .tree-mobile {
+    display: block;
+  }
+
+  .umrt-team-dropdown {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .team-hud {
+    display: block;
+  }
+}
+
+@media (min-width: 1024px) {
+  .tree-branches {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1023px) and (min-width: 769px) {
+  .tree-branches {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+/* REPLACE CALL */
+.team-filter-tab {
+  position: relative;
+  background: var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: var(--font-display);
+  cursor: pointer;
+  transition: color 0.3s ease, border-color 0.3s ease;
+  overflow: hidden;
+}
+
+.team-filter-tab:hover {
+  color: white;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.team-filter-tab--active {
+  color: var(--paper);
+  border-color: var(--signal);
+}
+
+.team-filter-tab-indicator {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--signal);
+  background: rgba(216, 255, 79, 0.05);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.team-filter-tab-label {
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  z-index: 1;
+}
+
+.team-filter-tab-code {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  opacity: 0.5;
+  z-index: 1;
+}
+/* MULTI REPLACE CALL */
+[
+  {
+    "AllowMultiple": false,
+    "EndLine": 2528,
+    "ReplacementContent": ".umrt-team-nav-item {\n  position: relative;\n  display: inline-block;\n}\n\n.umrt-team-trigger:hover .umrt-team-chevron,\n.umrt-team-dropdown:hover ~ .umrt-team-trigger .umrt-team-chevron {\n  opacity: 1;\n  transform: rotate(180deg);\n}\n\n.umrt-team-dropdown {\n  position: absolute;\n  left: 50%;\n  top: calc(100% + 12px);\n  pointer-events: none;\n  opacity: 0;\n  transform: translateX(-50%) translateY(-8px);\n  transition: opacity 0.3s ease, transform 0.3s ease;\n  z-index: 1000;\n}\n\n.umrt-team-trigger:hover ~ .umrt-team-dropdown,\n.umrt-team-dropdown:hover {\n  pointer-events: auto;\n  opacity: 1;\n  transform: translateX(-50%) translateY(0);\n}",
+    "StartLine": 2516,
+    "TargetContent": ".umrt-team-trigger:hover .umrt-team-chevron,\n.umrt-team-dropdown:hover ~ .umrt-team-trigger .umrt-team-chevron {\n  opacity: 1;\n  transform: rotate(180deg);\n}\n\n.umrt-team-dropdown {\n  position: absolute;\n  right: 160px;\n  top: calc(100% + 12px);\n  pointer-events: none;\n  opacity: 0;\n  transform: translateY(-8px);\n  transition: opacity 0.3s ease, transform 0.3s ease;\n  z-index: 1000;\n}\n\n.umrt-team-trigger:hover ~ .umrt-team-dropdown,\n.umrt-team-dropdown:hover {\n  pointer-events: auto;\n  opacity: 1;\n  transform: translateY(0);\n}"
+  },
+  {
+    "AllowMultiple": false,
+    "EndLine": 2271,
+    "ReplacementContent": "/* -------------------------------------------------------------------------- */\n/* Team page base                                                              */\n/* -------------------------------------------------------------------------- */\n\n.team-page {\n  width: 100%;\n  background: transparent; /* Inherits mars-900 from body */\n  color: var(--paper);\n  padding-top: 100px;\n}",
+    "StartLine": 2264,
+    "TargetContent": "/* -------------------------------------------------------------------------- */\n/* Team page base                                                              */\n/* -------------------------------------------------------------------------- */\n\n.team-page {\n  width: 100%;\n  background: var(--ink);\n  color: var(--paper);\n  padding-top: 100px;\n}"
+  }
+]

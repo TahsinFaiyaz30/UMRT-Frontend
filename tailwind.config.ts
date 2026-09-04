@@ -10,6 +10,7 @@ const config: Config = {
       fontFamily: {
         display: ['var(--font-display)', 'system-ui', 'sans-serif'],
         body: ['var(--font-body)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-body)', 'ui-monospace', 'monospace'],
       },
       colors: {
         mars: {
@@ -23,6 +24,14 @@ const config: Config = {
           700: '#5a1d0c',
           800: '#2f0f06',
           900: '#180804',
+        },
+        space: {
+          deep: '#08090D',
+          carbon: '#111318',
+          steel: '#2A2E39',
+        },
+        cyan: {
+          laser: '#00F0FF',
         },
       },
     },
