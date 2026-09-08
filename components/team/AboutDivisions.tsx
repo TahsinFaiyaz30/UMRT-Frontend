@@ -4,81 +4,36 @@ import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { teamData, departments } from '@/data/team';
 
-// Advanced Canvas Component that strictly removes grey checkerboard backgrounds pixel by pixel
-const MechanicalArmGraphic = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    if (!ctx) return;
-
-    const img = new Image();
-    img.src = '/images/robot_arm.jpg';
-    img.crossOrigin = 'Anonymous';
-    img.onload = () => {
-      // Set canvas to exactly the image dimensions
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-
-      // Loop through every pixel
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-
-        // The background is a grey checkerboard (R=G=B).
-        // The lines are white (high RGB).
-        // If the pixel is greyish and not too bright, make it fully transparent!
-        const isGrey = Math.abs(r - g) < 20 && Math.abs(g - b) < 20;
-        const isDarkerThanWhite = r < 230 || g < 230 || b < 230;
-
-        if (isGrey && isDarkerThanWhite) {
-          data[i + 3] = 0; // Alpha = 0 (Transparent)
-        }
-      }
-
-      ctx.putImageData(imageData, 0, 0);
-    };
-  }, []);
-
-  return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', perspective: '1000px' }}>
-      <motion.canvas
-        ref={canvasRef}
-        style={{ 
-          width: '120%', 
-          maxWidth: 'none',
-          objectFit: 'contain',
-          // Colorize the newly transparent image to cyan
-          filter: 'sepia(1) hue-rotate(170deg) saturate(10) drop-shadow(0 10px 20px rgba(0, 240, 255, 0.4))'
-        }}
-        animate={{ 
-          rotateY: [-10, 15, -10],
-          rotateX: [5, -5, 5],
-          y: [-15, 10, -15],
-          z: [0, 50, 0]
-        }}
-        transition={{
-          duration: 6,
-          repeat: Infinity,
-          ease: 'easeInOut'
-        }}
-      />
-    </div>
-  );
-};
-
 // Abstract SVGs for the graphical pane
 const AbstractGraphic = ({ type }: { type: string }) => {
   switch (type) {
     case 'mechanical':
-      return <MechanicalArmGraphic />;
+      return (
+        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', perspective: '1000px' }}>
+          <motion.img
+            src="/images/robot_arm_transparent.png"
+            alt="Mechanical System"
+            style={{ 
+              width: '120%', 
+              maxWidth: 'none',
+              objectFit: 'contain',
+              // Use light drop shadow to make it glow slightly
+              filter: 'drop-shadow(0 10px 20px rgba(0, 240, 255, 0.4))'
+            }}
+            animate={{ 
+              rotateY: [-10, 15, -10],
+              rotateX: [5, -5, 5],
+              y: [-15, 10, -15],
+              z: [0, 50, 0]
+            }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: 'easeInOut'
+            }}
+          />
+        </div>
+      );
     case 'electrical':
       return (
         <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
