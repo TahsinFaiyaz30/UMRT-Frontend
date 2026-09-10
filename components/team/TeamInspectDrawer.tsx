@@ -8,8 +8,8 @@
  * areas, and social links.
  */
 
-import { useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useCallback, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import type { CrewMember, DivisionRecord, MediaAsset } from '@/lib/content';
 import { MediaImage } from '@/components/media/MediaImage';
 import { AvatarPlaceholder } from './AvatarPlaceholder';
@@ -23,12 +23,15 @@ interface TeamInspectDrawerProps {
 }
 
 export function TeamInspectDrawer({ member, onClose, divisions = [] }: TeamInspectDrawerProps) {
+  const reduce = useReducedMotion();
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const restoreFocusTo = useRef<Element | null>(null);
+
   const division = member
     ? divisions.find((d) => d.leadId === member.id || d.memberIds.includes(member.id))
     : undefined;
-  const portrait = member?.portrait && typeof member.portrait === 'object'
-    ? member.portrait as MediaAsset
-    : null;
+  const portrait =
+    member?.portrait && typeof member.portrait === 'object' ? (member.portrait as MediaAsset) : null;
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -38,12 +41,20 @@ export function TeamInspectDrawer({ member, onClose, divisions = [] }: TeamInspe
   );
 
   useEffect(() => {
-    if (member) {
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
-    }
-    return undefined;
+    if (!member) return undefined;
+
+    // Move focus into the dialog, and hand it back to whatever opened it.
+    restoreFocusTo.current = document.activeElement;
+    closeRef.current?.focus();
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (restoreFocusTo.current instanceof HTMLElement) restoreFocusTo.current.focus();
+    };
   }, [member, handleKeyDown]);
+
+  const centered = { y: '-50%', x: '-50%' } as const;
 
   return (
     <AnimatePresence>
@@ -55,6 +66,7 @@ export function TeamInspectDrawer({ member, onClose, divisions = [] }: TeamInspe
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: reduce ? 0 : 0.25 }}
             onClick={onClose}
             aria-hidden="true"
           />
@@ -65,18 +77,19 @@ export function TeamInspectDrawer({ member, onClose, divisions = [] }: TeamInspe
             role="dialog"
             aria-modal="true"
             aria-label={`Inspect ${member.name}`}
-            initial={{ opacity: 0, scale: 0.95, y: '-50%', x: '-50%' }}
-            animate={{ opacity: 1, scale: 1, y: '-50%', x: '-50%' }}
-            exit={{ opacity: 0, scale: 0.95, y: '-50%', x: '-50%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            initial={{ opacity: 0, scale: reduce ? 1 : 0.96, ...centered }}
+            animate={{ opacity: 1, scale: 1, ...centered }}
+            exit={{ opacity: 0, scale: reduce ? 1 : 0.96, ...centered }}
+            transition={reduce ? { duration: 0 } : { type: 'spring', damping: 26, stiffness: 320 }}
           >
             <button
+              ref={closeRef}
               className="team-drawer-close"
               onClick={onClose}
               aria-label="Close panel"
               type="button"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                 <path d="M18 6 6 18" />
                 <path d="m6 6 12 12" />
               </svg>
@@ -85,13 +98,16 @@ export function TeamInspectDrawer({ member, onClose, divisions = [] }: TeamInspe
             <div className="team-drawer-content">
               {/* Header */}
               <div className="team-drawer-header">
-                {portrait ? (
-                  <div style={{ width: 128, height: 128 }}>
+                <div
+                  className="team-drawer-avatar"
+                  style={{ '--avatar-size': 'clamp(96px, 30vw, 128px)' } as React.CSSProperties}
+                >
+                  {portrait ? (
                     <MediaImage asset={portrait} ratio={1} sizes="128px" className="team-avatar-frame" alt={member.name} />
-                  </div>
-                ) : (
-                  <AvatarPlaceholder alt={member.name} size={128} />
-                )}
+                  ) : (
+                    <AvatarPlaceholder alt={member.name} />
+                  )}
+                </div>
                 <div className="team-drawer-scanline" aria-hidden="true" />
               </div>
 

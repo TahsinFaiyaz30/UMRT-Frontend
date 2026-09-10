@@ -964,7 +964,7 @@ html[data-mission-loading='true'] body {
 .mission-loader-core>strong small {
   margin-left: 8px;
   color: var(--signal);
-  font-family: var(--font-mono), monospace;
+  font-family: var(--font-body), monospace;
   font-size: 11px;
   letter-spacing: 0;
 }
@@ -1917,104 +1917,199 @@ html[data-mission-loading='true'] body {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
 
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-
-/* -------------------------------------------------------------------------- */
-
-/* RESTORED TEAM CSS */
 /* ========================================================================== */
-/* TEAM MODULE                                                                 */
+/* TEAM MODULE                                                                */
+/* -------------------------------------------------------------------------- */
+/* Shared by /team/architecture, /team/core and /team/leadership.              */
+/*                                                                            */
+/* One token block drives all three views, so radii, spacing rhythm and        */
+/* surface treatment stay identical across them. `--t-accent` is the only      */
+/* token a view overrides: the core filter and each architecture block set it  */
+/* from the division's own colour, and everything keyed to it follows.         */
 /* ========================================================================== */
-
-/* -------------------------------------------------------------------------- */
-/* Team page base                                                              */
-/* -------------------------------------------------------------------------- */
 
 .team-page {
+  /* Rounded scale -------------------------------------------------------- */
+  --t-r-xs: 10px;
+  --t-r-sm: 16px;
+  --t-r-md: 22px;
+  --t-r-lg: 28px;
+  --t-r-xl: 36px;
+  --t-r-pill: 999px;
+
+  /* Soft, fluid spacing scale ------------------------------------------- */
+  --t-s-2xs: clamp(0.35rem, 0.3rem + 0.2vw, 0.5rem);
+  --t-s-xs: clamp(0.6rem, 0.5rem + 0.45vw, 0.9rem);
+  --t-s-sm: clamp(0.9rem, 0.75rem + 0.7vw, 1.4rem);
+  --t-s-md: clamp(1.4rem, 1.1rem + 1.4vw, 2.25rem);
+  --t-s-lg: clamp(2.25rem, 1.7rem + 2.6vw, 3.75rem);
+  --t-s-xl: clamp(3.25rem, 2.3rem + 4.2vw, 5.5rem);
+  --t-s-2xl: clamp(4.5rem, 3rem + 6.5vw, 8rem);
+
+  /* Shell ---------------------------------------------------------------- */
+  --t-pad-x: clamp(1.15rem, 0.6rem + 2.4vw, 2.5rem);
+  --t-maxw: 1200px;
+
+  /* Surfaces ------------------------------------------------------------- */
+  --t-surface: rgba(255, 255, 255, 0.024);
+  --t-surface-2: rgba(255, 255, 255, 0.05);
+  --t-border: rgba(242, 239, 232, 0.09);
+  --t-border-2: rgba(242, 239, 232, 0.17);
+
+  /* Text ----------------------------------------------------------------- */
+  --t-text: var(--paper);
+  --t-text-2: rgba(242, 239, 232, 0.66);
+  --t-text-3: rgba(242, 239, 232, 0.42);
+
+  /* Motion --------------------------------------------------------------- */
+  --t-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Per-view accent ------------------------------------------------------ */
+  --t-accent: var(--signal);
+
+  position: relative;
   width: 100%;
+  padding-top: clamp(88px, 8vw, 116px);
   background: var(--ink);
-  color: var(--paper);
-  padding-top: 100px;
+  color: var(--t-text);
+  isolation: isolate;
+}
+
+/* Spacey backdrop: two slow nebulae plus a fine star wash. Pure gradients —
+   no extra elements, no JS, and it sits behind content via a -1 z-index. */
+.team-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(85rem 45rem at 50% -8%, color-mix(in srgb, var(--rust) 28%, transparent), transparent 62%),
+    radial-gradient(50rem 40rem at 108% 22%, color-mix(in srgb, var(--signal) 5%, transparent), transparent 60%),
+    radial-gradient(45rem 38rem at -12% 68%, color-mix(in srgb, var(--solar) 6%, transparent), transparent 62%);
+}
+
+.team-page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(242, 239, 232, 0.5), transparent),
+    radial-gradient(1px 1px at 68% 8%, rgba(242, 239, 232, 0.35), transparent),
+    radial-gradient(1px 1px at 84% 42%, rgba(242, 239, 232, 0.4), transparent),
+    radial-gradient(1px 1px at 27% 63%, rgba(242, 239, 232, 0.3), transparent),
+    radial-gradient(1px 1px at 55% 88%, rgba(242, 239, 232, 0.32), transparent),
+    radial-gradient(1px 1px at 91% 76%, rgba(242, 239, 232, 0.28), transparent);
+  background-size: 780px 780px;
 }
 
 .team-page-content {
   display: flex;
   flex-direction: column;
-  gap: 8rem;
+  gap: var(--t-s-2xl);
 }
 
 /* -------------------------------------------------------------------------- */
-/* Section headers                                                             */
+/* Section header                                                             */
 /* -------------------------------------------------------------------------- */
 
 .team-section-header {
-  text-align: center;
-  padding: 4rem 1.5rem 3rem;
-  max-width: 720px;
+  position: relative;
+  max-width: 46rem;
   margin: 0 auto;
+  padding: var(--t-s-xl) var(--t-pad-x) var(--t-s-lg);
+  text-align: center;
+}
+
+/* Soft halo behind the title — the "spacey" cue, kept very low contrast. */
+.team-section-header::before {
+  content: '';
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  width: min(34rem, 88%);
+  height: 14rem;
+  transform: translateX(-50%);
+  border-radius: var(--t-r-pill);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--t-accent) 12%, transparent), transparent);
+  opacity: 0.55;
+  pointer-events: none;
+  filter: blur(6px);
+}
+
+.team-section-header > * {
+  position: relative;
 }
 
 .team-section-line {
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--signal), transparent);
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--t-s-md);
+  background: linear-gradient(90deg, transparent, var(--t-accent), transparent);
   transform-origin: center;
+  opacity: 0.75;
 }
 
 .team-section-eyebrow {
-  font-family: var(--font-body);
-  font-size: 0.65rem;
-  letter-spacing: 0.25em;
-  color: var(--signal);
+  margin: 0 0 var(--t-s-xs);
+  color: var(--t-accent);
+  font-family: var(--font-body), monospace;
+  font-size: clamp(0.6rem, 0.55rem + 0.15vw, 0.7rem);
+  letter-spacing: 0.28em;
   text-transform: uppercase;
-  margin-bottom: 0.75rem;
 }
 
 .team-section-title {
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 3.5rem);
+  margin: 0 0 var(--t-s-sm);
+  color: var(--t-text);
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(2.1rem, 1.3rem + 3.6vw, 3.75rem);
   font-weight: 700;
-  line-height: 1.1;
-  margin: 0 0 1rem;
-  color: var(--paper);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 .team-section-subtitle {
-  font-size: 1rem;
-  line-height: 1.7;
-  color: rgba(242, 239, 232, 0.6);
-  max-width: 560px;
+  max-width: 34rem;
   margin: 0 auto;
+  color: var(--t-text-2);
+  font-size: clamp(0.92rem, 0.86rem + 0.28vw, 1.05rem);
+  line-height: 1.75;
+  text-wrap: pretty;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Avatar placeholder                                                          */
+/* Avatar                                                                     */
 /* -------------------------------------------------------------------------- */
 
 .team-avatar-frame {
   position: relative;
-  border-radius: 16px;
-  overflow: hidden;
   flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  border: 1px solid var(--t-border);
+  border-radius: var(--t-r-md);
+  background: rgba(0, 0, 0, 0.28);
 }
 
 .team-avatar-img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
 }
 
 .team-avatar-placeholder {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent);
   display: flex;
   align-items: center;
   justify-content: center;
+  background:
+    radial-gradient(closest-side, color-mix(in srgb, var(--t-accent) 9%, transparent), transparent 78%),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
 }
 
 .team-avatar-grid {
@@ -2022,910 +2117,985 @@ html[data-mission-loading='true'] body {
   inset: 0;
   width: 100%;
   height: 100%;
-  color: var(--signal);
+  color: var(--t-accent);
 }
 
 .team-avatar-glyph {
   position: relative;
-  width: 40%;
-  height: 40%;
-  color: rgba(255, 255, 255, 0.12);
+  width: 38%;
+  height: 38%;
+  color: rgba(242, 239, 232, 0.2);
 }
 
 .team-avatar-label {
   position: absolute;
-  bottom: 8px;
-  left: 0;
   right: 0;
-  text-align: center;
-  font-family: var(--font-body);
+  bottom: 7px;
+  left: 0;
+  color: var(--t-accent);
+  font-family: var(--font-body), monospace;
   font-size: 7px;
-  letter-spacing: 0.12em;
-  color: var(--signal);
-  opacity: 0.5;
+  letter-spacing: 0.14em;
+  text-align: center;
   text-transform: uppercase;
+  opacity: 0.55;
+}
+
+/* Sizing wrapper. The avatar fills it, so one CSS rule can shrink every
+   portrait on narrow screens instead of each call site passing pixels. */
+.team-card-avatar,
+.team-drawer-avatar {
+  flex-shrink: 0;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+}
+
+.team-card-avatar > *,
+.team-drawer-avatar > * {
+  width: 100%;
+  height: 100%;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Member card                                                                 */
+/* Member card                                                                */
 /* -------------------------------------------------------------------------- */
+/* No fixed aspect-ratio: the card grows to its content and grid stretch keeps
+   a row even. A ratio here used to clip focus pills and social links.        */
 
 .team-member-card {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  aspect-ratio: 4 / 6;
-  gap: 1rem;
-  padding: 1.5rem 1rem;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(24px);
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  gap: var(--t-s-sm);
+  height: 100%;
+  padding: var(--t-s-md) var(--t-s-sm) var(--t-s-sm);
   overflow: hidden;
+  border: 1px solid var(--t-border);
+  border-radius: var(--t-r-lg);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012)),
+    rgba(10, 8, 6, 0.5);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 0.45s var(--t-ease),
+    box-shadow 0.45s var(--t-ease),
+    background-color 0.45s var(--t-ease);
 }
 
 .team-member-card:hover,
 .team-member-card:focus-visible {
-  border-color: rgba(216, 255, 79, 0.3);
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(216, 255, 79, 0.1);
-  transform: translateY(-4px);
   outline: none;
+  border-color: color-mix(in srgb, var(--t-accent) 42%, transparent);
+  box-shadow:
+    0 22px 55px -28px rgba(0, 0, 0, 0.9),
+    0 0 0 1px color-mix(in srgb, var(--t-accent) 16%, transparent) inset;
 }
 
+.team-member-card:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--ink),
+    0 0 0 4px color-mix(in srgb, var(--t-accent) 65%, transparent);
+}
+
+/* Accent bloom, revealed on hover. */
 .team-card-glow {
   position: absolute;
-  top: -20px;
-  right: -20px;
-  width: 100px;
-  height: 100px;
+  top: -35%;
+  left: 50%;
+  width: 130%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(216, 255, 79, 0.1), transparent 70%);
-  pointer-events: none;
-  transition: opacity 0.3s;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--t-accent) 15%, transparent), transparent 70%);
   opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s var(--t-ease);
 }
 
-.team-member-card:hover .team-card-glow {
+.team-member-card:hover .team-card-glow,
+.team-member-card:focus-visible .team-card-glow {
   opacity: 1;
 }
 
 .team-card-info {
-  min-width: 0;
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  gap: var(--t-s-2xs);
+  min-width: 0;
+  width: 100%;
 }
 
 .team-card-name {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 600;
   margin: 0;
-  color: var(--paper);
+  color: var(--t-text);
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1rem, 0.95rem + 0.22vw, 1.15rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
 }
 
 .team-card-role {
-  font-size: 0.85rem;
-  color: rgba(242, 239, 232, 0.6);
   margin: 0;
+  color: var(--t-text-2);
+  font-size: 0.85rem;
+  line-height: 1.5;
 }
 
 .team-card-tag {
-  font-family: var(--font-body);
-  font-size: 0.65rem;
-  letter-spacing: 0.08em;
+  margin-top: var(--t-s-2xs);
+  padding: 4px 10px;
+  max-width: 100%;
+  border: 1px solid color-mix(in srgb, var(--solar) 26%, transparent);
+  border-radius: var(--t-r-pill);
+  background: color-mix(in srgb, var(--solar) 11%, transparent);
   color: var(--solar);
-  background: rgba(255, 90, 31, 0.1);
-  border: 1px solid rgba(255, 90, 31, 0.2);
-  border-radius: 6px;
-  padding: 4px 8px;
-  width: fit-content;
-  margin-top: 6px;
+  font-family: var(--font-body), monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  overflow-wrap: anywhere;
 }
 
 .team-card-focus {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 10px;
+  justify-content: center;
+  margin-top: var(--t-s-2xs);
 }
 
 .team-pill {
-  font-family: var(--font-body);
-  font-size: 0.65rem;
+  padding: 4px 11px;
+  border: 1px solid color-mix(in srgb, var(--t-accent) 24%, transparent);
+  border-radius: var(--t-r-pill);
+  background: color-mix(in srgb, var(--t-accent) 8%, transparent);
+  color: color-mix(in srgb, var(--t-accent) 86%, var(--paper));
+  font-family: var(--font-body), monospace;
+  font-size: 0.63rem;
   letter-spacing: 0.06em;
-  color: var(--signal);
-  background: rgba(216, 255, 79, 0.06);
-  border: 1px solid rgba(216, 255, 79, 0.15);
-  border-radius: 999px;
-  padding: 3px 10px;
+  white-space: nowrap;
 }
 
 .team-card-socials {
   display: flex;
-  gap: 12px;
-  margin-top: 12px;
+  gap: 6px;
+  justify-content: center;
+  margin-top: auto;
+  padding-top: var(--t-s-xs);
 }
 
 .team-card-socials a {
-  color: rgba(242, 239, 232, 0.4);
-  transition: color 0.2s;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: var(--t-r-pill);
+  color: var(--t-text-3);
+  transition:
+    color 0.28s var(--t-ease),
+    border-color 0.28s var(--t-ease),
+    background-color 0.28s var(--t-ease);
 }
 
-.team-card-socials a:hover {
-  color: var(--signal);
+.team-card-socials a:hover,
+.team-card-socials a:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--t-accent) 34%, transparent);
+  background: color-mix(in srgb, var(--t-accent) 10%, transparent);
+  color: var(--t-accent);
 }
 
 .team-social-icon {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 }
+
+/* Variants ----------------------------------------------------------------- */
 
 .team-member-card--hero {
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 2.5rem 2rem;
-  border-color: rgba(255, 90, 31, 0.2);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 90, 31, 0.05));
-}
-
-.team-member-card--hero .team-card-info {
-  align-items: center;
+  padding: var(--t-s-lg) var(--t-s-md) var(--t-s-md);
+  border-color: color-mix(in srgb, var(--solar) 22%, transparent);
+  background:
+    linear-gradient(165deg, rgba(255, 90, 31, 0.09), rgba(255, 255, 255, 0.015) 58%),
+    rgba(10, 8, 6, 0.5);
 }
 
 .team-member-card--hero .team-card-name {
-  font-size: 1.25rem;
+  font-size: clamp(1.1rem, 1rem + 0.4vw, 1.3rem);
 }
 
-.team-member-card--hero:hover {
-  border-color: rgba(255, 90, 31, 0.4);
-  box-shadow: 0 10px 50px -10px rgba(255, 90, 31, 0.2), inset 0 0 0 1px rgba(255, 90, 31, 0.1);
+.team-member-card--hero:hover,
+.team-member-card--hero:focus-visible {
+  border-color: color-mix(in srgb, var(--solar) 46%, transparent);
+  box-shadow:
+    0 26px 60px -28px color-mix(in srgb, var(--solar) 32%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--solar) 14%, transparent) inset;
 }
 
 .team-member-card--compact {
-  padding: 1rem 1.25rem;
-  gap: 1rem;
-  border-radius: 12px;
+  gap: var(--t-s-xs);
+  padding: var(--t-s-sm);
+  border-radius: var(--t-r-md);
 }
 
 .team-member-card--compact .team-card-name {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
 }
 
 .team-member-card--compact .team-card-role {
-  font-size: 0.75rem;
+  font-size: 0.76rem;
 }
 
 /* -------------------------------------------------------------------------- */
-/* About divisions (Zig-zag)                                                   */
+/* Architecture — division blocks                                             */
 /* -------------------------------------------------------------------------- */
 
 .team-about {
-  padding-bottom: 4rem;
+  padding-bottom: var(--t-s-xl);
 }
 
 .team-about-list {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 8rem;
+  gap: var(--t-s-2xl);
+  max-width: var(--t-maxw);
+  margin: 0 auto;
+  padding: 0 var(--t-pad-x);
 }
 
 .team-division-block {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4rem;
+  gap: var(--t-s-lg);
   align-items: center;
 }
 
-.team-division-block:nth-child(even) {
-  direction: rtl;
-}
-
-.team-division-block:nth-child(even)>* {
-  direction: ltr;
+/* Zig-zag by grid order rather than `direction: rtl`, which used to leak
+   RTL text behaviour into every descendant that forgot to reset it. */
+.team-division-block:nth-child(even) .team-division-graphic {
+  order: 2;
 }
 
 .team-division-graphic {
   position: relative;
+  display: grid;
+  place-items: center;
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
-  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--t-border);
+  border-radius: var(--t-r-xl);
+  background:
+    radial-gradient(closest-side at 50% 45%, color-mix(in srgb, var(--t-accent) 13%, transparent), transparent 72%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.008));
+  box-shadow: 0 40px 80px -46px rgba(0, 0, 0, 0.9);
+}
+
+/* Faint orbital rings for depth. */
+.team-division-graphic::before {
+  content: '';
+  position: absolute;
+  inset: 12%;
+  border: 1px solid color-mix(in srgb, var(--t-accent) 12%, transparent);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.team-division-graphic::after {
+  content: '';
+  position: absolute;
+  inset: 26%;
+  border: 1px dashed color-mix(in srgb, var(--t-accent) 9%, transparent);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 .team-division-graphic svg {
-  width: 50%;
-  height: 50%;
-  color: var(--signal);
-  opacity: 0.2;
+  position: relative;
+  width: 46%;
+  height: 46%;
+  color: var(--t-accent);
+  opacity: 0.85;
+  filter: drop-shadow(0 6px 22px color-mix(in srgb, var(--t-accent) 34%, transparent));
 }
 
 .team-division-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--t-s-sm);
+  min-width: 0;
 }
 
 .team-division-head {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--t-s-2xs);
 }
 
 .team-division-code {
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  letter-spacing: 0.15em;
-  color: var(--signal);
+  color: var(--t-accent);
+  font-family: var(--font-body), monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
 .team-division-name {
-  font-family: var(--font-display);
-  font-size: 2.5rem;
+  margin: 0;
+  color: var(--t-text);
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.7rem, 1.15rem + 2.2vw, 2.5rem);
   font-weight: 700;
   line-height: 1.1;
-  color: var(--paper);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 .team-division-desc {
-  font-size: 1.05rem;
-  line-height: 1.8;
-  color: rgba(242, 239, 232, 0.7);
   margin: 0;
+  color: var(--t-text-2);
+  font-size: clamp(0.95rem, 0.9rem + 0.28vw, 1.05rem);
+  line-height: 1.8;
+  text-wrap: pretty;
 }
 
 .team-division-highlights {
-  list-style: none;
-  padding: 0;
-  margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--t-s-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .team-division-highlights li {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: var(--t-s-xs);
+  color: var(--t-text-2);
   font-size: 0.95rem;
-  color: rgba(242, 239, 232, 0.6);
   line-height: 1.6;
 }
 
 .team-division-bullet {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--solar);
   flex-shrink: 0;
-  margin-top: 6px;
-  box-shadow: 0 0 10px rgba(255, 90, 31, 0.5);
+  width: 7px;
+  height: 7px;
+  margin-top: 0.55em;
+  border-radius: 50%;
+  background: var(--t-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--t-accent) 65%, transparent);
 }
 
 .team-division-specs {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 1rem;
+  gap: var(--t-s-2xs);
+  margin-top: var(--t-s-2xs);
 }
 
 .team-spec-pill {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.03);
+  padding: 7px 14px;
+  border: 1px solid var(--t-border);
+  border-radius: var(--t-r-pill);
+  background: var(--t-surface);
+  font-family: var(--font-body), monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
 }
 
 .team-spec-pill code {
-  color: rgba(242, 239, 232, 0.4);
+  color: var(--t-text-3);
 }
 
 .team-spec-pill strong {
-  color: var(--signal);
+  color: var(--t-accent);
   font-weight: 500;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Leadership tiers                                                            */
+/* Leadership — tiers                                                         */
 /* -------------------------------------------------------------------------- */
 
 .team-leads {
-  padding-bottom: 4rem;
+  padding-bottom: var(--t-s-xl);
 }
 
 .team-tier {
-  max-width: 1200px;
-  margin: 0 auto 5rem;
-  padding: 0 1.5rem;
+  max-width: var(--t-maxw);
+  margin: 0 auto var(--t-s-xl);
+  padding: 0 var(--t-pad-x);
+}
+
+.team-tier:last-of-type {
+  margin-bottom: 0;
 }
 
 .team-tier-label {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
-  color: rgba(242, 239, 232, 0.4);
+  gap: var(--t-s-xs);
+  margin-bottom: var(--t-s-md);
+  color: var(--t-text-3);
+  font-family: var(--font-body), monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
+}
+
+/* Hairline that runs out from the label to the edge of the tier. */
+.team-tier-label::after {
+  content: '';
+  flex: 1;
+  min-width: 2rem;
+  height: 1px;
+  background: linear-gradient(90deg, var(--t-border-2), transparent);
 }
 
 .team-tier-badge {
-  font-family: var(--font-body);
+  padding: 5px 11px;
+  border: 1px solid color-mix(in srgb, var(--t-accent) 26%, transparent);
+  border-radius: var(--t-r-pill);
+  background: color-mix(in srgb, var(--t-accent) 9%, transparent);
+  color: var(--t-accent);
+  font-family: var(--font-body), monospace;
   font-size: 0.6rem;
-  letter-spacing: 0.12em;
-  color: var(--signal);
-  background: rgba(216, 255, 79, 0.08);
-  border: 1px solid rgba(216, 255, 79, 0.2);
-  border-radius: 6px;
-  padding: 4px 10px;
+  letter-spacing: 0.14em;
 }
 
+/* Equal `1fr` tracks keep every card in a tier the same width, including the
+   ones left over on a short final row. The per-card cap is what stops a tier
+   holding a single person from stretching that card across the whole row —
+   uncapped `1fr` used to render one member as a 1152px billboard. */
 .team-tier-grid {
   display: grid;
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--t-card-min)), 1fr));
+  gap: var(--t-s-sm);
+  justify-items: center;
+}
+
+.team-tier-grid > * {
+  width: 100%;
+  max-width: var(--t-card-max);
 }
 
 .team-tier-grid--hero {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  --t-card-min: 15rem;
+  --t-card-max: 22rem;
 }
 
 .team-tier-grid--default {
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  --t-card-min: 13rem;
+  --t-card-max: 19rem;
 }
 
 .team-tier-grid--compact {
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  --t-card-min: 10.5rem;
+  --t-card-max: 15.5rem;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Org tree                                                                    */
+/* Core — division filter                                                     */
 /* -------------------------------------------------------------------------- */
 
-.team-tree {
+.team-core-filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--t-s-lg);
+  max-width: var(--t-maxw);
+  margin: 0 auto;
+  padding: 0 var(--t-pad-x) var(--t-s-xl);
+}
+
+.team-filter-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--t-s-lg);
+}
+
+.team-filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--t-s-xs);
+  justify-content: center;
+}
+
+.team-filter-tab {
   position: relative;
-  padding-bottom: 8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.72rem 1.15rem;
+  border: 1px solid var(--t-border);
+  border-radius: var(--t-r-pill);
+  background: var(--t-surface);
+  color: var(--t-text-2);
+  font-family: var(--font-display), sans-serif;
+  cursor: pointer;
+  transition:
+    color 0.3s var(--t-ease),
+    border-color 0.3s var(--t-ease),
+    background-color 0.3s var(--t-ease);
 }
 
-.tree-progress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--solar), var(--signal));
-  z-index: 999;
+.team-filter-tab:hover {
+  border-color: var(--t-border-2);
+  color: var(--t-text);
+}
+
+.team-filter-tab:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--ink),
+    0 0 0 4px color-mix(in srgb, var(--t-accent) 65%, transparent);
+}
+
+.team-filter-tab--active {
+  border-color: transparent;
+  color: var(--t-text);
+}
+
+/* Framer Motion's shared-layout pill. Sits under the label via z-index. */
+.team-filter-tab-indicator {
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--t-accent) 55%, transparent);
+  border-radius: var(--t-r-pill);
+  background: color-mix(in srgb, var(--t-accent) 11%, transparent);
+  box-shadow: 0 10px 30px -18px color-mix(in srgb, var(--t-accent) 80%, transparent);
   pointer-events: none;
 }
 
-.tree-desktop {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
+.team-filter-tab-label {
+  position: relative;
+  z-index: 1;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.team-filter-tab-code {
+  position: relative;
+  z-index: 1;
+  color: var(--t-text-3);
+  font-family: var(--font-body), monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+.team-filter-tab--active .team-filter-tab-code {
+  color: color-mix(in srgb, var(--t-accent) 80%, var(--paper));
+}
+
+.team-filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--t-s-lg);
+}
+
+.team-filter-panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--t-s-xs);
+  max-width: 46rem;
+}
+
+.team-filter-panel-header h2 {
+  margin: 0;
+  color: var(--t-text);
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.55rem, 1.05rem + 2vw, 2.35rem);
+  font-weight: 700;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.team-filter-panel-header p {
+  margin: 0;
+  color: var(--t-text-2);
+  font-size: clamp(0.95rem, 0.9rem + 0.3vw, 1.08rem);
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Core — org tree                                                            */
+/* -------------------------------------------------------------------------- */
+/* Connectors are laid out by the same grid that positions the columns, so they
+   line up at any width and any column count. The previous fixed-viewBox SVG
+   assumed four evenly-spaced columns in a 1000px band and missed the cards by
+   up to 69px once the grid's gaps were taken into account.                    */
+
+.team-tree {
+  --tree-gap: clamp(1rem, 2.4vw, 2rem);
+  --tree-drop: clamp(1.75rem, 3.4vw, 3rem);
+  --tree-line: color-mix(in srgb, var(--t-accent) 42%, transparent);
+
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.tree-tier {
+.tree-lead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--t-s-sm);
   width: 100%;
-  text-align: center;
-  margin-bottom: 0;
 }
 
 .tree-tier-label {
-  font-family: var(--font-body);
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
-  color: rgba(242, 239, 232, 0.3);
+  color: var(--t-text-3);
+  font-family: var(--font-body), monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  margin-bottom: 1.5rem;
 }
 
-.tree-tier-nodes {
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
+.tree-lead-node {
+  width: min(100%, 20rem);
 }
 
-.tree-tier--advisors .tree-tier-nodes,
-.tree-tier--command .tree-tier-nodes {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.tree-tier--senior .tree-tier-nodes {
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.tree-connector {
-  width: 2px;
-  height: 60px;
-  display: block;
-  margin: 0 auto;
-}
-
-.tree-connector line {
-  stroke: rgba(255, 255, 255, 0.1);
-  stroke-width: 2;
-}
-
-.tree-connector-glow {
-  stroke: var(--signal);
-  stroke-width: 2;
-  filter: drop-shadow(0 0 6px rgba(216, 255, 79, 0.6));
-}
-
-.tree-connector--short {
-  height: 40px;
-}
-
-.tree-split-connector {
-  width: 100%;
-  max-width: 1000px;
-  height: 30px;
-  display: block;
-  margin: 0 auto;
-}
-
-.tree-split-connector path {
-  stroke: rgba(255, 255, 255, 0.1);
-  stroke-width: 2;
-  fill: none;
-}
-
-.tree-split-connector .tree-connector-glow {
-  stroke: var(--signal);
+/* Vertical run from the lead card down to the branch rail. */
+.tree-trunk {
+  width: 1px;
+  height: var(--tree-drop);
+  background: linear-gradient(180deg, transparent, var(--tree-line));
+  transform-origin: top;
 }
 
 .tree-branches {
+  --tree-cols: var(--cols, 1);
+  --tree-col-w: calc((100% - (var(--tree-cols) - 1) * var(--tree-gap)) / var(--tree-cols));
+
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2rem;
+  grid-template-columns: repeat(var(--tree-cols), minmax(0, 1fr));
+  gap: var(--tree-gap);
   width: 100%;
-  margin-top: 1rem;
+  margin-top: var(--tree-drop);
+}
+
+/* Horizontal rail spanning first-column centre to last-column centre. */
+.tree-rail {
+  position: absolute;
+  top: calc(-1 * var(--tree-drop));
+  left: calc(var(--tree-col-w) / 2);
+  width: calc((var(--tree-cols) - 1) * (var(--tree-col-w) + var(--tree-gap)));
+  height: 1px;
+  background: var(--tree-line);
+  transform-origin: center;
+  pointer-events: none;
 }
 
 .tree-branch {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: var(--t-s-sm);
   text-align: center;
-  padding: 1.5rem;
-  border-radius: 16px;
-  border: none;
-  background: transparent;
-  transition: border-color 0.3s;
 }
 
-.tree-branch:hover {
-  border-color: rgba(216, 255, 79, 0.15);
+/* Drop from the rail into each column. */
+.tree-branch::before {
+  content: '';
+  position: absolute;
+  top: calc(-1 * var(--tree-drop));
+  left: 50%;
+  width: 1px;
+  height: var(--tree-drop);
+  background: var(--tree-line);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* A lone column needs no rail, and an unled division has nothing to drop from. */
+.team-tree--single .tree-rail,
+.team-tree--no-lead .tree-rail,
+.team-tree--no-lead .tree-branch::before {
+  display: none;
+}
+
+.team-tree--no-lead .tree-branches {
+  margin-top: 0;
 }
 
 .tree-branch-header {
-  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .tree-branch-code {
-  font-family: var(--font-body);
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  color: var(--signal);
-  display: block;
+  color: var(--t-accent);
+  font-family: var(--font-body), monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
 }
 
 .tree-branch-name {
-  font-family: var(--font-display);
-  font-size: 1rem;
+  color: var(--t-text-2);
+  font-family: var(--font-display), sans-serif;
+  font-size: 0.86rem;
   font-weight: 600;
-  color: var(--paper);
-  display: block;
-  margin-top: 4px;
+  letter-spacing: 0.01em;
 }
 
 .tree-member-cluster {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  width: 100%;
-}
-
-.tree-mobile {
-  display: none;
-  padding: 0 1.5rem;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.tree-mobile-section {
-  margin-bottom: 2rem;
-}
-
-.tree-mobile-label {
-  font-family: var(--font-body);
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
-  color: var(--signal);
-  text-transform: uppercase;
-  margin-bottom: 1rem;
-}
-
-.tree-mobile-section>.team-member-card {
-  margin-bottom: 0.75rem;
-}
-
-.tree-mobile-spine {
-  width: 2px;
-  height: 60px;
-  background: linear-gradient(180deg, var(--signal) 0%, transparent 100%);
-  margin: 0 auto 1.5rem;
-  opacity: 0.4;
-}
-
-.tree-accordion {
-  margin-bottom: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.tree-accordion-trigger {
-  width: 100%;
-  display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.25rem;
-  background: none;
-  border: none;
-  color: var(--paper);
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.2s;
+  gap: var(--t-s-md);
+  width: 100%;
 }
 
-.tree-accordion-trigger:hover {
-  background: rgba(255, 255, 255, 0.04);
+.tree-member-node {
+  position: relative;
+  width: 100%;
 }
 
-.tree-accordion-trigger code {
-  font-family: var(--font-body);
-  font-size: 0.65rem;
-  letter-spacing: 0.1em;
-  color: var(--signal);
+.tree-empty {
+  margin: 0;
+  padding: var(--t-s-lg) var(--t-s-md);
+  border: 1px dashed var(--t-border-2);
+  border-radius: var(--t-r-lg);
+  background: var(--t-surface);
+  color: var(--t-text-3);
+  font-family: var(--font-body), monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-align: center;
 }
 
-.tree-accordion-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  transition: background 0.3s;
-}
-
-.tree-accordion-trigger--open .tree-accordion-dot {
-  background: var(--signal);
-  box-shadow: 0 0 8px rgba(216, 255, 79, 0.6);
-}
-
-.tree-accordion-chevron {
-  width: 18px;
-  height: 18px;
-  margin-left: auto;
-  transition: transform 0.3s;
-  opacity: 0.4;
-}
-
-.tree-accordion-trigger--open .tree-accordion-chevron {
-  transform: rotate(180deg);
-}
-
-.tree-accordion-panel {
-  padding: 0.5rem 1rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  overflow: hidden;
+/* Hairline joining stacked cards inside one column. */
+.tree-member-node + .tree-member-node::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  width: 1px;
+  height: var(--t-s-md);
+  background: var(--tree-line);
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Inspect drawer                                                              */
+/* Inspect drawer                                                             */
 /* -------------------------------------------------------------------------- */
+/* `.team-drawer-backdrop` and `.team-drawer-close` are also used by the join
+   page's apply modal — keep both class names available.                       */
 
 .team-drawer-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
   z-index: 1000;
+  background: rgba(3, 2, 2, 0.72);
+  backdrop-filter: blur(10px);
 }
 
 .team-drawer {
   position: fixed;
   top: 50%;
   left: 50%;
-  /* Transform handled by Framer Motion */
-  width: min(460px, 90vw);
-  max-height: 90vh;
-  background: rgba(7, 6, 4, 0.85);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.8);
   z-index: 1001;
+  width: min(30rem, calc(100vw - 2rem));
+  max-height: min(88svh, 46rem);
   overflow-y: auto;
   overscroll-behavior: contain;
+  border: 1px solid var(--t-border-2);
+  border-radius: var(--t-r-xl);
+  background:
+    radial-gradient(60rem 30rem at 50% -12%, color-mix(in srgb, var(--t-accent) 9%, transparent), transparent 62%),
+    rgba(9, 7, 5, 0.92);
+  backdrop-filter: blur(22px);
+  box-shadow: 0 44px 120px -40px rgba(0, 0, 0, 0.95);
 }
 
+/* Every custom property here carries a fallback: the join page's apply modal
+   reuses this class outside `.team-page`, where the token block is not in
+   scope. Without them the button renders square, black-on-black. */
 .team-drawer-close {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
+  top: clamp(0.85rem, 2.5vw, 1.35rem);
+  right: clamp(0.85rem, 2.5vw, 1.35rem);
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--t-border, rgba(242, 239, 232, 0.09));
+  border-radius: var(--t-r-pill, 999px);
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 8px;
+  color: var(--t-text-2, rgba(242, 239, 232, 0.66));
   cursor: pointer;
-  color: rgba(242, 239, 232, 0.6);
-  transition: all 0.2s;
-  z-index: 1;
+  transition:
+    color 0.25s var(--t-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    background-color 0.25s var(--t-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    border-color 0.25s var(--t-ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
-.team-drawer-close:hover {
-  color: var(--paper);
-  background: rgba(255, 255, 255, 0.1);
+.team-drawer-close:hover,
+.team-drawer-close:focus-visible {
+  outline: none;
+  border-color: var(--t-border-2, rgba(242, 239, 232, 0.17));
+  background: rgba(255, 255, 255, 0.11);
+  color: var(--t-text, #f2efe8);
 }
 
 .team-drawer-close svg {
-  width: 20px;
-  height: 20px;
+  width: 17px;
+  height: 17px;
 }
 
 .team-drawer-content {
-  padding: 4rem 2rem 2rem;
+  padding: clamp(2.75rem, 7vw, 3.25rem) clamp(1.25rem, 5vw, 2rem) clamp(1.5rem, 5vw, 2rem);
 }
 
+/* Sized to the portrait so the scanline overlay lands on the image instead of
+   banding the full width of the drawer. */
 .team-drawer-header {
   position: relative;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 2rem;
+  width: fit-content;
+  margin: 0 auto var(--t-s-md);
 }
 
 .team-drawer-scanline {
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(0deg,
-      transparent,
-      transparent 2px,
-      rgba(216, 255, 79, 0.03) 2px,
-      rgba(216, 255, 79, 0.03) 4px);
+  border-radius: var(--t-r-md);
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    color-mix(in srgb, var(--t-accent) 4%, transparent) 2px,
+    color-mix(in srgb, var(--t-accent) 4%, transparent) 4px
+  );
   pointer-events: none;
-  border-radius: 16px;
 }
 
 .team-drawer-identity {
+  margin-bottom: var(--t-s-md);
   text-align: center;
-  margin-bottom: 2.5rem;
 }
 
 .team-drawer-tag {
-  font-family: var(--font-body);
-  font-size: 0.65rem;
-  letter-spacing: 0.12em;
-  color: var(--solar);
   display: block;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--t-s-2xs);
+  color: var(--solar);
+  font-family: var(--font-body), monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.13em;
+  overflow-wrap: anywhere;
 }
 
 .team-drawer-identity h2 {
-  font-family: var(--font-display);
-  font-size: 1.75rem;
+  margin: 0 0 0.4rem;
+  color: var(--t-text);
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.4rem, 1.15rem + 1vw, 1.75rem);
   font-weight: 700;
-  margin: 0 0 0.5rem;
-  color: var(--paper);
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
 }
 
 .team-drawer-role {
-  font-size: 0.95rem;
-  color: rgba(242, 239, 232, 0.6);
   margin: 0;
+  color: var(--t-text-2);
+  font-size: 0.95rem;
 }
 
 .team-drawer-section {
-  margin-bottom: 2rem;
+  margin-bottom: var(--t-s-md);
 }
 
 .team-drawer-label {
-  font-family: var(--font-body);
-  font-size: 0.65rem;
-  letter-spacing: 0.18em;
-  color: rgba(242, 239, 232, 0.4);
-  text-transform: uppercase;
   display: block;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--t-s-xs);
+  color: var(--t-text-3);
+  font-family: var(--font-body), monospace;
+  font-size: 0.63rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
 
 .team-drawer-section p {
-  font-size: 0.95rem;
-  color: rgba(242, 239, 232, 0.8);
   margin: 0;
-  line-height: 1.6;
+  color: rgba(242, 239, 232, 0.82);
+  font-size: 0.95rem;
+  line-height: 1.65;
 }
 
 .team-drawer-section code {
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  color: var(--signal);
+  color: var(--t-accent);
+  font-family: var(--font-body), monospace;
+  font-size: 0.76rem;
 }
 
 .team-drawer-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 7px;
 }
 
 .team-drawer-links {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
+  align-items: flex-start;
 }
 
 .team-drawer-links a {
+  max-width: 100%;
+  color: var(--t-accent);
   font-size: 0.9rem;
-  color: var(--signal);
   text-decoration: none;
-  transition: color 0.2s;
+  overflow-wrap: anywhere;
+  transition: color 0.25s var(--t-ease);
 }
 
-.team-drawer-links a:hover {
-  color: var(--paper);
+.team-drawer-links a:hover,
+.team-drawer-links a:focus-visible {
+  color: var(--t-text);
 }
 
 .team-drawer-status {
   display: flex;
+  flex-wrap: wrap;
+  gap: var(--t-s-xs);
   justify-content: space-between;
-  font-family: var(--font-body);
-  font-size: 0.55rem;
-  letter-spacing: 0.12em;
-  color: rgba(242, 239, 232, 0.3);
+  margin-top: var(--t-s-lg);
+  padding-top: var(--t-s-sm);
+  border-top: 1px solid var(--t-border);
+  color: var(--t-text-3);
+  font-family: var(--font-body), monospace;
+  font-size: 0.56rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 1.5rem;
-  margin-top: 3rem;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Sticky HUD                                                                  */
-/* -------------------------------------------------------------------------- */
-
-.team-hud {
-  position: fixed;
-  right: 2rem;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 100;
-  display: none;
-  background: rgba(7, 6, 4, 0.6);
-  backdrop-filter: blur(12px);
-  padding: 1rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.team-hud-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 1rem;
-}
-
-.team-hud-header span {
-  font-family: var(--font-body);
-  font-size: 0.55rem;
-  letter-spacing: 0.15em;
-  color: var(--signal);
-  opacity: 0.6;
-}
-
-.team-hud-pulse {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--signal);
-  animation: signal-pulse 2s ease-in-out infinite;
-}
-
-.team-hud-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.team-hud-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: none;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  color: rgba(242, 239, 232, 0.4);
-  transition: all 0.2s;
-}
-
-.team-hud-item:hover {
-  color: rgba(242, 239, 232, 0.8);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.team-hud-item--active {
-  color: var(--signal) !important;
-  background: rgba(216, 255, 79, 0.05);
-}
-
-.team-hud-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  transition: all 0.3s;
-}
-
-.team-hud-item--active .team-hud-dot {
-  background: var(--signal);
-  box-shadow: 0 0 8px rgba(216, 255, 79, 0.6);
-}
-
-.team-hud-code {
-  font-family: var(--font-body);
-  font-size: 0.55rem;
-  letter-spacing: 0.1em;
-}
-
-.team-hud-label {
-  font-size: 0.65rem;
-  white-space: nowrap;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Team tree loader                                                            */
+/* Core tree loader                                                           */
 /* -------------------------------------------------------------------------- */
 
 .team-tree-loader {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   min-height: 60vh;
 }
 
@@ -2934,22 +3104,22 @@ html[data-mission-loading='true'] body {
 }
 
 .team-tree-loader-inner span {
-  font-family: var(--font-body);
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
-  color: var(--signal);
-  opacity: 0.8;
   display: block;
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--t-s-sm);
+  color: var(--signal);
+  font-family: var(--font-body), monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  opacity: 0.8;
 }
 
 .team-tree-loader-bar {
-  width: 240px;
+  width: min(240px, 60vw);
   height: 2px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-  overflow: hidden;
   margin: 0 auto;
+  overflow: hidden;
+  border-radius: var(--t-r-pill);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .team-tree-loader-bar::after {
@@ -2957,6 +3127,7 @@ html[data-mission-loading='true'] body {
   display: block;
   width: 40%;
   height: 100%;
+  border-radius: inherit;
   background: var(--signal);
   animation: tree-loader-slide 1.2s ease-in-out infinite;
 }
@@ -2970,6 +3141,159 @@ html[data-mission-loading='true'] body {
     transform: translateX(350%);
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Responsive                                                                 */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 1023px) {
+  .team-tier-grid--hero {
+    --t-card-min: 13.5rem;
+    --t-card-max: 20rem;
+  }
+
+  .team-tier-grid--default {
+    --t-card-min: 12rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .team-division-block {
+    grid-template-columns: 1fr;
+    gap: var(--t-s-md);
+  }
+
+  /* Graphic always leads on a single column, regardless of zig-zag order. */
+  .team-division-block:nth-child(even) .team-division-graphic {
+    order: 0;
+  }
+
+  .team-division-graphic {
+    aspect-ratio: 16 / 11;
+  }
+
+  .team-division-graphic svg {
+    width: 38%;
+    height: 62%;
+  }
+
+  /* The tree collapses to one column: rail and drops are meaningless here. */
+  .tree-branches {
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: var(--t-s-md);
+  }
+
+  .tree-rail,
+  .tree-branch::before {
+    display: none;
+  }
+
+  /* Stacked cells are separated by a rule. Matched on the adjacent sibling
+     rather than `:first-child`, because `.tree-rail` is the first child. */
+  .tree-branch + .tree-branch {
+    padding-top: var(--t-s-sm);
+    border-top: 1px solid var(--t-border);
+  }
+
+  /* With no rail to meet, the trunk reads as a spine and dissolves at both
+     ends instead of stopping dead in open space. */
+  .tree-trunk {
+    background: linear-gradient(180deg, transparent, var(--tree-line) 50%, transparent);
+  }
+
+  .tree-lead-node {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  /* One card per row here, so every variant fills the column — the per-variant
+     caps otherwise left `default` cards narrower than `hero` ones. */
+  .team-tier-grid {
+    --t-card-max: 100%;
+  }
+
+  .team-filter-tabs {
+    justify-content: flex-start;
+  }
+
+  .team-filter-tab {
+    flex: 1 1 100%;
+    justify-content: space-between;
+    padding: 0.7rem 1rem;
+    border-radius: var(--t-r-md);
+  }
+
+  .team-filter-tab-label {
+    font-size: 0.78rem;
+  }
+
+  .team-filter-tab-indicator {
+    border-radius: var(--t-r-md);
+  }
+
+  /* Cards become a portrait-beside-text row: far less dead space per person
+     when only one column fits. */
+  .team-member-card {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--t-s-sm);
+    padding: var(--t-s-sm);
+    text-align: left;
+  }
+
+  .team-member-card--hero {
+    padding: var(--t-s-md) var(--t-s-sm);
+  }
+
+  .team-card-avatar {
+    align-self: flex-start;
+    width: min(var(--avatar-size), 76px);
+    height: min(var(--avatar-size), 76px);
+  }
+
+  .team-card-info {
+    align-items: flex-start;
+  }
+
+  .team-card-focus,
+  .team-card-socials {
+    justify-content: flex-start;
+  }
+
+  .team-card-socials {
+    margin-top: var(--t-s-2xs);
+    padding-top: 0;
+  }
+
+  .team-card-glow {
+    top: -60%;
+    left: 0;
+    width: 90%;
+    transform: none;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Reduced motion                                                             */
+/* -------------------------------------------------------------------------- */
+/* Content must never depend on an animation having run to become visible. */
+
+@media (prefers-reduced-motion: reduce) {
+  .team-page *,
+  .team-page *::before,
+  .team-page *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .team-avatar-grid line[class],
+  .team-tree-loader-bar::after {
+    animation: none !important;
+  }
+}
+
 
 /* -------------------------------------------------------------------------- */
 /* Responsive                                                                 */
@@ -3432,188 +3756,6 @@ html[data-mission-loading='true'] body {
 
 
 
-
-
-/* -------------------------------------------------------------------------- */
-/* Responsive                                                                  */
-/* -------------------------------------------------------------------------- */
-
-@media (max-width: 768px) {
-  .team-page-content {
-    gap: 4rem;
-  }
-
-  .team-about-list {
-    gap: 4rem;
-  }
-
-  .team-division-block {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-
-  .team-division-block:nth-child(even) {
-    direction: ltr;
-  }
-
-  .tree-desktop {
-    display: none;
-  }
-
-  .tree-mobile {
-    display: block;
-  }
-
-
-}
-
-@media (min-width: 769px) {
-  .team-hud {
-    display: block;
-  }
-}
-
-@media (min-width: 1024px) {
-  .tree-branches {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (max-width: 1023px) and (min-width: 769px) {
-  .tree-branches {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* Core Team Filter */
-.team-core-filter {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 6rem 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 4rem;
-}
-
-.team-filter-container {
-  display: flex;
-  flex-direction: column;
-  gap: 3rem;
-}
-
-.team-filter-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: center;
-}
-
-.team-filter-tab {
-  position: relative;
-  background: var(--ink);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: rgba(255, 255, 255, 0.5);
-  font-family: var(--font-display);
-  cursor: pointer;
-  transition: color 0.3s ease, border-color 0.3s ease;
-  overflow: hidden;
-}
-
-.team-filter-tab:hover {
-  color: white;
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.team-filter-tab--active {
-  color: var(--paper);
-  border-color: var(--signal);
-}
-
-.team-filter-tab-indicator {
-  position: absolute;
-  inset: 0;
-  border: 1px solid var(--signal);
-  background: rgba(216, 255, 79, 0.05);
-  border-radius: 8px;
-  pointer-events: none;
-}
-
-.team-filter-tab-label {
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  z-index: 1;
-}
-
-.team-filter-tab-code {
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  opacity: 0.5;
-  z-index: 1;
-}
-
-.team-filter-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 4rem;
-  background: transparent;
-  border: none;
-  border-radius: 24px;
-  padding: 4rem;
-  backdrop-filter: none;
-}
-
-.team-filter-panel-header h2 {
-  font-family: var(--font-display);
-  font-size: 2.5rem;
-  color: var(--paper);
-  margin-bottom: 1rem;
-}
-
-.team-filter-panel-header p {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 1.125rem;
-  max-width: 800px;
-  line-height: 1.6;
-}
-
-.team-filter-role-label {
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  color: var(--signal);
-  margin-bottom: 1.5rem;
-  letter-spacing: 2px;
-}
-
-.team-filter-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 4rem;
-}
-
-.team-filter-lead {
-  max-width: 600px;
-}
-
-.team-filter-members-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
-}
-
-
-
-.tree-member-cluster {
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-  position: relative;
-}
 
 
 /* -------------------------------------------------------------------------- */

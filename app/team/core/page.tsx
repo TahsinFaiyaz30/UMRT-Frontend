@@ -18,9 +18,5 @@ const CoreTeamFilter = dynamic(
 );
 
 export default function CoreTeamPage() {
-  return (
-    <div className="team-page-content" style={{ gap: 0, paddingBottom: '4rem' }}>
-      <CoreTeamFilter />
-    </div>
-  );
+  return <CoreTeamFilter />;
 }

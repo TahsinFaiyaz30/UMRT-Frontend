@@ -10,21 +10,18 @@
  */
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useContentRecords, type CrewMember } from '@/lib/content';
 import { MemberCard } from './MemberCard';
 import { TeamInspectDrawer } from './TeamInspectDrawer';
-
-const stagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.08 } },
-};
+import { reveal, stagger } from './reveal';
 
 export function LeadershipRoster() {
   const [inspected, setInspected] = useState<CrewMember | null>(null);
   const { records: crew } = useContentRecords('crew');
   const { records: tiers } = useContentRecords('teamTiers');
   const { records: divisions } = useContentRecords('divisions');
+  const reduce = useReducedMotion();
 
   const crewById = new Map(crew.map((member) => [member.id, member]));
   const sortedTiers = [...tiers].sort((a, b) => a.order - b.order);
@@ -34,39 +31,28 @@ export function LeadershipRoster() {
       {/* Section header */}
       <div className="team-section-header">
         <motion.div
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
           className="team-section-line"
           aria-hidden="true"
+          {...(reduce
+            ? {}
+            : {
+                initial: { scaleX: 0 },
+                whileInView: { scaleX: 1 },
+                viewport: { once: true },
+                transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] as const },
+              })}
         />
-        <motion.p
-          className="team-section-eyebrow"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
-        >
+        <motion.p className="team-section-eyebrow" {...reveal(reduce, { y: 10, delay: 0.15 })}>
           COMMAND // ROSTER
         </motion.p>
         <motion.h1
           id="team-leads-heading"
           className="team-section-title"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4, duration: 0.6 }}
+          {...reveal(reduce, { y: 20, delay: 0.22 })}
         >
           Leadership Deck
         </motion.h1>
-        <motion.p
-          className="team-section-subtitle"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.5 }}
-        >
+        <motion.p className="team-section-subtitle" {...reveal(reduce, { y: 14, delay: 0.3 })}>
           The command structure that drives every system forward — from
           institutional oversight to hands-on subsystem leadership.
         </motion.p>
@@ -78,25 +64,26 @@ export function LeadershipRoster() {
           .filter((member): member is CrewMember => Boolean(member));
         if (members.length === 0) return null;
 
+        const variant = tier.cardVariant ?? 'default';
+
         return (
           <div className="team-tier" key={tier.id}>
-            <div className="team-tier-label">
+            <motion.div className="team-tier-label" {...reveal(reduce, { y: 12 })}>
               <span className="team-tier-badge">{tier.badge}</span>
               <span>{tier.label}</span>
-            </div>
+            </motion.div>
+
             <motion.div
-              className={`team-tier-grid team-tier-grid--${tier.cardVariant ?? 'default'}`}
-              variants={stagger}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-40px' }}
+              className={`team-tier-grid team-tier-grid--${variant}`}
+              {...stagger(reduce)}
             >
               {members.map((member) => (
                 <MemberCard
                   key={member.id}
                   member={member}
-                  variant={tier.cardVariant ?? 'default'}
+                  variant={variant}
                   onInspect={setInspected}
+                  staggered
                 />
               ))}
             </motion.div>

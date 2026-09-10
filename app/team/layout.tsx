@@ -12,11 +12,10 @@ export default function TeamLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <PremiumNavbar />
-      <main className="team-page relative min-h-screen" style={{ background: 'radial-gradient(circle at 50% 45%, rgba(127, 33, 15, 0.2), transparent 30%), #050504' }}>
-        {/* Premium Grid Overlay */}
-        <div className="relative z-10">
-          {children}
-        </div>
+      {/* The nebula/star backdrop lives on `.team-page` in globals.css so all
+          three views share one treatment. */}
+      <main className="team-page relative min-h-screen">
+        <div className="team-page-content">{children}</div>
       </main>
       <SiteFooter />
     </>

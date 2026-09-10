@@ -1,91 +1,91 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useContentRecords } from '@/lib/content';
+import { reveal } from './reveal';
 
-// Abstract SVGs for the graphical pane, keyed off a division's `iconHint`.
+/**
+ * Abstract marks for the graphical pane, keyed off a division's `iconHint`.
+ *
+ * All of them are stroke-only line art on `currentColor`, so each block tints
+ * itself from the division's own accent. Unknown hints fall through to a
+ * neutral orbital mark rather than rendering nothing.
+ */
 const AbstractGraphic = ({ type }: { type?: string }) => {
   switch (type) {
     case 'gear':
+      // Manipulator arm: shoulder, elbow and gripper over a base plate.
       return (
-        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', perspective: '1000px' }}>
-          <motion.img
-            src="/images/robot_arm_transparent.png"
-            alt="Mechanical System"
-            style={{
-              width: '120%',
-              maxWidth: 'none',
-              objectFit: 'contain',
-              // Use light drop shadow to make it glow slightly
-              filter: 'drop-shadow(0 10px 20px rgba(0, 240, 255, 0.4))'
-            }}
-            animate={{
-              rotateY: [-10, 15, -10],
-              rotateX: [5, -5, 5],
-              y: [-15, 10, -15],
-              z: [0, 50, 0]
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: 'easeInOut'
-            }}
-          />
-        </div>
+        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 82h24" />
+          <path d="M34 82V64" />
+          <path d="m34 64 22-18" />
+          <path d="m56 46 18 12" />
+          <circle cx="34" cy="64" r="5" />
+          <circle cx="56" cy="46" r="5" />
+          <path d="m74 58 6-4M74 58l6 5" />
+          <path d="M18 86h32" strokeOpacity="0.45" />
+          <circle cx="50" cy="50" r="40" strokeOpacity="0.16" strokeDasharray="4 7" />
+        </svg>
       );
     case 'zap':
       return (
-        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M20 50 H40 L50 20 L60 80 L70 50 H80" strokeLinecap="round" strokeLinejoin="round" />
-          <rect x="10" y="10" width="80" height="80" rx="8" strokeDasharray="8 8" />
+        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 50h20l10-30 10 60 10-30h10" />
+          <rect x="12" y="12" width="76" height="76" rx="16" strokeDasharray="8 8" strokeOpacity="0.35" />
         </svg>
       );
     case 'code':
       return (
-        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M30 40 L20 50 L30 60 M70 40 L80 50 L70 60 M45 70 L55 30" strokeLinecap="round" strokeLinejoin="round" />
-          <rect x="10" y="10" width="80" height="80" rx="4" opacity="0.3" />
+        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M32 40 22 50l10 10M68 40l10 10-10 10M45 72l10-44" />
+          <rect x="12" y="12" width="76" height="76" rx="16" strokeOpacity="0.3" />
         </svg>
       );
     case 'flask':
       return (
-        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M30 80 Q50 20 70 80" />
-          <circle cx="50" cy="40" r="10" />
-          <circle cx="35" cy="60" r="6" />
-          <circle cx="65" cy="60" r="6" />
+        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M42 18v22L26 76a6 6 0 0 0 5 9h38a6 6 0 0 0 5-9L58 40V18" />
+          <path d="M38 18h24" />
+          <circle cx="50" cy="66" r="4" strokeOpacity="0.55" />
+          <circle cx="40" cy="74" r="2.5" strokeOpacity="0.4" />
+          <circle cx="60" cy="75" r="3" strokeOpacity="0.4" />
         </svg>
       );
     case 'briefcase':
       return (
-        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
-          <rect x="20" y="40" width="20" height="40" />
-          <rect x="50" y="20" width="20" height="60" />
-          <path d="M10 80 H90" />
-          <path d="M20 40 L70 20" strokeDasharray="4 4" />
+        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="16" y="34" width="68" height="48" rx="12" />
+          <path d="M38 34v-8a8 8 0 0 1 8-8h8a8 8 0 0 1 8 8v8" />
+          <path d="M16 54h68" strokeOpacity="0.45" />
+          <path d="M44 54v8h12v-8" />
         </svg>
       );
     case 'camera':
       return (
-        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
-          <rect x="20" y="30" width="60" height="40" rx="4" />
-          <circle cx="50" cy="50" r="10" />
-          <path d="M80 35 L90 25 V75 L80 65" />
+        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="14" y="30" width="56" height="42" rx="12" />
+          <circle cx="42" cy="51" r="12" />
+          <circle cx="42" cy="51" r="4" strokeOpacity="0.5" />
+          <path d="m70 42 16-9v36l-16-9z" />
         </svg>
       );
     case 'signal':
       return (
-        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M50 85 V55" strokeLinecap="round" />
-          <circle cx="50" cy="45" r="8" />
-          <path d="M32 33 a26 26 0 0 1 36 0" strokeLinecap="round" />
-          <path d="M20 21 a44 44 0 0 1 60 0" strokeLinecap="round" opacity="0.5" />
+        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M50 84V58" />
+          <circle cx="50" cy="50" r="7" />
+          <path d="M33 34a24 24 0 0 1 34 0" />
+          <path d="M21 22a41 41 0 0 1 58 0" strokeOpacity="0.5" />
+          <path d="M38 84h24" strokeOpacity="0.45" />
         </svg>
       );
     default:
       return (
-        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="50" cy="50" r="30" />
+        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="50" cy="50" r="16" />
+          <ellipse cx="50" cy="50" rx="38" ry="16" strokeOpacity="0.45" transform="rotate(-24 50 50)" />
+          <circle cx="82" cy="36" r="3.5" />
         </svg>
       );
   }
@@ -93,39 +93,47 @@ const AbstractGraphic = ({ type }: { type?: string }) => {
 
 export const AboutDivisions = () => {
   const { records: divisions } = useContentRecords('divisions');
+  const reduce = useReducedMotion();
 
   return (
-    <section className="team-about">
+    <section className="team-about" aria-labelledby="team-architecture-heading">
       <div className="team-section-header">
         <motion.div
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: false,}}
           className="team-section-line"
+          aria-hidden="true"
+          {...(reduce
+            ? {}
+            : {
+                initial: { scaleX: 0 },
+                whileInView: { scaleX: 1 },
+                viewport: { once: true },
+                transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] as const },
+              })}
         />
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false,}}
+        <motion.p className="team-section-eyebrow" {...reveal(reduce, { y: 10, delay: 0.15 })}>
+          SYS_ARCH // DIVISIONS
+        </motion.p>
+        <motion.h1
+          id="team-architecture-heading"
+          className="team-section-title"
+          {...reveal(reduce, { y: 20, delay: 0.22 })}
         >
-          <span className="team-section-eyebrow">VIEW A // TEARDOWN</span>
-          <h1 className="team-section-title">System Architecture</h1>
-          <p className="team-section-subtitle">
-            An inside look at the specialized engineering divisions that build, test, and operate the rover.
-          </p>
-        </motion.div>
+          System Architecture
+        </motion.h1>
+        <motion.p className="team-section-subtitle" {...reveal(reduce, { y: 14, delay: 0.3 })}>
+          An inside look at the specialized engineering divisions that build, test, and operate the rover.
+        </motion.p>
       </div>
 
       <div className="team-about-list">
+        {/* Accents come from the site palette (`--signal`/`--solar`), not from
+            `division.color` — those stock hues are off-brand here. */}
         {divisions.map((division, idx) => (
           <div key={division.id} className="team-division-block">
             {/* Graphic pane */}
             <motion.div
               className="team-division-graphic"
-              initial={{ opacity: 0, scale: 0.8, x: idx % 2 === 0 ? 100 : -100, borderRadius: '50%', filter: 'blur(10px)' }}
-              whileInView={{ opacity: 1, scale: 1, x: 0, borderRadius: '16px', filter: 'blur(0px)' }}
-              viewport={{ once: false,}}
-              transition={{ duration: 1, type: 'spring', bounce: 0.3 }}
+              {...reveal(reduce, { x: idx % 2 === 0 ? 48 : -48, scale: 0.94, duration: 0.85 })}
             >
               <AbstractGraphic type={division.iconHint} />
             </motion.div>
@@ -133,10 +141,7 @@ export const AboutDivisions = () => {
             {/* Content pane */}
             <motion.div
               className="team-division-content"
-              initial={{ opacity: 0, x: idx % 2 === 0 ? -100 : 100, filter: 'blur(10px)' }}
-              whileInView={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-              viewport={{ once: false,}}
-              transition={{ duration: 1, type: 'spring', bounce: 0.3, delay: 0.1 }}
+              {...reveal(reduce, { x: idx % 2 === 0 ? -48 : 48, duration: 0.85, delay: 0.08 })}
             >
               <div className="team-division-head">
                 <span className="team-division-code">{division.sysCode}</span>
@@ -145,9 +150,9 @@ export const AboutDivisions = () => {
               <p className="team-division-desc">{division.description}</p>
 
               <ul className="team-division-highlights">
-                {division.highlights.map((item, i) => (
-                  <li key={i}>
-                    <div className="team-division-bullet" />
+                {division.highlights.map((item) => (
+                  <li key={item}>
+                    <div className="team-division-bullet" aria-hidden="true" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -155,8 +160,8 @@ export const AboutDivisions = () => {
 
               {division.specs && division.specs.length > 0 && (
                 <div className="team-division-specs">
-                  {division.specs.map((spec, i) => (
-                    <div key={i} className="team-spec-pill">
+                  {division.specs.map((spec) => (
+                    <div key={spec.label} className="team-spec-pill">
                       <code>{spec.label}</code>
                       <strong>{spec.value}</strong>
                     </div>
