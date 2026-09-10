@@ -156,17 +156,28 @@ export interface EventRecord {
   stats?: { label: string; value: string }[];
 }
 
+export interface SocialLinks {
+  linkedin?: string;
+  github?: string;
+  email?: string;
+  website?: string;
+}
+
 export interface CrewMember {
   id: string;
   name: string;
   role: string;
-  /** Sub-team, when the member belongs to one. */
+  /** Sub-team, when the member belongs to one. Display label only — see DivisionRecord for structural grouping. */
   unit: string | null;
   /** Lower sorts first: mentor 0, lead 1, sub-lead 2, member 3. */
   rank: number;
   portrait: MediaRef | null;
   /** The pre-composed roster graphic with the name baked in. */
   card: MediaRef | null;
+  /** Optional focus areas, shown on the team pages when present. */
+  focus?: string[];
+  /** Optional external links, shown on the team pages when present. */
+  socials?: SocialLinks;
 }
 
 /**
@@ -204,6 +215,74 @@ export interface PartnerRecord {
   mark: MediaRef | null;
 }
 
+/**
+ * An engineering division/sub-team on /team/architecture and /team/core.
+ *
+ * Membership is an explicit id list rather than a match against
+ * `CrewMember.unit` — renaming or restructuring a division then never
+ * requires touching the (generated) crew roster. A backend is free to move
+ * people between divisions, add a division, or retire one; the frontend only
+ * ever renders whatever list of records it is given.
+ */
+export interface DivisionRecord {
+  id: string;
+  /** Telemetry system code, e.g. "SYS-01". */
+  sysCode: string;
+  name: string;
+  description: string;
+  /** Bulleted engineering highlights. Empty array renders nothing. */
+  highlights: string[];
+  /** Compact telemetry spec pills. */
+  specs?: { label: string; value: string }[];
+  /** Accent color (hex) for this division's tab/graphics. */
+  color?: string;
+  /** Icon glyph hint for the architecture page graphic. Unknown values fall back to a default mark. */
+  iconHint?: string;
+  /** Crew id leading this division, or absent/null if currently unled. */
+  leadId?: string | null;
+  /** Crew ids belonging to this division, excluding the lead. */
+  memberIds: string[];
+}
+
+/**
+ * One tier of the command structure on /team/leadership — e.g. "Faculty
+ * Advisory Board" or "Command Nodes". The tier list itself is data: a backend
+ * can rename a tier, reorder tiers, or add a new one (an "Alumni Board" tier,
+ * say) without any frontend change.
+ */
+export interface TeamTierRecord {
+  id: string;
+  /** Lower sorts first. */
+  order: number;
+  /** Short badge, e.g. "TIER-1". */
+  badge: string;
+  label: string;
+  description?: string;
+  /** Card size used for members in this tier. */
+  cardVariant?: 'hero' | 'default' | 'compact';
+  /** Crew ids shown in this tier, in display order. */
+  memberIds: string[];
+}
+
+export type CertificateStatus = 'valid' | 'revoked';
+
+/** One credential in the certificate registry on /certificates. */
+export interface CertificateRecord {
+  id: string;
+  recipient: {
+    name: string;
+    /** Alternate spellings the same recipient might be searched by. */
+    aliases: string[];
+  };
+  title: string;
+  program: string;
+  role: string;
+  /** ISO date. */
+  issuedOn: string;
+  status: CertificateStatus;
+  description: string;
+}
+
 /** Resource names accepted by the client. */
 export type ResourceName =
   | 'achievements'
@@ -211,6 +290,9 @@ export type ResourceName =
   | 'crew'
   | 'partners'
   | 'sections'
+  | 'divisions'
+  | 'teamTiers'
+  | 'certificates'
   | 'media';
 
 export interface ResourceMap {
@@ -219,5 +301,8 @@ export interface ResourceMap {
   crew: CrewMember;
   partners: PartnerRecord;
   sections: SectionRecord;
+  divisions: DivisionRecord;
+  teamTiers: TeamTierRecord;
+  certificates: CertificateRecord;
   media: MediaAsset;
 }

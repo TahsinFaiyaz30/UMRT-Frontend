@@ -1,8 +1,11 @@
 import achievementsData from '@/data/content/achievements.json';
+import certificatesData from '@/data/content/certificates.json';
 import crewData from '@/data/content/crew.json';
+import divisionsData from '@/data/content/divisions.json';
 import eventsData from '@/data/content/events.json';
 import partnersData from '@/data/content/partners.json';
 import sectionsData from '@/data/content/sections.json';
+import teamTiersData from '@/data/content/team-tiers.json';
 
 import { listMediaAssets } from './media';
 import type {
@@ -33,6 +36,9 @@ const datasets: Record<Exclude<ResourceName, 'media'>, Dataset> = {
   crew: crewData as Dataset,
   partners: partnersData as Dataset,
   sections: sectionsData as Dataset,
+  divisions: divisionsData as Dataset,
+  teamTiers: teamTiersData as Dataset,
+  certificates: certificatesData as Dataset,
 };
 
 const DEFAULT_LIMIT = 12;

@@ -2384,33 +2384,21 @@ html[data-mission-loading='true'] body {
   padding: 4px 10px;
 }
 
-.team-tier-badge--cmd {
-  color: var(--solar);
-  background: rgba(255, 90, 31, 0.08);
-  border-color: rgba(255, 90, 31, 0.2);
-}
-
-.team-tier-badge--sys {
-  color: var(--paper);
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
 .team-tier-grid {
   display: grid;
   gap: 1.5rem;
 }
 
-.team-tier-grid--advisors {
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-}
-
-.team-tier-grid--command {
+.team-tier-grid--hero {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
-.team-tier-grid--leads {
+.team-tier-grid--default {
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.team-tier-grid--compact {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
 /* -------------------------------------------------------------------------- */

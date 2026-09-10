@@ -1,20 +1,19 @@
 'use client';
 
 /**
- * LeadershipRoster — View B (/team/leads)
+ * LeadershipRoster — View B (/team/leadership)
  *
- * Tiered command deck:
- *   Tier 1 — Faculty Advisory Board
- *   Tier 2 — Team Leader, Co-Team Leader, Overall Senior Lead
- *   Tier 3 — Sub-Team Leads grid
+ * Renders whatever tiers `teamTiers` defines, in `order`, each populated by
+ * its own `memberIds` against the `crew` roster. Nothing here is hardcoded to
+ * a tier count, label, or membership rule — a backend can rename a tier,
+ * reorder tiers, or add a new one and this renders it without a code change.
  */
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { teamData } from '@/data/team';
+import { useContentRecords, type CrewMember } from '@/lib/content';
 import { MemberCard } from './MemberCard';
 import { TeamInspectDrawer } from './TeamInspectDrawer';
-import type { TeamMember } from '@/data/team';
 
 const stagger = {
   hidden: {},
@@ -22,7 +21,13 @@ const stagger = {
 };
 
 export function LeadershipRoster() {
-  const [inspected, setInspected] = useState<TeamMember | null>(null);
+  const [inspected, setInspected] = useState<CrewMember | null>(null);
+  const { records: crew } = useContentRecords('crew');
+  const { records: tiers } = useContentRecords('teamTiers');
+  const { records: divisions } = useContentRecords('divisions');
+
+  const crewById = new Map(crew.map((member) => [member.id, member]));
+  const sortedTiers = [...tiers].sort((a, b) => a.order - b.order);
 
   return (
     <section className="team-leads" aria-labelledby="team-leads-heading">
@@ -67,75 +72,40 @@ export function LeadershipRoster() {
         </motion.p>
       </div>
 
-      {/* ── Tier 1: Faculty Advisory Board ── */}
-      <div className="team-tier">
-        <div className="team-tier-label">
-          <span className="team-tier-badge">TIER-1</span>
-          <span>FACULTY ADVISORY BOARD</span>
-        </div>
-        <motion.div
-          className="team-tier-grid team-tier-grid--advisors"
-          variants={stagger}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-40px' }}
-        >
-          {teamData.advisors.map((adv) => (
-            <MemberCard
-              key={adv.id}
-              member={adv}
-              variant="hero"
-              onInspect={setInspected}
-            />
-          ))}
-        </motion.div>
-      </div>
+      {sortedTiers.map((tier) => {
+        const members = tier.memberIds
+          .map((id) => crewById.get(id))
+          .filter((member): member is CrewMember => Boolean(member));
+        if (members.length === 0) return null;
 
-      {/* ── Tier 2: Command Nodes ── */}
-      <div className="team-tier">
-        <div className="team-tier-label">
-          <span className="team-tier-badge team-tier-badge--cmd">TIER-2</span>
-          <span>COMMAND NODES</span>
-        </div>
-        <motion.div
-          className="team-tier-grid team-tier-grid--command"
-          variants={stagger}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-40px' }}
-        >
-          <MemberCard member={teamData.teamLeader}   variant="hero" onInspect={setInspected} />
-          <MemberCard member={teamData.coTeamLeader}  variant="hero" onInspect={setInspected} />
-          <MemberCard member={teamData.seniorLead}    variant="hero" onInspect={setInspected} />
-        </motion.div>
-      </div>
-
-      {/* ── Tier 3: Subsystem Leads ── */}
-      <div className="team-tier">
-        <div className="team-tier-label">
-          <span className="team-tier-badge team-tier-badge--sys">TIER-3</span>
-          <span>SUBSYSTEM LEADS</span>
-        </div>
-        <motion.div
-          className="team-tier-grid team-tier-grid--leads"
-          variants={stagger}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-40px' }}
-        >
-          {teamData.subTeamLeads.map((lead) => (
-            <MemberCard
-              key={lead.id}
-              member={lead}
-              variant="default"
-              onInspect={setInspected}
-            />
-          ))}
-        </motion.div>
-      </div>
+        return (
+          <div className="team-tier" key={tier.id}>
+            <div className="team-tier-label">
+              <span className="team-tier-badge">{tier.badge}</span>
+              <span>{tier.label}</span>
+            </div>
+            <motion.div
+              className={`team-tier-grid team-tier-grid--${tier.cardVariant ?? 'default'}`}
+              variants={stagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-40px' }}
+            >
+              {members.map((member) => (
+                <MemberCard
+                  key={member.id}
+                  member={member}
+                  variant={tier.cardVariant ?? 'default'}
+                  onInspect={setInspected}
+                />
+              ))}
+            </motion.div>
+          </div>
+        );
+      })}
 
       {/* Inspect drawer */}
-      <TeamInspectDrawer member={inspected} onClose={() => setInspected(null)} />
+      <TeamInspectDrawer member={inspected} onClose={() => setInspected(null)} divisions={divisions} />
     </section>
   );
 }

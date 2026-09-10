@@ -43,6 +43,9 @@ GET /v1/events
 GET /v1/crew
 GET /v1/partners
 GET /v1/sections
+GET /v1/divisions
+GET /v1/teamTiers
+GET /v1/certificates
 GET /v1/media
 
 GET /v1/{resource}/{id}
@@ -172,6 +175,51 @@ The home page shows `rank <= 3` only. `data/content/crew.json` is **generated**
 by `scripts/build-media-library.mjs` from the roster in
 `scripts/media-sources.mjs`; edit it there, not by hand.
 
+`focus` (string array) and `socials` (`{ linkedin?, github?, email?, website? }`)
+are optional and not currently populated — a backend may add them per member
+and the team pages will render them.
+
+### `divisions` — engineering sub-teams on /team/architecture and /team/core
+
+```jsonc
+{
+  "id": "mechanical",
+  "sysCode": "SYS-01",
+  "name": "Mechanical Team",
+  "description": "…",
+  "highlights": ["Structural design and fabrication", "…"],
+  "specs": [{ "label": "…", "value": "…" }],   // optional
+  "color": "#3B82F6",                          // optional accent, hex
+  "iconHint": "gear",                          // optional: gear | zap | code | flask | briefcase | camera | signal
+  "leadId": "siam-ibne-sarwar",                // crew id, or null if unled
+  "memberIds": ["riad-hossen", "…"]            // crew ids, excluding the lead
+}
+```
+
+Membership is an explicit id list against `crew`, not a match on
+`CrewMember.unit` — renaming a division, moving someone between divisions, or
+adding a brand new division never requires touching the (generated) crew
+roster. `leadId`/`memberIds` pointing at an id `crew` does not have are
+silently dropped rather than breaking the page.
+
+### `teamTiers` — command structure on /team/leadership
+
+```jsonc
+{
+  "id": "advisory",
+  "order": 1,                    // lower sorts first
+  "badge": "TIER-1",
+  "label": "Faculty Advisory Board",
+  "description": "…",            // optional
+  "cardVariant": "hero",         // optional: hero | default | compact
+  "memberIds": ["abid-hossain"]
+}
+```
+
+The tier list is entirely data — a backend can rename a tier, reorder tiers,
+or add a new one (an "Alumni Board" tier, say) and the leadership page renders
+it with no frontend change. A tier with no resolvable members renders nothing.
+
 ### `sections` — editorial copy for the home page
 
 Without this resource, every photograph on the page would be editable but the
@@ -212,6 +260,34 @@ rather than silent. A section whose record is missing renders nothing at all.
 The current ids are `surface-record`, `transmission-film`, `outreach-log`,
 `crew-teaser` and `partner-marks`. Adding a record does **not** create a
 section — each one is a component; this resource only supplies its words.
+
+### `certificates` — the registry behind /certificates
+
+```jsonc
+{
+  "id": "UMRT-CERT-2025-001",
+  "recipient": { "name": "Arafat Rahman", "aliases": [] },   // aliases: alternate spellings, searchable
+  "title": "Certificate of Contribution",
+  "program": "University Rover Challenge 2025",
+  "role": "Autonomous Navigation Subsystem",
+  "issuedOn": "2025-06-30",                                  // ISO date
+  "status": "valid",                                          // valid | revoked
+  "description": "…"
+}
+```
+
+The verifier fetches every page via `listAllContent` and builds its own ID/name
+lookup index client-side (`lib/certificateRegistry.ts`) — search is exact-match
+against a certificate's `id` or against `recipient.name`/`recipient.aliases`,
+case- and whitespace-normalized. A record that fails structural validation
+(bad date, missing fields, duplicate id) is dropped from the index with a
+console error rather than breaking the page for every other certificate — the
+one resource here where that matters most, since the whole page exists to
+assert a record is trustworthy.
+
+The issuing org's name/location are UI copy (`ISSUER` in
+`CertificateValidator.tsx`), not part of this resource — they describe UMRT
+itself, not a certificate.
 
 ### `partners`
 
