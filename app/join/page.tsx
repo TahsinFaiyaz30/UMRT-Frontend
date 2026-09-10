@@ -20,8 +20,8 @@ export default function JoinPage() {
             <p className="join-description">
               Are you passionate about pushing the boundaries of space robotics, engineering, and innovation? 
               UMRT is the place for you! Join a dynamic and diverse team of students dedicated to designing, 
-              building, and programming cutting-edge rovers. Whether you're an engineer, a programmer, a designer, 
-              or someone eager to learn and contribute, you'll find a supportive environment where your skills 
+              building, and programming cutting-edge rovers. Whether you&apos;re an engineer, a programmer, a designer,
+              or someone eager to learn and contribute, you&apos;ll find a supportive environment where your skills
               and creativity can thrive. Collaborate on exciting projects, compete in international competitions, 
               and gain hands-on experience that will propel your career. Become a part of the UIU Mars Rover Team 
               and help us shape the future of robotics today!
