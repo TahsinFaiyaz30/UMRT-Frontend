@@ -169,6 +169,32 @@ export interface CrewMember {
   card: MediaRef | null;
 }
 
+/**
+ * Editorial copy for one page section.
+ *
+ * Without this, headings, kickers and standfirsts would be the one part of
+ * the site a backend could not reach — every photograph editable but the
+ * sentence above it frozen in JSX. Values may contain `{token}` placeholders;
+ * the component supplies live figures (record counts, runtimes) for them, so
+ * copy stays editable without hard-coding numbers that would go stale.
+ */
+export interface SectionRecord {
+  id: string;
+  /** Two-digit chapter number, continuing the mission's own numbering. */
+  index: string;
+  kicker: string;
+  /** Stroke-only word set behind the headline. */
+  echo: string;
+  /** Three-part headline: solid, outlined, then the solar-orange close. */
+  title: { lead: string; outline: string; accent: string };
+  lede: string;
+  specs: { label: string; value: string }[];
+  /** Optional second spec table, used by the film panel's footer. */
+  footSpecs?: { label: string; value: string }[];
+  /** Optional line rendered beneath the section body. */
+  footnote?: string;
+}
+
 export interface PartnerRecord {
   id: string;
   name: string;
@@ -179,12 +205,19 @@ export interface PartnerRecord {
 }
 
 /** Resource names accepted by the client. */
-export type ResourceName = 'achievements' | 'events' | 'crew' | 'partners' | 'media';
+export type ResourceName =
+  | 'achievements'
+  | 'events'
+  | 'crew'
+  | 'partners'
+  | 'sections'
+  | 'media';
 
 export interface ResourceMap {
   achievements: AchievementRecord;
   events: EventRecord;
   crew: CrewMember;
   partners: PartnerRecord;
+  sections: SectionRecord;
   media: MediaAsset;
 }

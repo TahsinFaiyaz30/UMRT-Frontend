@@ -42,6 +42,7 @@ GET /v1/achievements
 GET /v1/events
 GET /v1/crew
 GET /v1/partners
+GET /v1/sections
 GET /v1/media
 
 GET /v1/{resource}/{id}
@@ -171,6 +172,47 @@ The home page shows `rank <= 3` only. `data/content/crew.json` is **generated**
 by `scripts/build-media-library.mjs` from the roster in
 `scripts/media-sources.mjs`; edit it there, not by hand.
 
+### `sections` — editorial copy for the home page
+
+Without this resource, every photograph on the page would be editable but the
+sentence above it frozen in JSX. One record per section:
+
+```jsonc
+{
+  "id": "surface-record",
+  "index": "08",                                  // chapter number in the eyebrow
+  "kicker": "Surface record / field photography",
+  "echo": "FIELD",                                // stroke-only word behind the headline
+  "title": {                                      // three-part, matching the hero
+    "lead": "THE MACHINE,",                       //   solid
+    "outline": "ON REAL",                         //   outlined
+    "accent": "GROUND."                           //   solar orange
+  },
+  "lede": "Every frame here is the actual rover — …",
+  "specs": [{ "label": "Frames logged", "value": "{count}" }],
+  "footSpecs": [ /* optional second table, used by the film panel */ ],
+  "footnote": "Full {headcount}-person roster in preparation"
+}
+```
+
+**`{token}` placeholders** are substituted at render time with live figures, so
+copy stays editable without hard-coding numbers that would go stale. Tokens are
+supplied per section by its component:
+
+| Section | Tokens |
+| --- | --- |
+| `surface-record` | `{count}` |
+| `transmission-film` | `{filmTitle}` `{runtime}` `{renditions}` `{payload}` `{maxHeight}` |
+| `outreach-log` | `{count}` `{frames}` |
+| `crew-teaser` | `{headcount}` `{units}` `{leads}` |
+
+An unknown token is left in place rather than blanked, so a typo is visible
+rather than silent. A section whose record is missing renders nothing at all.
+
+The current ids are `surface-record`, `transmission-film`, `outreach-log`,
+`crew-teaser` and `partner-marks`. Adding a record does **not** create a
+section — each one is a component; this resource only supplies its words.
+
 ### `partners`
 
 ```jsonc
@@ -241,8 +283,7 @@ Each asset:
   "tags": ["urc", "competition", "crew", "hero"],
   "blurDataUrl": "data:image/webp;base64,…",   // ~20px placeholder
   "src": "/media/urc/urc26-team-banner-1600.webp",
-  "srcSet": "/media/urc/urc26-team-banner-480.webp 480w, …",
-  "variants": [{ "width": 480, "height": 360, "url": "…", "bytes": 21044 }],
+  "srcSet": "/media/urc/urc26-team-banner-480.webp 480w, …",  // ascending by width
   "sources": [ /* video only: [{ height, url, type, bytes }] */ ],
   "durationSeconds": 75.31            // video only
 }
@@ -250,6 +291,14 @@ Each asset:
 
 If the backend serves media, keep `blurDataUrl`, `aspectRatio` and `srcSet` —
 they are what stop the page shifting as photography streams in.
+
+The manifest is imported straight into the client bundle, so every field it
+carries is downloaded by every visitor. Two things follow. A `variants` array
+is **not** emitted: it duplicated the ladder `srcSet` already encodes, for all
+117 assets, and nothing read it — `pickVariant` parses `srcSet` instead. The
+type still accepts `variants`, so a server may send it. And `srcSet` must be
+ordered ascending by width, because `pickVariant` relies on that rather than
+sorting at runtime.
 
 Running the script without `RESOURCES/` present leaves the committed manifest
 untouched, so a checkout that has only the derivatives still builds.

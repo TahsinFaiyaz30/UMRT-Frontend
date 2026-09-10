@@ -133,6 +133,12 @@ export function useContentCollection<R extends ResourceName>(
   const abortRef = useRef<AbortController | null>(null);
   const generationRef = useRef(generation);
 
+  // Identity of the query this hook is currently showing. Seeded with the key
+  // the initial `useState` above already resolved, so the effect below can
+  // tell a genuine change from its own first run.
+  const appliedKey = `${resource}|${paramsKey}|${limit}|${generation}|${enabled}`;
+  const appliedKeyRef = useRef(appliedKey);
+
   // A change of resource, filters, or generation invalidates everything that
   // is in flight and resets the accumulated pages.
   useEffect(() => {
@@ -141,19 +147,26 @@ export function useContentCollection<R extends ResourceName>(
     abortRef.current = null;
     loadingRef.current = false;
 
-    const nextSeed = enabled ? seedCollection(resource, query) : null;
-    cursorRef.current = nextSeed?.nextCursor ?? null;
-    exhaustedRef.current = nextSeed ? !nextSeed.state.hasMore : false;
-    setState(
-      nextSeed?.state
-        ?? { records: [], total: null, hasMore: true, status: enabled ? 'loading' : 'ready', error: null },
-    );
+    // On mount the state, cursor and exhausted flag were all initialised from
+    // the same seed this would recompute. Repeating it costs a second slice
+    // and hydrate of the dataset and an immediate extra render, for a result
+    // identical to what is already on screen.
+    if (appliedKeyRef.current !== appliedKey) {
+      appliedKeyRef.current = appliedKey;
+      const nextSeed = enabled ? seedCollection(resource, query) : null;
+      cursorRef.current = nextSeed?.nextCursor ?? null;
+      exhaustedRef.current = nextSeed ? !nextSeed.state.hasMore : false;
+      setState(
+        nextSeed?.state
+          ?? { records: [], total: null, hasMore: true, status: enabled ? 'loading' : 'ready', error: null },
+      );
+    }
 
     return () => {
       abortRef.current?.abort();
       abortRef.current = null;
     };
-  }, [enabled, generation, query, resource]);
+  }, [appliedKey, enabled, generation, limit, paramsKey, query, resource]);
 
   const loadMore = useCallback(() => {
     if (!enabled || loadingRef.current || exhaustedRef.current) return;
