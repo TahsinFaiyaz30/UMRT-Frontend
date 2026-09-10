@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "revision": "sec-2026-09-02",
+  "resource": "sections",
+  "records": [
+    {
+      "id": "surface-record",
+      "index": "08",
+      "kicker": "Surface record / field photography",
+      "echo": "FIELD",
+      "title": {
+        "lead": "THE MACHINE,",
+        "outline": "ON REAL",
+        "accent": "GROUND."
+      },
+      "lede": "Every frame here is the actual rover — in the workshop at four in the morning, on excavated terrain outside Dhaka, and on competition soil twelve thousand kilometres from where it was built.",
+      "specs": [
+        { "label": "Frames logged", "value": "{count}" },
+        { "label": "Capture", "value": "Field / studio" },
+        { "label": "Classification", "value": "Unrestricted" }
+      ]
+    },
+    {
+      "id": "transmission-film",
+      "index": "09",
+      "kicker": "Transmission / motion record",
+      "echo": "SIGNAL",
+      "title": {
+        "lead": "WATCH",
+        "outline": "IT",
+        "accent": "MOVE."
+      },
+      "lede": "{filmTitle}. Cut from workshop footage, night tests, and the field season — the shortest honest answer to what a student rover programme actually looks like.",
+      "specs": [
+        { "label": "Runtime", "value": "{runtime}" },
+        { "label": "Renditions", "value": "{renditions}" },
+        { "label": "Payload", "value": "{payload}" }
+      ],
+      "footSpecs": [
+        { "label": "Channel", "value": "UMRT / Dhaka" },
+        { "label": "Format", "value": "MP4 · {maxHeight}p" }
+      ]
+    },
+    {
+      "id": "outreach-log",
+      "index": "10",
+      "kicker": "Deployment log / where it has been",
+      "echo": "DEPLOY",
+      "title": {
+        "lead": "A ROVER IS ONLY",
+        "outline": "REAL",
+        "accent": "IN PUBLIC."
+      },
+      "lede": "Competition fields, exhibition halls, school courtyards. Each entry is a weekend the platform left the lab and had to survive strangers, questions, and its own reliability budget.",
+      "specs": [
+        { "label": "Deployments", "value": "{count}" },
+        { "label": "Frames archived", "value": "{frames}" },
+        { "label": "Window", "value": "2026" }
+      ]
+    },
+    {
+      "id": "crew-teaser",
+      "index": "11",
+      "kicker": "Crew / command structure",
+      "echo": "CREW",
+      "title": {
+        "lead": "PEOPLE",
+        "outline": "BUILD",
+        "accent": "MACHINES."
+      },
+      "lede": "{headcount} students across mechanical, electrical, autonomous, aerial, science, media and logistics. These are the people the rest of the roster reports into.",
+      "specs": [
+        { "label": "Roster", "value": "{headcount}" },
+        { "label": "Sub-teams", "value": "{units}" },
+        { "label": "Shown here", "value": "{leads} leads" }
+      ],
+      "footnote": "Full {headcount}-person roster in preparation"
+    },
+    {
+      "id": "partner-marks",
+      "index": "12",
+      "kicker": "Support network",
+      "echo": "BACKING",
+      "title": { "lead": "BACKED", "outline": "BY", "accent": "" },
+      "lede": "",
+      "specs": []
+    }
+  ]
+}

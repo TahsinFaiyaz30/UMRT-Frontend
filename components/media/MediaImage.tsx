@@ -1,18 +1,25 @@
 'use client';
 
-import { useCallback, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { MediaAsset } from '@/lib/content';
 import styles from './MediaImage.module.css';
 
 /**
  * Renders one asset from the generated media library.
  *
- * The pipeline already emitted the width ladder and an inline blur, so this
- * is deliberately a plain <img>: `next/image` would re-derive both at request
- * time and is a no-op under the project's static export. What it does add is
- * the two things a hand-rolled <img> usually gets wrong — an intrinsic aspect
- * ratio so the layout never shifts, and a blur that is replaced only once the
- * real bitmap has decoded.
+ * The pipeline already emitted the width ladder and an inline blur, so this is
+ * deliberately a plain <img>: `next/image` would re-derive both at request time
+ * and is a no-op under the project's static export. What it adds is the two
+ * things a hand-rolled <img> usually gets wrong.
+ *
+ * First, an intrinsic aspect ratio, so the box is reserved before the bytes
+ * arrive and a page of lazy photography never shifts under the reader.
+ *
+ * Second, the swap waits on `decode()` rather than `load`. `load` only means
+ * the bytes are in — the browser still has to turn a WebP into a bitmap, and
+ * doing that during the same frame it becomes visible is what produces the
+ * flash-then-settle you get from a naive fade-in. Decoding first means the
+ * frame that reveals the photograph is the frame that can already paint it.
  */
 export function MediaImage({
   asset,
@@ -31,13 +38,32 @@ export function MediaImage({
   alt?: string;
 }) {
   const [loaded, setLoaded] = useState(false);
+  const mountedRef = useRef(true);
 
-  // A cached image can finish decoding before React attaches onLoad. Catching
-  // that on the ref keeps the blur from staying up forever; the callback is
-  // memoised so an inline function does not detach the ref every render.
-  const captureNode = useCallback((node: HTMLImageElement | null) => {
-    if (node?.complete && node.naturalWidth > 0) setLoaded(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
   }, []);
+
+  const reveal = useCallback((node: HTMLImageElement) => {
+    const settle = () => {
+      if (mountedRef.current) setLoaded(true);
+    };
+    // A browser without decode(), or a decode that rejects because the element
+    // was detached mid-flight, must still reveal rather than hold the blur.
+    if (typeof node.decode !== 'function') {
+      settle();
+      return;
+    }
+    node.decode().then(settle, settle);
+  }, []);
+
+  // A cached image can finish before React attaches onLoad, so the ref has to
+  // catch that case too. Memoised so an inline callback does not detach and
+  // reattach the ref on every render.
+  const captureNode = useCallback((node: HTMLImageElement | null) => {
+    if (node?.complete && node.naturalWidth > 0) reveal(node);
+  }, [reveal]);
 
   return (
     <div
@@ -57,11 +83,10 @@ export function MediaImage({
         width={asset.width}
         height={asset.height}
         loading={priority ? 'eager' : 'lazy'}
-        // `priority` assets are above the fold; everything else waits its turn.
         fetchPriority={priority ? 'high' : 'auto'}
         decoding="async"
         draggable={false}
-        onLoad={() => setLoaded(true)}
+        onLoad={(event) => reveal(event.currentTarget)}
         ref={captureNode}
       />
     </div>

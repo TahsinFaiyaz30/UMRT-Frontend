@@ -12,6 +12,7 @@ import { DismantleRig } from './DismantleRig';
 import { SoilInteraction } from './SoilInteraction';
 import { CelestialBackdrop } from './CelestialBackdrop';
 import {
+  ambientDaylightFactor,
   solarDaylightFactorFromPosition,
   solarLightingFromSettings,
   useSolarCalibrationSettings,
@@ -218,13 +219,17 @@ export const HeroScene = forwardRef<
     if (appliedLightingRevisionRef.current === liveSunRevisionRef.current) return;
     appliedLightingRevisionRef.current = liveSunRevisionRef.current;
     const daylight = liveSunDaylightRef.current;
+    // The direct sun is allowed to reach zero at night; everything ambient
+    // holds a floor so the machine stays readable through the dark half of
+    // the sol instead of the whole hero going black.
+    const ambient = ambientDaylightFactor(daylight);
     if (ambientLightRef.current) {
-      ambientLightRef.current.intensity = solar.intensity * 0.07 * (0.18 + daylight * 0.82);
+      ambientLightRef.current.intensity = solar.intensity * 0.07 * ambient;
     }
     if (hemisphereLightRef.current) {
-      hemisphereLightRef.current.intensity = solar.intensity * 0.2 * (0.14 + daylight * 0.86);
+      hemisphereLightRef.current.intensity = solar.intensity * 0.2 * ambient;
     }
-    scene.environmentIntensity = 0.2 + daylight * 0.8;
+    scene.environmentIntensity = 0.45 + daylight * 0.55;
   });
 
   // Rebuilding a cube-map environment for every pointer sample from the solar

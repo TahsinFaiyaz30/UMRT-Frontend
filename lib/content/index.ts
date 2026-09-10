@@ -46,5 +46,6 @@ export type {
   PartnerRecord,
   ResourceMap,
   ResourceName,
+  SectionRecord,
   SingleResponse,
 } from './types';

@@ -37,6 +37,12 @@ const CAMERA_PATH: CameraKeyframe[] = [
 // Accumulate sub-texel movement and refresh only once it can affect a shadow.
 const SHADOW_CASTER_MOVEMENT_EPSILON = 0.006;
 const SHADOW_SETTLE_MS = 120;
+/**
+ * Longest the shadow map may lag the rover during an uninterrupted scroll.
+ * Roughly seven refreshes a second — enough that the shadow stays attached to
+ * the machine, cheap enough that it never becomes the frame budget.
+ */
+const SHADOW_MAX_STALE_MS = 140;
 
 function easeInOut(value: number) {
   const x = clamp(value);
@@ -83,6 +89,7 @@ export function ScrollDirector({
   const shadowedModelOffset = useRef(Number.NaN);
   const shadowMovementAt = useRef(Number.NEGATIVE_INFINITY);
   const shadowUpdatePending = useRef(false);
+  const shadowRefreshedAt = useRef(Number.NEGATIVE_INFINITY);
 
   const positionRig = (progress: number, now: number) => {
     const rig = rigRef.current;
@@ -108,11 +115,19 @@ export function ScrollDirector({
     // for that motion to settle, then refresh once; repeatedly redrawing the
     // entire shadow map while the camera is moving creates visible frame
     // spikes. The initial position remains immediate.
-    if (
-      shadowUpdatePending.current
-      && (firstPosition || now - shadowMovementAt.current >= SHADOW_SETTLE_MS)
-    ) {
+    //
+    // Settling alone is not enough, though: `shadowMovementAt` is pushed
+    // forward on every frame the rover moves, so a continuous scroll never
+    // reaches the settle threshold and the map stays frozen for the whole
+    // gesture. The rover then slides out from under its own shadow, which
+    // reads as its brightness popping — worst of all at dawn and dusk, when
+    // the shadows are long and the surrounding scene is dark. Cap how stale
+    // the map may get so long scrolls still refresh, just at a bounded rate.
+    const settled = firstPosition || now - shadowMovementAt.current >= SHADOW_SETTLE_MS;
+    const stale = now - shadowRefreshedAt.current >= SHADOW_MAX_STALE_MS;
+    if (shadowUpdatePending.current && (settled || stale)) {
       shadowUpdatePending.current = false;
+      shadowRefreshedAt.current = now;
       gl.shadowMap.needsUpdate = true;
     }
   };
