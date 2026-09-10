@@ -29,6 +29,36 @@ const nextConfig = {
                 { key: 'Vary', value: 'Accept-Encoding' },
               ],
             },
+            {
+              // Derivatives from scripts/build-media-library.mjs. Every file
+              // name already encodes its width or rendition, and the pipeline
+              // writes a new name rather than overwriting, so these are
+              // genuinely immutable — a revisit should never revalidate
+              // seventy-odd megabytes of photography and film.
+              source: '/media/:path*',
+              headers: [
+                { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+                { key: 'Timing-Allow-Origin', value: '*' },
+              ],
+            },
+            {
+              // Range requests are what let the browser start the film before
+              // it has the whole file, and seek without refetching it.
+              source: '/media/film/:path*',
+              headers: [{ key: 'Accept-Ranges', value: 'bytes' }],
+            },
+            {
+              source: '/terrain/:path*',
+              headers: [
+                { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+              ],
+            },
+            {
+              source: '/textures/:path*',
+              headers: [
+                { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+              ],
+            },
           ];
         },
       }),

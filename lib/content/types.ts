@@ -87,8 +87,14 @@ export interface MediaAsset {
   blurDataUrl: string;
   /** Largest still (or the poster frame, for video). */
   src: string;
+  /** Ascending by width. `pickVariant` parses the ladder out of this. */
   srcSet: string;
-  variants: MediaVariant[];
+  /**
+   * Optional. The generated manifest does not ship this — it duplicated what
+   * `srcSet` already encodes, for every asset, in the client bundle. A backend
+   * may still send it; nothing in the app depends on it.
+   */
+  variants?: MediaVariant[];
   /** Present only when `kind === 'video'`. */
   sources?: MediaVideoSource[];
   durationSeconds?: number | null;

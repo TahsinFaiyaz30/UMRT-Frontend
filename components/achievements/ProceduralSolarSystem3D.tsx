@@ -59,6 +59,9 @@ type PlanetLayout = {
 
 type DisposableResource = THREE.BufferGeometry | THREE.Material;
 
+/** Mutable position tuple, reused across frames rather than reallocated. */
+type Vec3 = [number, number, number];
+
 const DEG = Math.PI / 180;
 const TAU = Math.PI * 2;
 const SYSTEM_Z = -1.2;
@@ -897,7 +900,13 @@ function localOrbitPosition(
   elapsed: number,
   /** Wrapped row height for this frame; defaults to the unwrapped row. */
   rowY: number = layout.rowY,
-): [number, number, number] {
+  /**
+   * Scratch tuple written in place. Called once per body per frame, so
+   * returning a fresh array here produced roughly five hundred short-lived
+   * allocations a second — a steady sawtooth in the heap profile for nothing.
+   */
+  out: Vec3 = [0, 0, 0],
+): Vec3 {
   const meanAnomaly = definition.initialAnomaly
     + elapsed * definition.orbitSpeed * LOCAL_ORBIT_SPEED_SCALE;
   const eccentricAnomaly = solveEccentricAnomaly(meanAnomaly, definition.eccentricity);
@@ -911,25 +920,27 @@ function localOrbitPosition(
     + elapsed * FLOW_ANGULAR_SPEED
     + layout.flowPhase;
 
-  return [
-    Math.cos(flowAngle) * layout.flowRadius
-      + orbitX * cosLongitude
-      - orbitZ * sinLongitude,
-    rowY,
-    SYSTEM_Z
-      + Math.sin(flowAngle) * layout.flowDepthRadius
-      + orbitX * sinLongitude
-      + orbitZ * cosLongitude,
-  ];
+  out[0] = Math.cos(flowAngle) * layout.flowRadius
+    + orbitX * cosLongitude
+    - orbitZ * sinLongitude;
+  out[1] = rowY;
+  out[2] = SYSTEM_Z
+    + Math.sin(flowAngle) * layout.flowDepthRadius
+    + orbitX * sinLongitude
+    + orbitZ * cosLongitude;
+  return out;
 }
 
-function sunFlowPosition(sunY: number, elapsed: number): [number, number, number] {
+function sunFlowPosition(
+  sunY: number,
+  elapsed: number,
+  out: Vec3 = [0, 0, 0],
+): Vec3 {
   const flowAngle = FLOW_INITIAL_PHASE + elapsed * FLOW_ANGULAR_SPEED;
-  return [
-    Math.cos(flowAngle) * SUN_FLOW_RADIUS,
-    sunY,
-    SYSTEM_Z + Math.sin(flowAngle) * SUN_FLOW_DEPTH_RADIUS,
-  ];
+  out[0] = Math.cos(flowAngle) * SUN_FLOW_RADIUS;
+  out[1] = sunY;
+  out[2] = SYSTEM_Z + Math.sin(flowAngle) * SUN_FLOW_DEPTH_RADIUS;
+  return out;
 }
 
 function RingSystem({
@@ -1071,6 +1082,7 @@ function ProceduralSolarSystem3D({
   const worldPlanetPosition = useMemo(() => new THREE.Vector3(), []);
   const worldPlanetScale = useMemo(() => new THREE.Vector3(), []);
   const flowWorldOffset = useMemo(() => new THREE.Vector3(), []);
+  const positionScratch = useMemo<Vec3>(() => [0, 0, 0], []);
   const inverseParentQuaternion = useMemo(() => new THREE.Quaternion(), []);
   const baseSunRadius = quality === 'low' ? 1.72 : quality === 'medium' ? 1.94 : 2.12;
 
@@ -1293,7 +1305,8 @@ function ProceduralSolarSystem3D({
     // reader leaves it behind, and `starField` hands illumination over to a
     // constant distant starlight as it recedes.
     if (sunRef.current) {
-      sunRef.current.position.set(...sunFlowPosition(SUN_ENTRY_OFFSET, elapsed));
+      sunFlowPosition(SUN_ENTRY_OFFSET, elapsed, positionScratch);
+      sunRef.current.position.set(positionScratch[0], positionScratch[1], positionScratch[2]);
     }
 
     PLANETS.forEach((definition, index) => {
@@ -1303,7 +1316,8 @@ function ProceduralSolarSystem3D({
       if (group) {
         const layout = layouts[index];
         const rowY = nearestCycleImage(layout.rowY, focusY, cycleHeight);
-        group.position.set(...localOrbitPosition(definition, layout, elapsed, rowY));
+        localOrbitPosition(definition, layout, elapsed, rowY, positionScratch);
+        group.position.set(positionScratch[0], positionScratch[1], positionScratch[2]);
       }
 
       if (shouldAnimate) {

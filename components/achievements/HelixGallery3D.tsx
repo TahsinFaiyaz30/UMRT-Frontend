@@ -119,10 +119,22 @@ function cssNumber(value: number) {
   return Math.abs(value) < 1e-10 ? 0 : value;
 }
 
+/**
+ * Builds a `matrix3d(...)` string without allocating.
+ *
+ * The obvious `elements.map(...).join(',')` costs a sixteen-element array plus
+ * an intermediate string per call. This runs for the camera and every visible
+ * card on every frame of a scroll — around seven hundred throwaway arrays a
+ * second — so the concatenation is done by hand instead.
+ */
 function cssMatrix3d(matrix: THREE.Matrix4, multipliers: number[], prefix = '') {
-  return `${prefix}matrix3d(${matrix.elements
-    .map((value, index) => cssNumber(value * multipliers[index]))
-    .join(',')})`;
+  const elements = matrix.elements;
+  let body = '';
+  for (let index = 0; index < 16; index += 1) {
+    if (index > 0) body += ',';
+    body += cssNumber(elements[index] * multipliers[index]);
+  }
+  return `${prefix}matrix3d(${body})`;
 }
 
 function smootherStep(value: number) {
@@ -447,7 +459,19 @@ function WebGLContextMonitor({ onLost }: { onLost: (lost: boolean) => void }) {
 /* ================================================================== *
  *  DOM card face                                                      *
  * ================================================================== */
-function CardMedia({ asset }: { asset: MediaAsset }) {
+/**
+ * Records whose photograph is fetched eagerly.
+ *
+ * A card sits at `display: none` until the projection loop has placed it, and
+ * a lazy image inside a hidden element does not load — so the opening cards
+ * would only start fetching at the moment the curtain lifts and the reader is
+ * already looking at them. Loading the first couple up front means the archive
+ * is complete the instant it is revealed; everything deeper stays lazy and
+ * arrives well ahead of the reader, five records out.
+ */
+const EAGER_CARD_COUNT = 2;
+
+function CardMedia({ asset, priority }: { asset: MediaAsset; priority: boolean }) {
   return (
     <div
       className={styles.cardMedia}
@@ -463,11 +487,15 @@ function CardMedia({ asset }: { asset: MediaAsset }) {
       <img
         src={asset.src}
         srcSet={asset.srcSet}
-        sizes="720px"
+        // The card is 720 CSS px before the 3D transform scales it; on screen
+        // a focused card covers roughly half the viewport. Describing that
+        // honestly stops small screens pulling the 1600w variant.
+        sizes="(max-width: 700px) 82vw, 46vw"
         alt=""
         width={asset.width}
         height={asset.height}
-        loading="lazy"
+        loading={priority ? 'eager' : 'lazy'}
+        fetchPriority={priority ? 'high' : 'low'}
         decoding="async"
         draggable={false}
       />
@@ -489,7 +517,7 @@ const ArchiveCardFace = memo(function ArchiveCardFace({
 
   return (
     <div className={styles.cardFrame} data-hovered={hovered ? 'true' : undefined}>
-      {media ? <CardMedia asset={media} /> : null}
+      {media ? <CardMedia asset={media} priority={index < EAGER_CARD_COUNT} /> : null}
       <div className={styles.cardGrid} aria-hidden="true" />
       <div className={styles.cardHead}>
         <span>ARC / {String(index + 1).padStart(2, '0')}</span>
