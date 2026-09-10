@@ -5,31 +5,26 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 const links = [
-  { href: '/#zoom_in', label: 'Machine' },
-  { href: '/#part_focus_1', label: 'Systems' },
-  { href: '/#final_recenter', label: 'Teardown' },
+  { href: '/team/architecture', label: 'Team' },
   { href: '/achievements', label: 'Achievements' },
   { href: '/certificates', label: 'Certificates' },
 ];
 
-const teamDropdownLinks = [
+const teamLinks = [
   {
-    href: '/team#about',
-    label: 'About Divisions',
-    desc: 'High-level system breakdown of each engineering discipline.',
-    code: 'VIEW_A',
+    href: '/team/architecture',
+    label: 'System architecture',
+    desc: 'Divisions and subsystem breakdown.',
   },
   {
-    href: '/team#leads',
-    label: 'Leadership Deck',
-    desc: 'Advisors, command leads, and subsystem lead roster.',
-    code: 'VIEW_B',
+    href: '/team/leadership',
+    label: 'Leadership deck',
+    desc: 'Advisors and command leads.',
   },
   {
-    href: '/team#core',
-    label: 'Core Team Tree',
-    desc: 'Full interactive hierarchical org tree with scroll interactions.',
-    code: 'VIEW_C',
+    href: '/team/core',
+    label: 'Core team tree',
+    desc: 'Full subsystem roster and specialists.',
   },
 ];
 
@@ -74,67 +69,50 @@ export function PremiumNavbar() {
         </Link>
 
         <nav className="umrt-nav-links" aria-label="Primary navigation">
-
-          <Link prefetch={false} href="/join">
-            Join Us
-          </Link>
-          
-          {/* Team link with dropdown trigger - Wrapped in a container for :hover state! */}
-          <div className="umrt-team-nav-item">
-            <span className="umrt-team-trigger" role="button" tabIndex={0} aria-haspopup="true">
-              Team
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="umrt-team-chevron" aria-hidden="true">
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </span>
-            
-            {/* Team hover dropdown is now a sibling inside the hovered container */}
-            <div className="umrt-team-dropdown" role="menu" aria-label="Team navigation">
-              <div className="umrt-team-dropdown-inner">
-                <div className="umrt-team-dropdown-head" aria-hidden="true">
-                  <span>TEAM // NAVIGATION</span>
-                  <div className="umrt-team-dropdown-glow" />
-                </div>
-                
-                <Link prefetch={false} href="/team/architecture" className="umrt-team-dropdown-link" role="menuitem">
-                  <code className="umrt-team-dropdown-code">01</code>
-                  <div>
-                    <strong>System Architecture</strong>
-                    <small>System teardown & divisions</small>
-                  </div>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="umrt-team-dropdown-arrow" aria-hidden="true">
-                    <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
-                  </svg>
-                </Link>
-
-                <Link prefetch={false} href="/team/leadership" className="umrt-team-dropdown-link" role="menuitem">
-                  <code className="umrt-team-dropdown-code">02</code>
-                  <div>
-                    <strong>Leadership Deck</strong>
-                    <small>Advisors & Command Nodes</small>
-                  </div>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="umrt-team-dropdown-arrow" aria-hidden="true">
-                    <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
-                  </svg>
-                </Link>
-
-                <Link prefetch={false} href="/team/core" className="umrt-team-dropdown-link" role="menuitem">
-                  <code className="umrt-team-dropdown-code">03</code>
-                  <div>
-                    <strong>Core Team</strong>
-                    <small>Subsystem engineers & specialists</small>
-                  </div>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="umrt-team-dropdown-arrow" aria-hidden="true">
-                    <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
-                  </svg>
-                </Link>
-
-              </div>
-            </div>
-          </div>
+          {links.map((link) => (
+            <Link prefetch={false} key={link.href} href={link.href}>{link.label}</Link>
+          ))}
         </nav>
 
+        <div className="umrt-nav-hover-panel">
+          <div className="umrt-nav-hover-inner">
+            <div className="umrt-nav-hover-column">
+              <span>THE MACHINE</span>
+              <Link prefetch={false} href="/#part_focus_1"><b>Vision mast</b><small>Stereo perception + terrain intelligence.</small></Link>
+              <Link prefetch={false} href="/#part_focus_2_left"><b>Science arm</b><small>Sample handling and field manipulation.</small></Link>
+              <Link prefetch={false} href="/#part_focus_3_right"><b>Mobility</b><small>Rocker-bogie traversal architecture.</small></Link>
+            </div>
 
+            <div className="umrt-nav-hover-column">
+              <span>THE MISSION</span>
+              <Link prefetch={false} href="/achievements"><b>Competition archive</b><small>Eight milestones across five seasons.</small></Link>
+              <Link prefetch={false} href="/certificates"><b>Certificate verification</b><small>Validate a credential by recipient name or certificate ID.</small></Link>
+              <Link prefetch={false} href="/#final_recenter"><b>System teardown</b><small>Inspect the rover by subsystem.</small></Link>
+              <Link prefetch={false} href="/#free_explore_unlock"><b>Free 3D lab</b><small>Orbit, pan, zoom, and control the explosion.</small></Link>
+            </div>
+
+            <div className="umrt-nav-hover-column">
+              <span>THE TEAM</span>
+              {teamLinks.map((item) => (
+                <Link prefetch={false} key={item.href} href={item.href}>
+                  <b>{item.label}</b>
+                  <small>{item.desc}</small>
+                </Link>
+              ))}
+            </div>
+
+            <Link prefetch={false} href="/#free_explore_unlock" className="umrt-nav-hover-feature">
+              <span>ENGINEERING BRIEF</span>
+              <strong>ROVER<br />SYSTEM 04</strong>
+              <p>A complete interactive surface for exploring the machine UMRT takes beyond the road.</p>
+              <b>ENTER THE LAB <i>→</i></b>
+            </Link>
+          </div>
+        </div>
+
+        <Link prefetch={false} href="/join" className="umrt-nav-action">
+          JOIN US <span>↗</span>
+        </Link>
 
         <button
           type="button"
@@ -156,23 +134,16 @@ export function PremiumNavbar() {
         inert={!open ? true : undefined}
         data-lenis-prevent
       >
-
-        <Link prefetch={false} href="/join" onClick={() => setOpen(false)}>
-          Join Us
-        </Link>
-
-        {/* Team links in mobile */}
-        <span className="umrt-mobile-divider">TEAM</span>
-        {teamDropdownLinks.map((item) => (
-          <Link prefetch={false} key={item.href} href={item.href} onClick={() => setOpen(false)}>
-            {item.label}
-          </Link>
+        {links.map((link) => (
+          <Link prefetch={false} key={link.href} href={link.href} onClick={() => setOpen(false)}>{link.label}</Link>
         ))}
-
+        {teamLinks.map((item) => (
+          <Link prefetch={false} key={item.href} href={item.href} onClick={() => setOpen(false)}>{item.label}</Link>
+        ))}
+        <Link prefetch={false} href="/join" onClick={() => setOpen(false)}>Join us</Link>
       </nav>
     </header>
   );
 }
 
 export default PremiumNavbar;
-
