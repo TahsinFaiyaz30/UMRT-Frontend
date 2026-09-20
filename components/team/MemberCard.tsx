@@ -11,6 +11,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import type { CrewMember, MediaAsset } from '@/lib/content';
 import { MediaImage } from '@/components/media/MediaImage';
 import { AvatarPlaceholder } from './AvatarPlaceholder';
+import { useCard3d } from './space/useCard3d';
 import { staggerItem } from './reveal';
 
 interface MemberCardProps {
@@ -49,6 +50,13 @@ export function MemberCard({
     member.portrait && typeof member.portrait === 'object' ? (member.portrait as MediaAsset) : null;
   const interactive = Boolean(onInspect);
 
+  // Real tilt + depth, and a resonance pulse into the field behind the page.
+  const card3d = useCard3d({
+    max: variant === 'hero' ? 6 : 8,
+    lift: variant === 'hero' ? 30 : 24,
+    resonance: variant === 'hero' ? 0.75 : 0.55,
+  });
+
   // Cards inside a staggered grid inherit the parent's timeline; standalone
   // cards reveal themselves. Either way, reduced motion renders them static.
   const motionProps = staggered
@@ -79,8 +87,8 @@ export function MemberCard({
             }
           : undefined
       }
-      style={interactive ? undefined : { cursor: 'default' }}
-      whileHover={reduce || !interactive ? undefined : { y: -6, transition: { duration: 0.25 } }}
+      style={{ ...card3d.style, ...(interactive ? null : { cursor: 'default' }) }}
+      {...card3d.handlers}
       {...motionProps}
     >
       {/* Glow accent */}

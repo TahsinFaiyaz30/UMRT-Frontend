@@ -1977,41 +1977,224 @@ html[data-mission-loading='true'] body {
   isolation: isolate;
 }
 
-/* Spacey backdrop: two slow nebulae plus a fine star wash. Pure gradients —
-   no extra elements, no JS, and it sits behind content via a -1 z-index. */
-.team-page::before {
-  content: '';
-  position: absolute;
+/* The backdrop is a real WebGL volume (components/team/space). It is fixed to
+   the viewport, never takes pointer events, and sits under both the scrim and
+   the content. */
+.team-space {
+  position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
-  background:
-    radial-gradient(85rem 45rem at 50% -8%, color-mix(in srgb, var(--rust) 28%, transparent), transparent 62%),
-    radial-gradient(50rem 40rem at 108% 22%, color-mix(in srgb, var(--signal) 5%, transparent), transparent 60%),
-    radial-gradient(45rem 38rem at -12% 68%, color-mix(in srgb, var(--solar) 6%, transparent), transparent 62%);
+  /* Opaque black background prevents the warm footer from bleeding through
+     the transparent WebGL canvas (alpha: true, clearAlpha: 0). */
+  background: #000;
+  /* Keep canvas repaints from invalidating page layout. */
+  contain: layout paint;
 }
 
+/* R3F sizes the drawing buffer from a ResizeObserver; give the element its CSS
+   box up front so it is correct on the very first frame regardless. */
+.team-space canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Legibility scrim. Deliberately weak in the middle, where the volume is most
+   visible, and stronger at the edges where headings sit over open space. */
 .team-page::after {
   content: '';
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 1;
   pointer-events: none;
-  opacity: 0.5;
-  background-image:
-    radial-gradient(1px 1px at 12% 18%, rgba(242, 239, 232, 0.5), transparent),
-    radial-gradient(1px 1px at 68% 8%, rgba(242, 239, 232, 0.35), transparent),
-    radial-gradient(1px 1px at 84% 42%, rgba(242, 239, 232, 0.4), transparent),
-    radial-gradient(1px 1px at 27% 63%, rgba(242, 239, 232, 0.3), transparent),
-    radial-gradient(1px 1px at 55% 88%, rgba(242, 239, 232, 0.32), transparent),
-    radial-gradient(1px 1px at 91% 76%, rgba(242, 239, 232, 0.28), transparent);
-  background-size: 780px 780px;
+  background:
+    radial-gradient(125% 85% at 50% 44%, transparent 0%, rgba(7, 6, 4, 0.22) 55%, rgba(7, 6, 4, 0.65) 100%),
+    linear-gradient(180deg, rgba(7, 6, 4, 0.55) 0%, transparent 15%, transparent 85%, rgba(7, 6, 4, 0.68) 100%);
 }
 
 .team-page-content {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: var(--t-s-2xl);
+}
+
+/* ========================================================================== */
+/* CINEMATIC UNIVERSE OBSERVATION MODE                                        */
+/* ========================================================================== */
+
+body.observation-mode-active {
+  overflow: hidden !important;
+}
+
+body.observation-mode-active .team-page-content,
+body.observation-mode-active .team-page::after,
+body.observation-mode-active header,
+body.observation-mode-active nav,
+body.observation-mode-active footer {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.65s !important;
+}
+
+body.observation-mode-active .team-space {
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+}
+
+/* Floating Launch Button on the team views */
+.observation-launch-trigger {
+  position: fixed;
+  bottom: 24px;
+  right: 28px;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgba(14, 17, 24, 0.76);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(242, 239, 232, 0.16);
+  color: #f2efe8;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.observation-launch-trigger:hover {
+  background: rgba(26, 32, 46, 0.92);
+  border-color: rgba(224, 90, 58, 0.7);
+  box-shadow: 0 0 24px rgba(224, 90, 58, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.observation-launch-trigger .pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e05a3a;
+  box-shadow: 0 0 10px #e05a3a;
+  animation: pulse-hud 2s infinite ease-in-out;
+}
+
+@keyframes pulse-hud {
+  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Observation Mode HUD Overlay */
+.observation-hud {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(16px, 3vw, 36px);
+  color: #f2efe8;
+  font-family: var(--font-mono, monospace);
+  user-select: none;
+}
+
+.observation-hud-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.observation-telemetry {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.observation-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  color: rgba(242, 239, 232, 0.55);
+}
+
+.observation-target {
+  font-size: clamp(0.95rem, 1.4vw, 1.35rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.4);
+}
+
+.observation-exit-btn {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: rgba(14, 17, 24, 0.8);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(242, 239, 232, 0.2);
+  color: #f2efe8;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.observation-exit-btn:hover {
+  background: rgba(224, 90, 58, 0.85);
+  border-color: #e05a3a;
+  color: #ffffff;
+}
+
+.observation-hud-bottom {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.observation-hint-pill {
+  pointer-events: auto;
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 24px;
+  border-radius: 999px;
+  background: rgba(7, 9, 13, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(242, 239, 232, 0.12);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: rgba(242, 239, 232, 0.7);
+}
+
+.observation-hint-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.observation-hint-key {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-weight: bold;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2162,6 +2345,11 @@ html[data-mission-loading='true'] body {
 /* No fixed aspect-ratio: the card grows to its content and grid stretch keeps
    a row even. A ratio here used to clip focus pills and social links.        */
 
+/* A real 3-D surface, not a flat rectangle: the card tilts inside its grid's
+   perspective and its inner layers sit at their own Z depths, so tilting
+   parallaxes the portrait against the text. `overflow` is deliberately NOT
+   hidden — any value other than `visible` forces `transform-style: flat` and
+   would collapse that depth. Each child clips itself instead. */
 .team-member-card {
   position: relative;
   display: flex;
@@ -2170,18 +2358,59 @@ html[data-mission-loading='true'] body {
   gap: var(--t-s-sm);
   height: 100%;
   padding: var(--t-s-md) var(--t-s-sm) var(--t-s-sm);
-  overflow: hidden;
   border: 1px solid var(--t-border);
   border-radius: var(--t-r-lg);
+  /* Opaque enough to stay readable when a lit planet drifts behind it. */
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012)),
-    rgba(10, 8, 6, 0.5);
+    rgba(8, 6, 5, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   text-align: center;
   cursor: pointer;
+  transform-style: preserve-3d;
   transition:
     border-color 0.45s var(--t-ease),
     box-shadow 0.45s var(--t-ease),
     background-color 0.45s var(--t-ease);
+}
+
+/* Specular sheen tracking the cursor across the surface. Sits just off the
+   card face so it catches the tilt. */
+.team-member-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    14rem 14rem at var(--card-mx, 50%) var(--card-my, 50%),
+    color-mix(in srgb, var(--t-accent) 13%, transparent),
+    transparent 62%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transform: translateZ(1px);
+  transition: opacity 0.4s var(--t-ease);
+}
+
+.team-member-card:hover::after,
+.team-member-card:focus-visible::after {
+  opacity: 1;
+}
+
+/* Depth stack. These are what make the tilt read as volume. */
+.team-card-avatar {
+  transform: translateZ(34px);
+}
+
+.team-card-info {
+  transform: translateZ(18px);
+}
+
+.team-card-tag,
+.team-card-focus,
+.team-card-socials {
+  transform: translateZ(10px);
 }
 
 .team-member-card:hover,
@@ -2199,18 +2428,21 @@ html[data-mission-loading='true'] body {
     0 0 0 4px color-mix(in srgb, var(--t-accent) 65%, transparent);
 }
 
-/* Accent bloom, revealed on hover. */
+/* Accent bloom, revealed on hover. Bounded to the card's own rounded box so it
+   needs no clipping ancestor — the card must keep `overflow: visible` for its
+   3-D layers to survive. */
 .team-card-glow {
   position: absolute;
-  top: -35%;
-  left: 50%;
-  width: 130%;
-  aspect-ratio: 1;
-  transform: translateX(-50%);
-  border-radius: 50%;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--t-accent) 15%, transparent), transparent 70%);
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    72% 54% at 50% -6%,
+    color-mix(in srgb, var(--t-accent) 20%, transparent),
+    transparent 72%
+  );
   opacity: 0;
   pointer-events: none;
+  transform: translateZ(2px);
   transition: opacity 0.45s var(--t-ease);
 }
 
@@ -2374,6 +2606,7 @@ html[data-mission-loading='true'] body {
   grid-template-columns: 1fr 1fr;
   gap: var(--t-s-lg);
   align-items: center;
+  perspective: 1600px;
 }
 
 /* Zig-zag by grid order rather than `direction: rtl`, which used to leak
@@ -2582,6 +2815,10 @@ html[data-mission-loading='true'] body {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--t-card-min)), 1fr));
   gap: var(--t-s-sm);
   justify-items: center;
+  /* Without this the cards' rotateX/rotateY render orthographically — a skew
+     rather than a tilt. Perspective must live on the parent. */
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
 }
 
 .team-tier-grid > * {
@@ -2746,6 +2983,8 @@ html[data-mission-loading='true'] body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  perspective: 1500px;
+  perspective-origin: 50% 40%;
 }
 
 .tree-lead {
