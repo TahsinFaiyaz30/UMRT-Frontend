@@ -344,6 +344,27 @@ export function solarDaylightFactorFromPosition(
   return progress * progress * (3 - 2 * progress);
 }
 
+/**
+ * Share of full-daylight ambient light that survives local midnight.
+ *
+ * The sun genuinely sets during the compressed sol, and with the direct light
+ * at zero the ambient terms alone used to fall to roughly a seventh of their
+ * daytime value — the hero went black for minutes at a time and the rover with
+ * it. Skylight, starlight and the surrounding dust glow never actually vanish,
+ * so the ambient chain keeps this floor while the sun itself is still allowed
+ * to set properly: no phantom key light, no glowing disc below the horizon.
+ */
+export const MARS_NIGHT_AMBIENT_FLOOR = 0.42;
+
+/**
+ * Maps a 0..1 daylight factor onto the ambient range that actually lights the
+ * scene. Direct sunlight must NOT use this — it should reach zero at night.
+ */
+export function ambientDaylightFactor(daylight: number) {
+  return MARS_NIGHT_AMBIENT_FLOOR
+    + (1 - MARS_NIGHT_AMBIENT_FLOOR) * clamp(daylight, 0, 1);
+}
+
 /** Single helper for declaratively binding the settings to scene lights. */
 export function solarLightingFromSettings(
   value: SolarCalibrationSettings,

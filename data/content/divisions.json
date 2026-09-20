@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "revision": "div-2026-09-10",
+  "resource": "divisions",
+  "records": [
+    {
+      "id": "mechanical",
+      "sysCode": "SYS-01",
+      "name": "Mechanical Team",
+      "description": "Designs, fabricates, and validates the rover's structural and kinematic systems — chassis, suspension, and the manipulator arm.",
+      "highlights": [
+        "Structural design and fabrication",
+        "Suspension and mobility hardware",
+        "Manipulator and tooling integration"
+      ],
+      "specs": [],
+      "color": "#3B82F6",
+      "iconHint": "gear",
+      "leadId": "siam-ibne-sarwar",
+      "memberIds": ["riad-hossen", "nazmuz-sakib", "miraz-al-hyder", "alif-nebir", "mimtiage-hemal"]
+    },
+    {
+      "id": "electrical",
+      "sysCode": "SYS-02",
+      "name": "Electrical Team",
+      "description": "Builds the power distribution, wiring, and embedded electronics that keep every other subsystem running in the field.",
+      "highlights": [
+        "Power distribution and battery systems",
+        "Wiring harness and connector design",
+        "Embedded electronics and sensors"
+      ],
+      "specs": [],
+      "color": "#F59E0B",
+      "iconHint": "zap",
+      "leadId": null,
+      "memberIds": ["syed-thuha", "sabik-sifat", "partha-podder"]
+    },
+    {
+      "id": "autonomous",
+      "sysCode": "SYS-03",
+      "name": "Autonomous Team",
+      "description": "Develops the navigation, perception, and control software that lets the rover sense and move through unstructured terrain.",
+      "highlights": [
+        "Navigation and path planning",
+        "Perception and sensor fusion",
+        "Control software and firmware"
+      ],
+      "specs": [],
+      "color": "#EF4444",
+      "iconHint": "code",
+      "leadId": "salman-kabir",
+      "memberIds": [
+        "mahin-hasan-upol",
+        "talha-jubayer",
+        "muhutasim-sadik",
+        "shahriar-siyam",
+        "bakhtiar-fahim",
+        "arman-hossain",
+        "abir-saba"
+      ]
+    },
+    {
+      "id": "science",
+      "sysCode": "SYS-04",
+      "name": "Science Team",
+      "description": "Runs the in-situ analysis payload and the sampling workflows behind every science objective the rover attempts.",
+      "highlights": [
+        "Sample collection and handling",
+        "In-situ analysis instruments",
+        "Mission science planning"
+      ],
+      "specs": [],
+      "color": "#22C55E",
+      "iconHint": "flask",
+      "leadId": "ayesha-sayma",
+      "memberIds": ["shanjida-shopna", "nowshin-faria", "epshita-sara"]
+    },
+    {
+      "id": "aerial-comms",
+      "sysCode": "SYS-05",
+      "name": "Aerial and Communication Team",
+      "description": "Operates the team's aerial survey platform and the radio links that keep the rover and ground station talking.",
+      "highlights": [
+        "Aerial survey and mapping",
+        "Radio and telemetry links",
+        "Ground station operations"
+      ],
+      "specs": [],
+      "color": "#06B6D4",
+      "iconHint": "signal",
+      "leadId": "sabbir-ahmed",
+      "memberIds": ["aninda-talukdar"]
+    },
+    {
+      "id": "media-branding",
+      "sysCode": "SYS-06",
+      "name": "Media and Branding",
+      "description": "Produces the team's documentation, photography, and public-facing identity across every platform and event.",
+      "highlights": [
+        "Photography and video production",
+        "Brand identity and design",
+        "Social and public outreach"
+      ],
+      "specs": [],
+      "color": "#A855F7",
+      "iconHint": "camera",
+      "leadId": "nadim-hossain",
+      "memberIds": ["marina-montaz", "zihad-shariar", "abrar-adib"]
+    },
+    {
+      "id": "logistics",
+      "sysCode": "SYS-07",
+      "name": "Logistics",
+      "description": "Coordinates travel, budgeting, and competition logistics so the rest of the team can focus on the machine.",
+      "highlights": [
+        "Competition logistics and travel",
+        "Budget and procurement",
+        "Sponsor and partner coordination"
+      ],
+      "specs": [],
+      "color": "#EAB308",
+      "iconHint": "briefcase",
+      "leadId": null,
+      "memberIds": ["adipta-shaha"]
+    }
+  ]
+}

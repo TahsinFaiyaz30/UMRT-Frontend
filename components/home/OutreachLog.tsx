@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { MediaImage } from '@/components/media/MediaImage';
 import { useContentRecords, type MediaAsset } from '@/lib/content';
+import { PanelHead, SectionHeader, SpecList, useSection } from './SectionShell';
 import styles from './HomeSections.module.css';
 
 const KIND_LABEL: Record<string, string> = {
@@ -32,35 +33,30 @@ function formatDate(iso: string) {
 export function OutreachLog() {
   const { records } = useContentRecords('events');
   const [openId, setOpenId] = useState<string | null>(null);
+  const section = useSection('outreach-log');
 
-  if (records.length === 0) return null;
+  if (records.length === 0 || !section) return null;
+
+  const frames = records.reduce((total, event) => total + event.media.length, 0);
 
   return (
     <section
       id="outreach-log"
-      className={`${styles.section} ${styles.outreach}`}
+      className={styles.section}
       aria-labelledby="outreach-log-title"
     >
       <div className={styles.inner}>
-        <header className={styles.header}>
-          <div>
-            <p className={styles.kicker}>
-              <span aria-hidden="true">10</span>
-              Deployment log / where it has been
-            </p>
-            <h2 id="outreach-log-title" className={styles.heading}>
-              A ROVER IS ONLY<br /><span>REAL IN PUBLIC.</span>
-            </h2>
-          </div>
-          <p className={styles.lede}>
-            Competition fields, exhibition halls, school courtyards. Each entry
-            is a weekend the platform left the lab and had to survive
-            strangers, questions, and its own reliability budget.
-          </p>
-        </header>
+        <SectionHeader
+          section={section}
+          titleId="outreach-log-title"
+          tokens={{
+            count: String(records.length).padStart(2, '0'),
+            frames: String(frames),
+          }}
+        />
 
         <ol className={styles.eventList}>
-          {records.map((event) => {
+          {records.map((event, eventIndex) => {
             const media = event.media.filter(
               (item): item is MediaAsset => typeof item === 'object' && item !== null,
             );
@@ -76,9 +72,15 @@ export function OutreachLog() {
                   aria-controls={`event-panel-${event.id}`}
                   onClick={() => setOpenId(open ? null : event.id)}
                 >
+                  <span className={styles.eventIndex}>
+                    /{String(eventIndex + 1).padStart(2, '0')}
+                  </span>
                   <span className={styles.eventDate}>{formatDate(event.date)}</span>
                   <span className={styles.eventName}>{event.name}</span>
-                  <span className={styles.eventKind}>{KIND_LABEL[event.kind] ?? event.kind}</span>
+                  <span className={styles.eventKind}>
+                    <i aria-hidden="true" />
+                    {KIND_LABEL[event.kind] ?? event.kind}
+                  </span>
                   <span className={styles.eventCount}>
                     {String(media.length).padStart(2, '0')} FRAMES
                   </span>
@@ -92,38 +94,41 @@ export function OutreachLog() {
                 >
                   <div className={styles.eventBody}>
                     {lead ? (
-                      <MediaImage
-                        asset={lead}
-                        ratio={3 / 2}
-                        className={styles.eventLead}
-                        sizes="(max-width: 900px) 92vw, 44vw"
-                      />
+                      <div className={styles.panel}>
+                        <PanelHead
+                          code={`LEAD / ${String(eventIndex + 1).padStart(2, '0')}`}
+                          status="VERIFIED"
+                        />
+                        <MediaImage
+                          asset={lead}
+                          ratio={3 / 2}
+                          sizes="(max-width: 900px) 92vw, 44vw"
+                        />
+                      </div>
                     ) : null}
                     <div className={styles.eventCopy}>
                       <p className={styles.eventVenue}>{event.venue}</p>
                       <p>{event.summary}</p>
-                      {event.stats?.length ? (
-                        <dl className={styles.eventStats}>
-                          {event.stats.map((stat) => (
-                            <div key={stat.label}>
-                              <dt>{stat.label}</dt>
-                              <dd>{stat.value}</dd>
-                            </div>
-                          ))}
-                        </dl>
-                      ) : null}
+                      <SpecList
+                        specs={[
+                          ...(event.stats ?? []),
+                          { label: 'Date', value: formatDate(event.date) },
+                          { label: 'Frames', value: String(media.length).padStart(2, '0') },
+                        ]}
+                      />
                     </div>
                   </div>
 
                   {media.length > 1 ? (
                     <div className={styles.eventThumbs}>
                       {media.slice(1).map((asset) => (
-                        <MediaImage
-                          key={asset.id}
-                          asset={asset}
-                          ratio={3 / 2}
-                          sizes="(max-width: 700px) 44vw, 18vw"
-                        />
+                        <div key={asset.id} className={styles.eventThumb}>
+                          <MediaImage
+                            asset={asset}
+                            ratio={3 / 2}
+                            sizes="(max-width: 700px) 44vw, 18vw"
+                          />
+                        </div>
                       ))}
                     </div>
                   ) : null}

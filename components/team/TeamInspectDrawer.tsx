@@ -4,23 +4,31 @@
  * TeamInspectDrawer — Slide-out panel for detailed member inspection.
  *
  * Triggered by clicking a node card in any team view. Shows full
- * telemetry-styled detail: name, avatar, role, department, focus
- * projects, and social links.
+ * telemetry-styled detail: name, avatar, role, division, focus
+ * areas, and social links.
  */
 
 import { useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { TeamMember } from '@/data/team';
-import { getDepartment } from '@/data/team';
+import type { CrewMember, DivisionRecord, MediaAsset } from '@/lib/content';
+import { MediaImage } from '@/components/media/MediaImage';
 import { AvatarPlaceholder } from './AvatarPlaceholder';
+import { roleTag } from './MemberCard';
 
 interface TeamInspectDrawerProps {
-  member: TeamMember | null;
+  member: CrewMember | null;
   onClose: () => void;
+  /** Used to look up and display the member's division, when known. */
+  divisions?: DivisionRecord[];
 }
 
-export function TeamInspectDrawer({ member, onClose }: TeamInspectDrawerProps) {
-  const department = member ? getDepartment(member.departmentId) : undefined;
+export function TeamInspectDrawer({ member, onClose, divisions = [] }: TeamInspectDrawerProps) {
+  const division = member
+    ? divisions.find((d) => d.leadId === member.id || d.memberIds.includes(member.id))
+    : undefined;
+  const portrait = member?.portrait && typeof member.portrait === 'object'
+    ? member.portrait as MediaAsset
+    : null;
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -77,27 +85,29 @@ export function TeamInspectDrawer({ member, onClose }: TeamInspectDrawerProps) {
             <div className="team-drawer-content">
               {/* Header */}
               <div className="team-drawer-header">
-                <AvatarPlaceholder
-                  src={member.avatarUrl}
-                  alt={member.name}
-                  size={128}
-                />
+                {portrait ? (
+                  <div style={{ width: 128, height: 128 }}>
+                    <MediaImage asset={portrait} ratio={1} sizes="128px" className="team-avatar-frame" alt={member.name} />
+                  </div>
+                ) : (
+                  <AvatarPlaceholder alt={member.name} size={128} />
+                )}
                 <div className="team-drawer-scanline" aria-hidden="true" />
               </div>
 
               {/* Identity */}
               <div className="team-drawer-identity">
-                <code className="team-drawer-tag">{member.roleTag}</code>
+                <code className="team-drawer-tag">{roleTag(member.role)}</code>
                 <h2>{member.name}</h2>
                 <p className="team-drawer-role">{member.role}</p>
               </div>
 
-              {/* Department */}
-              {department && (
+              {/* Division */}
+              {division && (
                 <div className="team-drawer-section">
                   <span className="team-drawer-label">ASSIGNED_DIVISION</span>
                   <p>
-                    <code>{department.sysCode}</code> // {department.name}
+                    <code>{division.sysCode}</code>{' // '}{division.name}
                   </p>
                 </div>
               )}

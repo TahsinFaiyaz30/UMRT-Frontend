@@ -34,9 +34,12 @@ export {
 export type {
   AchievementCategory,
   AchievementRecord,
+  CertificateRecord,
+  CertificateStatus,
   CollectionQuery,
   CollectionResponse,
   CrewMember,
+  DivisionRecord,
   EventRecord,
   MediaAsset,
   MediaRef,
@@ -46,5 +49,8 @@ export type {
   PartnerRecord,
   ResourceMap,
   ResourceName,
+  SectionRecord,
   SingleResponse,
+  SocialLinks,
+  TeamTierRecord,
 } from './types';

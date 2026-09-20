@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "revision": "tier-2026-09-10",
+  "resource": "teamTiers",
+  "records": [
+    {
+      "id": "advisory",
+      "order": 1,
+      "badge": "TIER-1",
+      "label": "Faculty Advisory Board",
+      "description": "Institutional oversight and technical mentorship for the whole programme.",
+      "cardVariant": "hero",
+      "memberIds": ["abid-hossain"]
+    },
+    {
+      "id": "command",
+      "order": 2,
+      "badge": "TIER-2",
+      "label": "Command Nodes",
+      "description": "Strategic planning, systems integration, and cross-team coordination.",
+      "cardVariant": "hero",
+      "memberIds": ["saif-al-saad", "sheikh-shakib", "mosfiqur-rahman"]
+    },
+    {
+      "id": "subsystem-leads",
+      "order": 3,
+      "badge": "TIER-3",
+      "label": "Subsystem Leads",
+      "description": "Hands-on leadership for each engineering division.",
+      "cardVariant": "default",
+      "memberIds": ["nadim-hossain", "salman-kabir", "sabbir-ahmed", "ayesha-sayma", "siam-ibne-sarwar"]
+    }
+  ]
+}

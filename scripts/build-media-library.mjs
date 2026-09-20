@@ -84,11 +84,26 @@ function openSource(file) {
 }
 
 /**
- * Curation order. Assets are emitted in the order they are declared in
- * `media-sources.mjs`, so editing that file re-orders every gallery — the
- * strongest frame first, without a sort key in every consumer.
+ * Curation order, taken from the declaration order in `media-sources.mjs`, so
+ * editing that file re-orders every gallery — strongest frame first — without
+ * a sort key in every consumer.
+ *
+ * Derived from the source map rather than counted as assets are built, so a
+ * partial run (`--images` / `--videos`) still places its output correctly
+ * against the assets it carried over from the previous manifest.
  */
-let nextOrder = 0;
+const declarationOrder = new Map();
+{
+  let position = 0;
+  for (const collection of collections) {
+    for (const item of collection.items) declarationOrder.set(item.id, position++);
+  }
+  for (const video of videos) declarationOrder.set(video.id, position++);
+}
+
+function curationRank(asset) {
+  return declarationOrder.get(asset.id) ?? Number.MAX_SAFE_INTEGER;
+}
 
 async function buildImage(item, profile, collectionId) {
   const source = path.join(sourceRoot, item.file);
@@ -141,16 +156,17 @@ async function buildImage(item, profile, collectionId) {
     id: item.id,
     collection: collectionId,
     kind: 'image',
-    order: nextOrder++,
     width: naturalWidth,
     height: naturalHeight,
     aspectRatio: Number((naturalWidth / naturalHeight).toFixed(5)),
     alt: item.alt,
     caption: item.caption,
     tags: item.tags,
-    hasAlpha: Boolean(metadata.hasAlpha),
     blurDataUrl: `data:image/webp;base64,${blurBuffer.toString('base64')}`,
     src: largest.url,
+    // Ascending by width. `pickVariant` parses this rather than reading a
+    // parallel `variants` array, which is why none is emitted — see
+    // `stripBuildOnlyFields`.
     srcSet: variants.map((variant) => `${variant.url} ${variant.width}w`).join(', '),
     variants,
   };
@@ -291,7 +307,6 @@ async function buildVideo(video, ffmpeg) {
     id: video.id,
     collection: 'film',
     kind: 'video',
-    order: nextOrder++,
     width: posterMeta.width,
     height: posterMeta.height,
     aspectRatio: Number((posterMeta.width / posterMeta.height).toFixed(5)),
@@ -354,6 +369,24 @@ async function writeCrewDataset() {
   log(`crew    → ${path.relative(root, crewPath)} (${records.length} people)`);
 }
 
+/**
+ * Every rendition URL for an asset, read back out of `srcSet`.
+ *
+ * The manifest is imported directly into the client bundle, so anything it
+ * carries is shipped to every visitor. `variants` duplicated what `srcSet`
+ * already encodes and nothing at runtime read it.
+ */
+function renditionUrls(asset) {
+  return asset.srcSet.split(',').map((entry) => entry.trim().split(/\s+/)[0]).filter(Boolean);
+}
+
+/** Drops fields only the build needs, just before the manifest is written. */
+function stripBuildOnlyFields(asset) {
+  const { variants, ...shipped } = asset;
+  void variants;
+  return shipped;
+}
+
 async function readExistingManifest() {
   try {
     return JSON.parse(await readFile(manifestPath, 'utf8'));
@@ -400,7 +433,7 @@ async function main() {
         const asset = await buildImage(item, profile, collection.id);
         if (!asset) continue;
         assets.push(asset);
-        for (const variant of asset.variants) kept.add(path.basename(variant.url));
+        for (const url of renditionUrls(asset)) kept.add(path.basename(url));
       }
       keptByCollection.set(collection.id, kept);
     }
@@ -417,7 +450,7 @@ async function main() {
         const asset = await buildVideo(video, ffmpeg);
         if (!asset) continue;
         assets.push(asset);
-        for (const variant of asset.variants) kept.add(path.basename(variant.url));
+        for (const url of renditionUrls(asset)) kept.add(path.basename(url));
         for (const item of asset.sources) kept.add(path.basename(item.url));
       }
       keptByCollection.set('film', kept);
@@ -436,13 +469,10 @@ async function main() {
 
   await pruneOrphans(keptByCollection);
 
-  // Curation order first; `order` is absent only on records carried over from
-  // a previous partial build, which sort to the end by id.
-  assets.sort((a, b) => (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER)
-    || a.id.localeCompare(b.id));
+  assets.sort((a, b) => curationRank(a) - curationRank(b) || a.id.localeCompare(b.id));
   const totalBytes = assets.reduce(
     (total, asset) => total
-      + asset.variants.reduce((sum, variant) => sum + variant.bytes, 0)
+      + (asset.variants ?? []).reduce((sum, variant) => sum + variant.bytes, 0)
       + (asset.sources ?? []).reduce((sum, source) => sum + source.bytes, 0),
     0,
   );
@@ -460,7 +490,7 @@ async function main() {
       roster: roster.length,
       bytes: totalBytes,
     },
-    assets,
+    assets: assets.map(stripBuildOnlyFields),
   };
 
   await mkdir(path.dirname(manifestPath), { recursive: true });

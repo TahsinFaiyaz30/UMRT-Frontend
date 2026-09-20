@@ -4,21 +4,27 @@
  * MemberCard — Reusable telemetry-styled team member card.
  *
  * Used across all three team views. Shows avatar (or placeholder),
- * name, role badge, department tag, and optional social links.
+ * name, role badge, unit tag, and optional focus/social links.
  */
 
 import { motion } from 'framer-motion';
-import type { TeamMember } from '@/data/team';
+import type { CrewMember, MediaAsset } from '@/lib/content';
+import { MediaImage } from '@/components/media/MediaImage';
 import { AvatarPlaceholder } from './AvatarPlaceholder';
 
 interface MemberCardProps {
-  member: TeamMember;
+  member: CrewMember;
   /** Visual size variant. */
   variant?: 'default' | 'hero' | 'compact';
   /** When provided, clicking the card triggers this callback. */
-  onInspect?: (member: TeamMember) => void;
+  onInspect?: (member: CrewMember) => void;
   /** Extra class names. */
   className?: string;
+}
+
+/** Turns a free-form role string into a bracketed telemetry tag, e.g. "Sub-Team Lead" -> "[SUB-TEAM_LEAD]". */
+export function roleTag(role: string) {
+  return `[${role.toUpperCase().replace(/\s+/g, '_')}]`;
 }
 
 export function MemberCard({
@@ -28,6 +34,9 @@ export function MemberCard({
   className = '',
 }: MemberCardProps) {
   const avatarSize = variant === 'hero' ? 120 : variant === 'compact' ? 56 : 80;
+  const portrait = member.portrait && typeof member.portrait === 'object'
+    ? member.portrait as MediaAsset
+    : null;
 
   return (
     <motion.article
@@ -51,16 +60,24 @@ export function MemberCard({
       {/* Glow accent */}
       <div className="team-card-glow" aria-hidden="true" />
 
-      <AvatarPlaceholder
-        src={member.avatarUrl}
-        alt={member.name}
-        size={avatarSize}
-      />
+      {portrait ? (
+        <div style={{ width: avatarSize, height: avatarSize, flexShrink: 0 }}>
+          <MediaImage
+            asset={portrait}
+            ratio={1}
+            sizes={`${avatarSize}px`}
+            className="team-avatar-frame"
+            alt={member.name}
+          />
+        </div>
+      ) : (
+        <AvatarPlaceholder alt={member.name} size={avatarSize} />
+      )}
 
       <div className="team-card-info">
         <h3 className="team-card-name">{member.name}</h3>
         <p className="team-card-role">{member.role}</p>
-        <code className="team-card-tag">{member.roleTag}</code>
+        <code className="team-card-tag">{roleTag(member.role)}</code>
 
         {member.focus && member.focus.length > 0 && (
           <div className="team-card-focus">

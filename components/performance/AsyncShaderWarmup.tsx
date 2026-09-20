@@ -17,6 +17,13 @@ import * as THREE from 'three';
  * paces it one program at a time, behind whatever loading state the route is
  * already showing.
  */
+/**
+ * Longest the scene may wait for parallel compilation before falling back to
+ * the browser's own path. Generous: a cold context on a slow integrated GPU
+ * legitimately takes several seconds.
+ */
+const WARMUP_WATCHDOG_MS = 9_000;
+
 export function AsyncShaderWarmup({
   readyRef,
   onReady,
@@ -66,6 +73,33 @@ export function AsyncShaderWarmup({
     }, 100);
     return () => window.clearInterval(timer);
   }, [invalidate]);
+
+  /*
+   * Warming shaders is an optimisation, and an optimisation must never be able
+   * to stop the canvas drawing.
+   *
+   * `compileShadersInBatches` resolves `false` when it was cancelled part-way
+   * — which also happens on React's development double-mount, where the
+   * cleanup flips `cancelledRef` between the two passes. `startedRef` survives
+   * on the reused instance, so without a backstop the warm-up would never
+   * start again, `readyRef` would never flip, and SceneRenderLoop would hold a
+   * blank canvas forever. A driver that simply never resolves `compileAsync`
+   * would do the same.
+   *
+   * The watchdog gives up waiting and hands over to the browser's ordinary
+   * first-use compilation path. Worst case is one slow frame; best case it
+   * never fires.
+   */
+  useEffect(() => {
+    if (doneRef.current) return undefined;
+    const watchdog = window.setTimeout(() => {
+      if (doneRef.current) return;
+      // Allow a genuine retry if this instance was only ever cancelled.
+      startedRef.current = false;
+      finish();
+    }, WARMUP_WATCHDOG_MS);
+    return () => window.clearTimeout(watchdog);
+  }, [finish]);
 
   // Kicks off KHR_parallel_shader_compile on the first frame it sees. Drawing
   // is deliberately not this component's job — see SceneRenderLoop.

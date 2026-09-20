@@ -2,18 +2,23 @@
 
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type FormEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
+import { isRemoteContentApi, useContentRecords } from '@/lib/content';
 import {
-  certificateRegistry,
+  buildCertificateIndexes,
   lookupCertificates,
   type CertificateLookupResult,
   type CertificateRecord,
 } from '@/lib/certificateRegistry';
 import styles from './CertificateValidator.module.css';
+
+/** Issuing org identity — page furniture, not per-certificate content. */
+const ISSUER = { name: 'UIU Mars Rover Team', location: 'Dhaka, Bangladesh' };
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {
   day: '2-digit',
@@ -86,7 +91,7 @@ function ResultCard({ record, index }: { record: CertificateRecord; index: numbe
         </div>
         <div>
           <dt>Issued by</dt>
-          <dd>{certificateRegistry.issuer.name}</dd>
+          <dd>{ISSUER.name}</dd>
         </div>
         <div>
           <dt>Registry status</dt>
@@ -99,7 +104,7 @@ function ResultCard({ record, index }: { record: CertificateRecord; index: numbe
 
       <footer className={styles.credentialFooter}>
         <span>UMRT / Official certificate registry</span>
-        <span>{certificateRegistry.issuer.location}</span>
+        <span>{ISSUER.location}</span>
       </footer>
     </article>
   );
@@ -192,6 +197,8 @@ export function CertificateValidator() {
   const pointerPosition = useRef({ x: 0, y: 0 });
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<CertificateLookupResult | null>(null);
+  const { records, status: fetchStatus } = useContentRecords('certificates');
+  const indexes = useMemo(() => buildCertificateIndexes(records), [records]);
 
   useEffect(() => {
     if (!result) return undefined;
@@ -218,7 +225,7 @@ export function CertificateValidator() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setResult(lookupCertificates(query));
+    setResult(lookupCertificates(indexes, query));
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -248,10 +255,12 @@ export function CertificateValidator() {
     pageRef.current?.style.setProperty('--pointer-y', '0');
   };
 
-  const updatedAt = formatDate(certificateRegistry.updatedAt);
-  const activeRecords = certificateRegistry.certificates.filter(
-    (certificate) => certificate.status === 'valid',
-  ).length;
+  const activeRecords = records.filter((record) => record.status === 'valid').length;
+  const latestIssued = records.reduce<string | null>(
+    (latest, record) => (!latest || record.issuedOn > latest ? record.issuedOn : latest),
+    null,
+  );
+  const registrySyncing = fetchStatus === 'loading';
   const responseState = !result
     ? 'idle'
     : result.kind !== 'found'
@@ -332,10 +341,12 @@ export function CertificateValidator() {
                   />
                 </div>
                 <p id="certificate-query-hint" className={styles.hint}>
-                  Search is case-insensitive. Use the complete ID or the recipient&apos;s full name.
+                  {registrySyncing
+                    ? 'Syncing with the certificate registry…'
+                    : "Search is case-insensitive. Use the complete ID or the recipient's full name."}
                 </p>
-                <button type="submit">
-                  Run verification
+                <button type="submit" disabled={registrySyncing}>
+                  {registrySyncing ? 'Syncing…' : 'Run verification'}
                   <span aria-hidden="true">→</span>
                 </button>
               </form>
@@ -343,15 +354,15 @@ export function CertificateValidator() {
               <dl className={styles.registryReadout} aria-label="Certificate registry status">
                 <div>
                   <dt>Registry source</dt>
-                  <dd>Static JSON mirror</dd>
+                  <dd>{isRemoteContentApi ? 'Live registry' : 'Static JSON mirror'}</dd>
                 </div>
                 <div>
                   <dt>Active records</dt>
-                  <dd>{String(activeRecords).padStart(2, '0')}</dd>
+                  <dd>{registrySyncing ? '—' : String(activeRecords).padStart(2, '0')}</dd>
                 </div>
                 <div>
-                  <dt>Snapshot</dt>
-                  <dd>{updatedAt}</dd>
+                  <dt>Latest credential</dt>
+                  <dd>{latestIssued ? formatDate(latestIssued) : '—'}</dd>
                 </div>
               </dl>
             </div>

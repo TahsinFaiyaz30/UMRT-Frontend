@@ -2,6 +2,7 @@
 
 import { MediaImage } from '@/components/media/MediaImage';
 import { useContentRecords, type MediaAsset } from '@/lib/content';
+import { PanelHead, SectionHeader, fillTokens, useSection } from './SectionShell';
 import styles from './HomeSections.module.css';
 
 /** Mentor, leads and sub-team leads. The full roster belongs on its own page. */
@@ -9,42 +10,46 @@ const LEADERSHIP_RANK = 3;
 
 export function CrewTeaser() {
   const { records, total } = useContentRecords('crew');
+  const section = useSection('crew-teaser');
 
   const leadership = records
     .filter((person) => person.rank <= LEADERSHIP_RANK)
     .sort((a, b) => a.rank - b.rank);
 
-  if (leadership.length === 0) return null;
+  if (leadership.length === 0 || !section) return null;
+
+  const headcount = total ?? records.length;
+  const units = new Set(records.map((person) => person.unit).filter(Boolean));
+  const tokens = {
+    headcount: String(headcount),
+    units: String(units.size),
+    leads: String(leadership.length),
+  };
 
   return (
     <section
       id="crew-teaser"
-      className={`${styles.section} ${styles.crew}`}
+      className={styles.section}
       aria-labelledby="crew-teaser-title"
     >
       <div className={styles.inner}>
-        <header className={styles.header}>
-          <div>
-            <p className={styles.kicker}>
-              <span aria-hidden="true">11</span>
-              Crew / command structure
-            </p>
-            <h2 id="crew-teaser-title" className={styles.heading}>
-              PEOPLE BUILD<br /><span>MACHINES.</span>
-            </h2>
-          </div>
-          <p className={styles.lede}>
-            {total ?? records.length} students across mechanical, electrical,
-            autonomous, aerial, science, media and logistics. These are the
-            people the rest of the roster reports into.
-          </p>
-        </header>
+        <SectionHeader
+          section={section}
+          titleId="crew-teaser-title"
+          tokens={tokens}
+        />
 
         <ul className={styles.crewGrid}>
-          {leadership.map((person) => {
-            const portrait = typeof person.portrait === 'object' ? person.portrait as MediaAsset : null;
+          {leadership.map((person, personIndex) => {
+            const portrait = typeof person.portrait === 'object'
+              ? person.portrait as MediaAsset
+              : null;
             return (
-              <li key={person.id} className={styles.crewCard}>
+              <li key={person.id} className={`${styles.crewCard} ${styles.panel}`}>
+                <PanelHead
+                  code={`CREW / ${String(personIndex + 1).padStart(2, '0')}`}
+                  status="ACTIVE"
+                />
                 {portrait ? (
                   <MediaImage
                     asset={portrait}
@@ -56,8 +61,8 @@ export function CrewTeaser() {
                 ) : null}
                 <div className={styles.crewMeta}>
                   <strong>{person.name}</strong>
-                  <span>{person.role}</span>
-                  {person.unit ? <em>{person.unit}</em> : null}
+                  <span className={styles.crewRole}>{person.role}</span>
+                  {person.unit ? <em className={styles.crewUnit}>{person.unit}</em> : null}
                 </div>
               </li>
             );
@@ -65,9 +70,8 @@ export function CrewTeaser() {
         </ul>
 
         <p className={styles.crewFoot}>
-          <span aria-hidden="true">/</span>
-          The full {total ?? records.length}-person roster is being prepared for
-          its own page.
+          <span aria-hidden="true">{'//'}</span>
+          {fillTokens(section.footnote ?? '', tokens)}
         </p>
       </div>
     </section>

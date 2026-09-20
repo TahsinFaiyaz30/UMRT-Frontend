@@ -1,12 +1,8 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-17",
-  "issuer": {
-    "name": "UIU Mars Rover Team",
-    "shortName": "UMRT",
-    "location": "Dhaka, Bangladesh"
-  },
-  "certificates": [
+  "revision": "cert-2026-07-17",
+  "resource": "certificates",
+  "records": [
     {
       "id": "UMRT-CERT-2025-001",
       "recipient": {

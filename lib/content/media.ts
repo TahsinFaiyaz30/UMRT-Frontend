@@ -39,14 +39,25 @@ export function resolveMediaRefs(refs: readonly MediaRef[] | null | undefined): 
 }
 
 /**
- * Picks the smallest variant at least `targetWidth` wide, falling back to the
- * largest available. Used where a single `src` is needed instead of a srcSet
- * (WebGL textures, CSS backgrounds, video posters).
+ * Picks the smallest rendition at least `targetWidth` wide, falling back to
+ * the largest available. Used where a single `src` is needed instead of a
+ * srcSet (WebGL textures, CSS backgrounds, video posters).
+ *
+ * The ladder is parsed out of `srcSet` rather than carried as a separate
+ * `variants` array: that array duplicated the same information for every one
+ * of the assets and cost about 26 KB of JSON in the client bundle for a
+ * function most pages never call. `srcSet` is already ordered ascending by the
+ * build script.
  */
 export function pickVariant(asset: MediaAsset, targetWidth: number): string {
-  const sorted = [...asset.variants].sort((a, b) => a.width - b.width);
-  const match = sorted.find((variant) => variant.width >= targetWidth);
-  return (match ?? sorted[sorted.length - 1])?.url ?? asset.src;
+  let fallback = asset.src;
+  for (const entry of asset.srcSet.split(',')) {
+    const [url, descriptor] = entry.trim().split(/\s+/);
+    if (!url) continue;
+    fallback = url;
+    if (Number.parseInt(descriptor ?? '', 10) >= targetWidth) return url;
+  }
+  return fallback;
 }
 
 /** Every asset carrying all of `tags`. */
