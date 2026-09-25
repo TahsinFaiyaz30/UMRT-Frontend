@@ -1,326 +1,318 @@
 'use client';
 
-/**
- * SpaceFlightRig — Cinema-grade 3D flight camera through vast deep space.
- *
- * The camera follows a closed Catmull-Rom spline through 7 distant celestial
- * sectors spanning ~15,600 units of 3D space. Each body is placed extremely far
- * from others so only one is prominent at any time.
- *
- * Normal scroll mode covers the first ~30% of the spline (Earth → Mars → Asteroids).
- * Observation mode enables infinite cruise through the entire cosmos.
- *
- * The return arc (last ~15% of spline) sends the camera far above the main plane
- * at y=2000, looping back to the start with a cinematic deep-cosmos feel.
- */
-
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { flightState } from './spaceFlightState';
+import { createEncounter } from './encounterCatalog';
+import { encounterWorldDistance, travelWorldDistance } from './encounterPresentation';
+import { cameraTravelDistance, flightState, isFlightControlTarget, sampleFlightPose } from './spaceFlightState';
+import { ENCOUNTER_OFFSET, SCROLL_WORLD_SCALE, SECTOR_LENGTH } from './spaceTypes';
 
-/**
- * How much of the spline a full page scroll covers.
- * 0.30 means scrolling from top to bottom of the page advances through
- * sectors 0-2 (Earth, Mars, start of Asteroid belt).
- */
-const PAGE_JOURNEY_FRACTION = 0.30;
-
-/**
- * Minimum scroll-equivalent in pixels. Prevents short pages (like /team/core
- * with ~800px) from rushing through space. The camera moves as if the page
- * were at least this many pixels tall.
- */
-const MIN_SCROLL_TRAVEL = 2000;
-
-/**
- * Major celestial body world-space positions for dwell slowdown.
- * Camera automatically decelerates when approaching these, lingering
- * to present the body in full view before drifting onward.
- * Debris (asteroids) excluded — only planets and black holes trigger dwell.
- */
-const BODY_POSITIONS: [number, number, number][] = [
-  [120, 50, -1200],     // Earth
-  [-150, -30, -3600],   // Mars
-  [-120, -60, -8400],   // Jupiter
-  [80, 20, -10800],     // Black Hole
-  [-100, 70, -13200],   // Saturn
-  [140, -50, -15600],   // Neptune
-];
-/** Distance (units) at which the camera begins slowing down. */
-const DWELL_APPROACH_DIST = 300;
-/** Speed fraction at closest approach (0.12 = 12% of normal speed, ~8× slower). */
-const DWELL_MIN_SPEED = 0.12;
-
-function computeDwellFactor(camPos: THREE.Vector3): number {
-  let factor = 1.0;
-  for (const bp of BODY_POSITIONS) {
-    const dx = camPos.x - bp[0];
-    const dy = camPos.y - bp[1];
-    const dz = camPos.z - bp[2];
-    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-    if (dist < DWELL_APPROACH_DIST) {
-      const t = dist / DWELL_APPROACH_DIST;
-      const speed = DWELL_MIN_SPEED + (1.0 - DWELL_MIN_SPEED) * t * t;
-      factor = Math.min(factor, speed);
-    }
-  }
-  return factor;
-}
+const MAX_SPEED = 420;
+const MAX_INPUT_LEAD = 680;
+const AUTO_DRIFT_SPEED = 68;
 
 export function SpaceFlightRig() {
-  const camera = useThree((s) => s.camera);
-  const invalidate = useThree((s) => s.invalidate);
-
-  const targetProgress = useRef(0);
-  const currentProgress = useRef(0);
-  const targetNdc = useRef(new THREE.Vector2());
-  const currentNdc = useRef(new THREE.Vector2());
-
-  // Interactive freelook for Observation Mode
-  const isDragging = useRef(false);
-  const prevPointer = useRef({ x: 0, y: 0 });
-  const freelookYaw = useRef(0);
-  const freelookPitch = useRef(0);
-  const targetYaw = useRef(0);
-  const targetPitch = useRef(0);
-  const lastInteractionTime = useRef(performance.now());
-
-  /**
-   * Closed Catmull-Rom spline for camera position — 18 waypoints.
-   *
-   * Waypoints 0-14: Outbound journey through 7 celestial sectors.
-   *   Each body gets a "flyby" waypoint near it, with void-transit waypoints between.
-   * Waypoints 15-17: Return arc at y=2000+ (far above all bodies), looping back to start.
-   *
-   * Body positions:
-   *   Earth [120,50,-1200], Mars [-150,-30,-3600], Asteroids [30,80,-6000],
-   *   Jupiter [-120,-60,-8400], BlackHole [80,20,-10800],
-   *   Saturn [-100,70,-13200], Neptune [140,-50,-15600]
-   */
-  const posCurve = useMemo(() => {
-    const curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0, 0, 50),            // 0  Start: pure dark cosmos
-      new THREE.Vector3(30, 50, -600),         // 1  Approaching Earth zone
-      new THREE.Vector3(30, 100, -1180),       // 2  Earth flyby (~104u from body)
-      new THREE.Vector3(-30, -5, -2400),       // 3  Void transit → Mars
-      new THREE.Vector3(-60, 30, -3580),       // 4  Mars flyby (~105u from body)
-      new THREE.Vector3(-50, 35, -4800),       // 5  Void transit → asteroids
-      new THREE.Vector3(25, 75, -5960),        // 6  Asteroid field encounter
-      new THREE.Vector3(-45, -10, -7200),      // 7  Void transit → Jupiter
-      new THREE.Vector3(-20, -20, -8380),      // 8  Jupiter flyby (~108u from body)
-      new THREE.Vector3(-10, -5, -9600),       // 9  Void transit → black hole
-      new THREE.Vector3(-10, 70, -10780),      // 10 Black hole flyby (~103u from body)
-      new THREE.Vector3(-20, 48, -12000),      // 11 Void transit → Saturn
-      new THREE.Vector3(0, 130, -13180),       // 12 Saturn flyby (~114u from body)
-      new THREE.Vector3(30, -10, -14400),      // 13 Void transit → Neptune
-      new THREE.Vector3(40, 10, -15580),       // 14 Neptune flyby (~114u from body)
-      // Return arc: camera climbs far above the main plane
-      new THREE.Vector3(80, 2000, -10000),     // 15 High above everything
-      new THREE.Vector3(-30, 1200, -3000),     // 16 Descending toward start
-      new THREE.Vector3(-10, 300, -200),       // 17 Approaching origin
-    ]);
-    curve.closed = true;
-    return curve;
-  }, []);
-
-  /**
-   * Look-at target spline — tracks nearby celestial bodies during flybys,
-   * looks forward into deep space during void transits.
-   */
-  const lookCurve = useMemo(() => {
-    const curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0, 0, -300),           // 0  Gazing into cosmos
-      new THREE.Vector3(120, 50, -1200),       // 1  Tracking Earth
-      new THREE.Vector3(120, 50, -1200),       // 2  Tracking Earth
-      new THREE.Vector3(-80, -15, -3200),      // 3  Toward Mars
-      new THREE.Vector3(-150, -30, -3600),     // 4  Tracking Mars
-      new THREE.Vector3(0, 40, -5600),         // 5  Forward into void
-      new THREE.Vector3(30, 80, -6000),        // 6  Tracking asteroid field
-      new THREE.Vector3(-60, -30, -8000),      // 7  Toward Jupiter
-      new THREE.Vector3(-120, -60, -8400),     // 8  Tracking Jupiter
-      new THREE.Vector3(40, 10, -10400),       // 9  Toward black hole
-      new THREE.Vector3(80, 20, -10800),       // 10 Tracking black hole
-      new THREE.Vector3(-50, 50, -12800),      // 11 Toward Saturn
-      new THREE.Vector3(-100, 70, -13200),     // 12 Tracking Saturn
-      new THREE.Vector3(70, -25, -15200),      // 13 Toward Neptune
-      new THREE.Vector3(140, -50, -15600),     // 14 Tracking Neptune
-      // Return arc: looking across the vast cosmos below
-      new THREE.Vector3(40, 400, -12000),      // 15 Panoramic cosmos view
-      new THREE.Vector3(0, 200, -5000),        // 16 Looking toward origin
-      new THREE.Vector3(0, 50, -500),          // 17 Approaching start
-    ]);
-    curve.closed = true;
-    return curve;
-  }, []);
-
-  const scratchPos = useRef(new THREE.Vector3());
-  const scratchLook = useRef(new THREE.Vector3());
+  const camera = useThree((state) => state.camera);
+  const scene = useThree((state) => state.scene);
+  const size = useThree((state) => state.size);
+  const invalidate = useThree((state) => state.invalidate);
+  const pathname = usePathname();
+  const pageDistance = useRef(0);
+  const observationTarget = useRef(0);
+  const previousMode = useRef(false);
+  const lastInteraction = useRef(0);
+  const pointerTarget = useRef(new THREE.Vector2());
+  const pointer = useRef(new THREE.Vector2());
+  const drag = useRef<{ id: number; x: number; y: number } | null>(null);
+  const touch = useRef<{ x: number; y: number } | null>(null);
+  const lookTarget = useRef(new THREE.Vector2());
+  const look = useRef(new THREE.Vector2());
+  const pose = useRef({ x: 0, y: 0, yaw: 0, pitch: 0 });
+  const lookAt = useRef(new THREE.Vector3());
+  const encounter = useRef(createEncounter(0));
+  const inspectedRegion = useRef(-1);
+  const regionDirection = useRef(new THREE.Vector3());
+  const viewDirection = useRef(new THREE.Vector3());
+  const sunView = useRef(new THREE.Vector3());
+  const mercuryView = useRef(new THREE.Vector3());
+  const openingBodies = useRef([createEncounter(0), createEncounter(1)]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (flightState.observationMode) return;
-      const doc = document.documentElement;
-      const rawMaxScroll = Math.max(1, doc.scrollHeight - window.innerHeight);
-      // Enforce minimum scroll travel so short pages feel slow and cinematic
-      const effectiveMax = Math.max(MIN_SCROLL_TRAVEL, rawMaxScroll);
-      // Page scroll covers only a fraction of the total spline journey
-      const progress = (window.scrollY / effectiveMax) * PAGE_JOURNEY_FRACTION;
-      targetProgress.current = progress;
-      lastInteractionTime.current = performance.now();
-      invalidate();
-    };
+    if (!(camera instanceof THREE.PerspectiveCamera)) return;
+    const aspect = Math.max(1, size.width) / Math.max(1, size.height);
+    // Keep a 45-degree view across the shorter dimension, including portrait.
+    camera.fov = THREE.MathUtils.radToDeg(
+      2 * Math.atan(Math.tan(Math.PI / 8) / Math.min(1, aspect)),
+    );
+    camera.aspect = aspect;
+    camera.updateProjectionMatrix();
+    invalidate();
+  }, [camera, size.width, size.height, invalidate]);
 
-    const handleWheel = (e: WheelEvent) => {
-      if (!flightState.observationMode) return;
-      // Gentle thrusters for infinite cruise in observation mode
-      const delta = e.deltaY * 0.00006;
-      targetProgress.current += delta;
-      lastInteractionTime.current = performance.now();
-      invalidate();
-    };
+  useEffect(() => {
+    const distance = Math.max(0, window.scrollY) * SCROLL_WORLD_SCALE;
+    pageDistance.current = distance;
+    observationTarget.current = distance;
+    flightState.distance = distance;
+    flightState.targetDistance = distance;
+    flightState.sectorIndex = Math.floor(distance / SECTOR_LENGTH);
+    flightState.origin = flightState.sectorIndex * SECTOR_LENGTH;
+    // The HUD owns route exits; preserve Observe if it was selected while
+    // this scene's lazy bundle was loading.
+    previousMode.current = false;
+    drag.current = null;
+    touch.current = null;
+    pointer.current.set(0, 0);
+    pointerTarget.current.set(0, 0);
+    look.current.set(0, 0);
+    lookTarget.current.set(0, 0);
+  }, [pathname]);
 
-    const handlePointerMove = (e: PointerEvent) => {
-      targetNdc.current.set(
-        (e.clientX / window.innerWidth) * 2 - 1,
-        -(e.clientY / window.innerHeight) * 2 + 1,
+  useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotion = () => {
+      flightState.reducedMotion = reduced.matches;
+      if (reduced.matches) flightState.autoDrift = false;
+    };
+    updateMotion();
+    reduced.addEventListener('change', updateMotion);
+
+    const navigate = (delta: number) => {
+      flightState.inspectSunspots = false;
+      observationTarget.current = THREE.MathUtils.clamp(
+        observationTarget.current + delta,
+        Math.max(0, flightState.distance - MAX_INPUT_LEAD),
+        flightState.distance + MAX_INPUT_LEAD,
       );
-
-      if (flightState.observationMode && isDragging.current) {
-        const dx = e.clientX - prevPointer.current.x;
-        const dy = e.clientY - prevPointer.current.y;
-        prevPointer.current = { x: e.clientX, y: e.clientY };
-
-        targetYaw.current -= dx * 0.003;
-        targetPitch.current = THREE.MathUtils.clamp(
-          targetPitch.current - dy * 0.003,
-          -Math.PI * 0.4,
-          Math.PI * 0.4,
-        );
-        lastInteractionTime.current = performance.now();
+      lastInteraction.current = performance.now();
+    };
+    const handleScroll = () => {
+      if (!flightState.observationMode) pageDistance.current = Math.max(0, window.scrollY) * SCROLL_WORLD_SCALE;
+    };
+    const handleWheel = (event: WheelEvent) => {
+      if (!flightState.observationMode || event.ctrlKey || isFlightControlTarget(event.target)) return;
+      event.preventDefault();
+      const pixels = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1);
+      navigate(THREE.MathUtils.clamp(pixels * SCROLL_WORLD_SCALE, -280, 280));
+    };
+    const handleKey = (event: KeyboardEvent) => {
+      if (!flightState.observationMode || isFlightControlTarget(event.target)
+        || event.altKey || event.metaKey || event.ctrlKey) return;
+      const amount = event.key === 'ArrowDown' || event.key === 'ArrowRight' ? 110
+        : event.key === 'ArrowUp' || event.key === 'ArrowLeft' ? -110
+          : event.key === 'PageDown' ? 520 : event.key === 'PageUp' ? -520 : 0;
+      if (amount) {
+        event.preventDefault();
+        navigate(amount);
       }
-      invalidate();
     };
-
-    const handlePointerDown = (e: PointerEvent) => {
-      if (!flightState.observationMode) return;
-      isDragging.current = true;
-      prevPointer.current = { x: e.clientX, y: e.clientY };
-      lastInteractionTime.current = performance.now();
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!flightState.observationMode || event.pointerType === 'touch' || event.button !== 0
+        || isFlightControlTarget(event.target)) return;
+      drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      flightState.inspectSunspots = false;
+      lastInteraction.current = performance.now();
     };
-
-    const handlePointerUp = () => {
-      isDragging.current = false;
+    const handlePointerMove = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') return;
+      pointerTarget.current.set(event.clientX / window.innerWidth * 2 - 1, 1 - event.clientY / window.innerHeight * 2);
+      if (flightState.observationMode && drag.current?.id === event.pointerId) {
+        lookTarget.current.x -= (event.clientX - drag.current.x) * 0.003;
+        lookTarget.current.y = THREE.MathUtils.clamp(
+          lookTarget.current.y + (event.clientY - drag.current.y) * 0.003, -1.05, 1.05,
+        );
+        drag.current.x = event.clientX;
+        drag.current.y = event.clientY;
+        lastInteraction.current = performance.now();
+      }
+    };
+    const releasePointer = () => { drag.current = null; };
+    const handleTouchStart = (event: TouchEvent) => {
+      if (!flightState.observationMode || isFlightControlTarget(event.target) || event.touches.length !== 1) {
+        touch.current = null;
+        return;
+      }
+      touch.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+      lastInteraction.current = performance.now();
+    };
+    const handleTouchMove = (event: TouchEvent) => {
+      if (!flightState.observationMode || !touch.current || event.touches.length !== 1) return;
+      event.preventDefault();
+      const current = event.touches[0];
+      navigate((touch.current.y - current.clientY) * 1.9);
+      touch.current = { x: current.clientX, y: current.clientY };
+    };
+    const releaseTouch = () => { touch.current = null; };
+    const releaseAll = () => {
+      releasePointer();
+      releaseTouch();
+      pointerTarget.current.set(0, 0);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleScroll, { passive: true });
-    window.addEventListener('wheel', handleWheel, { passive: true });
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('pageshow', handleScroll);
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('keydown', handleKey);
     window.addEventListener('pointerdown', handlePointerDown);
-    window.addEventListener('pointerup', handlePointerUp);
-
-    handleScroll();
-
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('pointerup', releasePointer);
+    window.addEventListener('pointercancel', releasePointer);
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', releaseTouch);
+    window.addEventListener('touchcancel', releaseTouch);
+    window.addEventListener('blur', releaseAll);
     return () => {
+      reduced.removeEventListener('change', updateMotion);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
+      window.removeEventListener('pageshow', handleScroll);
       window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('keydown', handleKey);
       window.removeEventListener('pointerdown', handlePointerDown);
-      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', releasePointer);
+      window.removeEventListener('pointercancel', releasePointer);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', releaseTouch);
+      window.removeEventListener('touchcancel', releaseTouch);
+      window.removeEventListener('blur', releaseAll);
     };
-  }, [invalidate]);
+  }, []);
 
   useFrame((_, rawDelta) => {
-    const delta = Math.min(rawDelta, 1 / 20);
-    const now = performance.now();
-
-    // Auto-cruise gentle drift when idle in Observation Mode
-    if (flightState.observationMode && flightState.autoDrift) {
-      if (now - lastInteractionTime.current > 2000) {
-        targetProgress.current += delta * 0.004;
+    const delta = Math.min(rawDelta, 0.05);
+    const observing = flightState.observationMode;
+    if (camera instanceof THREE.PerspectiveCamera) {
+      const zoom = observing ? flightState.viewMagnification : 1;
+      if (Math.abs(camera.zoom - zoom) > 0.0001) {
+        camera.zoom = zoom;
+        camera.updateProjectionMatrix();
       }
     }
-
-    // Preview position on spline for dwell computation
-    const previewU = ((currentProgress.current % 1.0) + 1.0) % 1.0;
-    posCurve.getPoint(previewU, scratchPos.current);
-    const dwellFactor = computeDwellFactor(scratchPos.current);
-
-    // Heavy aerospace inertia with body-proximity dwell slowdown
-    // Near a major body: camera lingers at ~12% speed to show full view
-    // In open void: full speed cinematic cruise
-    currentProgress.current +=
-      (targetProgress.current - currentProgress.current) *
-      Math.min(1, delta * 0.8 * dwellFactor);
-    const rawP = currentProgress.current;
-
-    // Seamless cyclic modulo for closed Catmull-Rom spline
-    const u = ((rawP % 1.0) + 1.0) % 1.0;
-    flightState.progress = u;
-
-    // Smooth mouse parallax & freelook
-    currentNdc.current.lerp(targetNdc.current, Math.min(1, delta * 3.0));
-    freelookYaw.current = THREE.MathUtils.lerp(
-      freelookYaw.current,
-      targetYaw.current,
-      Math.min(1, delta * 4.0),
-    );
-    freelookPitch.current = THREE.MathUtils.lerp(
-      freelookPitch.current,
-      targetPitch.current,
-      Math.min(1, delta * 4.0),
-    );
-
-    // Sample camera position and look-at from splines
-    posCurve.getPoint(u, scratchPos.current);
-    lookCurve.getPoint(u, scratchLook.current);
-
-    // Natural zero-gravity breathing sway
-    const time = now * 0.0004;
-    const swayX = Math.sin(time) * 0.3;
-    const swayY = Math.cos(time * 0.7) * 0.2;
-
-    // Mouse parallax offset
-    const mouseX = currentNdc.current.x * 1.5;
-    const mouseY = currentNdc.current.y * 1.0;
-
-    camera.position.set(
-      scratchPos.current.x + swayX + mouseX,
-      scratchPos.current.y + swayY + mouseY,
-      scratchPos.current.z,
-    );
-
-    // Look direction with optional freelook in Observation Mode
-    const lookDir = new THREE.Vector3()
-      .subVectors(scratchLook.current, scratchPos.current)
-      .normalize();
-
-    if (
-      flightState.observationMode &&
-      (Math.abs(freelookYaw.current) > 0.001 ||
-        Math.abs(freelookPitch.current) > 0.001)
-    ) {
-      lookDir.applyAxisAngle(
-        new THREE.Vector3(0, 1, 0),
-        freelookYaw.current,
-      );
-      const right = new THREE.Vector3()
-        .crossVectors(lookDir, new THREE.Vector3(0, 1, 0))
-        .normalize();
-      lookDir.applyAxisAngle(right, freelookPitch.current);
+    if (observing !== previousMode.current) {
+      previousMode.current = observing;
+      observationTarget.current = flightState.distance;
+      lastInteraction.current = performance.now();
+      drag.current = null;
+      touch.current = null;
+      if (!observing) {
+        pageDistance.current = Math.max(0, window.scrollY) * SCROLL_WORLD_SCALE;
+        flightState.distance = pageDistance.current;
+        lookTarget.current.set(0, 0);
+        look.current.set(0, 0);
+      }
     }
-
-    const finalLook = new THREE.Vector3().addVectors(
-      camera.position,
-      lookDir.multiplyScalar(100),
+    if (observing && flightState.requestedSector !== null) {
+      const sector = Math.max(0, Math.floor(flightState.requestedSector));
+      flightState.requestedSector = null;
+      // Begin inside the quiet approach corridor. Streaming retains control of
+      // forward travel until this destination's maps and shaders are ready.
+      flightState.distance = sector * SECTOR_LENGTH;
+      observationTarget.current = sector * SECTOR_LENGTH + 1200;
+      lastInteraction.current = performance.now();
+      look.current.set(0, 0);
+      lookTarget.current.set(0, 0);
+    }
+    if (observing && flightState.autoDrift && !flightState.reducedMotion && !drag.current && !touch.current
+      && performance.now() - lastInteraction.current > 1800) {
+      observationTarget.current = Math.min(
+        observationTarget.current + delta * AUTO_DRIFT_SPEED,
+        flightState.distance + MAX_INPUT_LEAD,
+      );
+    }
+    const desired = observing ? observationTarget.current : pageDistance.current;
+    flightState.targetDistance = THREE.MathUtils.clamp(
+      desired, Math.max(0, flightState.distance - MAX_INPUT_LEAD), flightState.distance + MAX_INPUT_LEAD,
     );
-    camera.lookAt(finalLook);
+    const remaining = flightState.targetDistance - flightState.distance;
+    const movement = THREE.MathUtils.clamp(remaining * (1 - Math.exp(-delta * 2.1)), -MAX_SPEED * delta, MAX_SPEED * delta);
+    const nextDistance = Math.max(0, flightState.distance + movement);
+    flightState.distance = movement > 0
+      ? Math.min(nextDistance, Math.max(flightState.distance, flightState.readyThroughDistance))
+      : nextDistance;
+    if (!flightState.openingReady) flightState.distance = 0;
+    const distance = flightState.distance;
+    flightState.sectorIndex = Math.floor(distance / SECTOR_LENGTH);
 
-    // Subtle banking roll into turns
-    camera.rotation.z = -currentNdc.current.x * 0.015;
-  });
+    const cameraDistance = cameraTravelDistance(distance);
+    const worldDistance = travelWorldDistance(cameraDistance);
+    flightState.worldDistance = worldDistance;
+    flightState.origin = Math.floor(worldDistance / 12_000) * 12_000;
+    const nearestIndex = Math.max(0, Math.floor((cameraDistance - ENCOUNTER_OFFSET + SECTOR_LENGTH / 2) / SECTOR_LENGTH));
+    if (encounter.current.index !== nearestIndex) encounter.current = createEncounter(nearestIndex);
+    const worldRemaining = encounterWorldDistance(nearestIndex) - worldDistance;
+    sampleFlightPose(cameraDistance, encounter.current, pose.current, worldRemaining);
+    const bodyDistance = Math.abs(worldRemaining);
+    flightState.activeSectorName = bodyDistance < 1100 ? encounter.current.name : 'Interstellar transit';
+
+    pointer.current.lerp(pointerTarget.current, 1 - Math.exp(-delta * 3));
+    look.current.lerp(lookTarget.current, 1 - Math.exp(-delta * 5));
+    const parallax = flightState.reducedMotion ? 0 : 1;
+    camera.position.set(
+      pose.current.x + pointer.current.x * 1.3 * parallax,
+      pose.current.y + pointer.current.y * 0.8 * parallax,
+      -worldDistance + flightState.origin,
+    );
+    let yaw = pose.current.yaw;
+    if (camera instanceof THREE.PerspectiveCamera) {
+      const aspect = Math.max(1, size.width) / Math.max(1, size.height);
+      const baseline = 2 * Math.atan(Math.tan(Math.PI / 8) / Math.min(1, aspect));
+      let verticalFov = baseline;
+      const opening = 1 - THREE.MathUtils.smoothstep(cameraDistance, 1150, 1500);
+      if (opening > 0 && !flightState.inspectSunspots) {
+        // Aim between angular bounds, not between world-space positions: the
+        // Sun is much closer to the camera than Mercury in this opening shot.
+        const [sun, mercury] = openingBodies.current;
+        sunView.current.fromArray(sun.position); sunView.current.z += flightState.origin;
+        mercuryView.current.fromArray(mercury.position); mercuryView.current.z += flightState.origin;
+        sunView.current.sub(camera.position); mercuryView.current.sub(camera.position);
+        const sunAngle = Math.atan2(sunView.current.x, -sunView.current.z);
+        const mercuryAngle = Math.atan2(mercuryView.current.x, -mercuryView.current.z);
+        const sunRadius = Math.asin(Math.min(1, sun.radius / sunView.current.length()));
+        const mercuryRadius = Math.asin(Math.min(1, mercury.radius / mercuryView.current.length()));
+        const left = Math.min(sunAngle - sunRadius, mercuryAngle - mercuryRadius);
+        const right = Math.max(sunAngle + sunRadius, mercuryAngle + mercuryRadius);
+        yaw += ((left + right) * .5 - yaw) * opening;
+        const required = 2 * Math.atan(Math.tan((right - left + .16) * .5) / aspect);
+        verticalFov += (Math.max(baseline, required) - baseline) * opening;
+      }
+      const degrees = THREE.MathUtils.radToDeg(verticalFov);
+      if (Math.abs(camera.fov - degrees) > .001) { camera.fov = degrees; camera.updateProjectionMatrix(); }
+    }
+    yaw += observing ? look.current.x : 0;
+    const pitch = THREE.MathUtils.clamp(pose.current.pitch - (observing ? look.current.y : 0), -1.45, 1.45);
+    lookAt.current.set(
+      camera.position.x + Math.sin(yaw) * Math.cos(pitch) * 100,
+      camera.position.y + Math.sin(pitch) * 100,
+      camera.position.z - Math.cos(yaw) * Math.cos(pitch) * 100,
+    );
+    if (observing && flightState.inspectSunspots && nearestIndex === 0) {
+      const solarRoot = scene.children.find((object) => object.userData.encounterIndex === 0);
+      const regions = solarRoot?.userData.solarActiveRegions as THREE.Vector3[] | undefined;
+      if (regions?.length) {
+        if (inspectedRegion.current < 0) {
+          // Pick a visible active region once, then follow that same physical
+          // feature as the Sun rotates. Dragging releases this inspection view.
+          solarRoot!.getWorldPosition(viewDirection.current);
+          viewDirection.current.subVectors(camera.position, viewDirection.current).normalize();
+          let best = -Infinity;
+          for (let index = 0; index < regions.length; index++) {
+            solarRoot!.getWorldPosition(regionDirection.current);
+            regionDirection.current.subVectors(regions[index], regionDirection.current).normalize();
+            const alignment = regionDirection.current.dot(viewDirection.current);
+            if (alignment > best) { best = alignment; inspectedRegion.current = index; }
+          }
+        }
+        lookAt.current.copy(regions[inspectedRegion.current]);
+      }
+    } else inspectedRegion.current = -1;
+    camera.lookAt(lookAt.current);
+  }, -2);
 
   return null;
 }

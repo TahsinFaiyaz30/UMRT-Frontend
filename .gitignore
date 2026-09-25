@@ -149,3 +149,5 @@ dist
 
 
 RESOURCES/
+/.playwright-cli
+/output/playwright

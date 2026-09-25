@@ -1,116 +1,98 @@
 'use client';
 
-/**
- * TeamSpaceField — Photorealistic 3D deep space voyage across isolated celestial worlds.
- *
- * Grounded in authentic planetary science & NASA astronomical photography:
- *  - Distant, elegant starting view: at page top, Mars sits distant in the upper-right sky.
- *    The title area is completely clear, dark cosmic void with pin-point stars.
- *  - Strict celestial isolation: each celestial body is encountered in its own sector.
- *    Zero crowded clutter or multiple planets in one frame.
- *  - Close-in inspection & lift-away flight choreography: camera dives close to each celestial body,
- *    highlights its surface/rings/glow, then lifts away back into open space.
- *  - Interstellar void transit: rogue cratered asteroids and exploration probe in the quiet expanse.
- *  - Deep-Sky Milky Way panorama & pin-point, non-twinkling astronomical stars.
- *  - Continuous natural zero-gravity motion and mouse parallax.
- */
-
-import { useEffect, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { EffectComposer, Bloom, ToneMapping, SMAA, Vignette } from '@react-three/postprocessing';
-import { ToneMappingMode } from 'postprocessing';
+import { Component, useEffect, useState, type ReactNode } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import {
-  HybridFrameGovernor,
-  WebGLRendererLifecycle,
-} from '@/components/performance/HybridFrameGovernor';
-import { useResponsiveDpr } from '@/components/performance/useResponsiveDpr';
-import { detectQuality, getReducedMotion, type Quality } from '@/lib/performance';
+import { HybridFrameGovernor } from '@/components/performance/HybridFrameGovernor';
 import { SpaceFlightRig } from './SpaceFlightRig';
 import { RealisticStarfield } from './RealisticStarfield';
 import { CelestialVoyage } from './CelestialVoyage';
+import { SpacePostProcessing } from './SpacePostProcessing';
+import { TransitDebris } from './TransitDebris';
 
-function Scene({ quality }: { quality: Quality }) {
-  const bloomEnabled = quality !== 'low';
+class SpaceBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() { return this.state.failed ? null : this.props.children; }
+}
 
+function SpaceScene({ reduced, onOpeningReady }: { reduced: boolean; onOpeningReady: (ready: boolean) => void }) {
+  const gl = useThree((state) => state.gl);
+  const [lostContext, setLostContext] = useState(false);
+  useEffect(() => {
+    const canvas = gl.domElement;
+    // Unmount owned GPU resources while the context is lost. Recreating the
+    // whole Canvas after restoration would dispose old framebuffers against
+    // the restored context; rebuilding just this subtree avoids stale handles.
+    const lost = (event: Event) => {
+      event.preventDefault();
+      setLostContext(true);
+      window.dispatchEvent(new Event('team-space-reset'));
+    };
+    const restored = () => {
+      setLostContext(false);
+      window.dispatchEvent(new Event('team-space-reset'));
+    };
+    canvas.addEventListener('webglcontextlost', lost);
+    canvas.addEventListener('webglcontextrestored', restored);
+    return () => {
+      canvas.removeEventListener('webglcontextlost', lost);
+      canvas.removeEventListener('webglcontextrestored', restored);
+    };
+  }, [gl]);
+  if (lostContext) return null;
   return (
     <>
+      <HybridFrameGovernor forceActive={!reduced} reduceMotion={reduced} />
       <SpaceFlightRig />
-
-      {/* Deep-Sky Milky Way Panorama & Static Pin-Point Stars */}
       <RealisticStarfield />
-
-      {/* Isolated Celestial Voyage (Mars -> Void -> Black Hole -> Saturn) */}
-      <CelestialVoyage />
-
-      {/* Cinematic Post-Processing Pipeline */}
-      {bloomEnabled && (
-        <EffectComposer enableNormalPass={false} multisampling={0}>
-          {/* SMAA anti-aliasing — smooth planet/ring silhouettes without MSAA cost */}
-          <SMAA />
-          {/* Bloom: atmospheric rims, accretion disk glow, star halos */}
-          <Bloom
-            intensity={0.8}
-            luminanceThreshold={0.55}
-            luminanceSmoothing={0.3}
-            mipmapBlur
-            radius={0.6}
-          />
-          {/* Subtle cinematic vignette — darkened edges, brighter center */}
-          <Vignette offset={0.25} darkness={0.55} />
-          {/* ACES filmic tone curve: cinematic HDR color response */}
-          <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-        </EffectComposer>
-      )}
+      <CelestialVoyage onOpeningReady={onOpeningReady} />
+      <TransitDebris />
+      <SpacePostProcessing />
     </>
   );
 }
 
+/** One visual specification on every device; only work scheduling is adaptive. */
 export function TeamSpaceField() {
   const [ready, setReady] = useState(false);
-  const [quality, setQuality] = useState<Quality>('medium');
   const [reduced, setReduced] = useState(false);
-
+  const [openingReady, setOpeningReady] = useState(false);
   useEffect(() => {
-    setQuality(detectQuality());
-    setReduced(getReducedMotion());
+    // A future page-loading animation can wait for this event or data attribute.
+    window.dispatchEvent(new CustomEvent('team-space-ready', { detail: { ready: openingReady } }));
+  }, [openingReady]);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReduced(mq.matches);
+    update();
     setReady(true);
-
-    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
-    const onChange = () => setReduced(mq?.matches ?? false);
-    mq?.addEventListener?.('change', onChange);
-    return () => mq?.removeEventListener?.('change', onChange);
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
   }, []);
-
-  const dprMax = useResponsiveDpr(quality);
-
   if (!ready) return null;
 
   return (
-    <div className="team-space" aria-hidden="true">
-      <Canvas
-        dpr={[Math.min(1, dprMax), dprMax]}
-        gl={{
-          antialias: true,
-          alpha: true,
-          powerPreference: 'high-performance',
-          depth: true,
-          stencil: false,
-          toneMapping: THREE.NoToneMapping,
-          outputColorSpace: THREE.SRGBColorSpace,
-        }}
-        camera={{ position: [0, 0, 0], fov: 36, near: 0.1, far: 18000 }}
-        frameloop="demand"
-        onCreated={({ gl }) => {
-          if (process.env.NODE_ENV === 'production') gl.debug.checkShaderErrors = false;
-          gl.toneMappingExposure = 1.35;
-          gl.setClearAlpha(0);
-        }}
-      >
-        <HybridFrameGovernor forceActive={!reduced} reduceMotion={reduced} startupDurationMs={1500} />
-        <WebGLRendererLifecycle />
-        <Scene quality={quality} />
-      </Canvas>
+    <div className="team-space" aria-hidden="true" data-space-ready={openingReady} style={{ visibility: openingReady ? 'visible' : 'hidden' }}>
+      <SpaceBoundary>
+        <Canvas
+          dpr={[1, 2]}
+          gl={{
+            antialias: true, alpha: false, powerPreference: 'high-performance',
+            depth: true, stencil: false, toneMapping: THREE.NoToneMapping,
+            outputColorSpace: THREE.SRGBColorSpace,
+          }}
+          camera={{ position: [0, 0, 0], fov: 45, near: 0.5, far: 42000 }}
+          frameloop="demand"
+          fallback={null}
+          onCreated={({ gl }) => {
+            gl.setClearColor('#000104', 1);
+            gl.toneMappingExposure = 1;
+          }}
+        >
+          <SpaceScene reduced={reduced} onOpeningReady={setOpeningReady} />
+        </Canvas>
+      </SpaceBoundary>
     </div>
   );
 }

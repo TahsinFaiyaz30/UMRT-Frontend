@@ -14,8 +14,7 @@ export default function TeamLayout({ children }: { children: React.ReactNode }) 
     <>
       <PremiumNavbar />
       <main className="team-page relative min-h-screen">
-        {/* Raymarched nebulae, a volumetric starfield and an interactive debris
-            field. Sits behind the content and never takes pointer events. */}
+        {/* A streamed 3D voyage shared by all database-driven team views. */}
         <TeamSpaceMount />
         <div className="team-page-content">{children}</div>
       </main>

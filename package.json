@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test:space": "node scripts/test-team-space.cjs && node scripts/test-solar-resources.cjs",
     "generate:terrain": "node scripts/generate-terrain-heights.mjs",
     "generate:media": "node scripts/build-media-library.mjs"
   },

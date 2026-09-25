@@ -2043,6 +2043,7 @@ body.observation-mode-active footer {
 body.observation-mode-active .team-space {
   z-index: 9999 !important;
   pointer-events: auto !important;
+  touch-action: none;
 }
 
 /* Floating Launch Button on the team views */
@@ -2162,8 +2163,98 @@ body.observation-mode-active .team-space {
 
 .observation-hud-bottom {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
   justify-content: center;
   align-items: center;
+}
+
+.observation-destinations {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  border: 1px solid rgba(242, 239, 232, 0.16);
+  border-radius: 12px;
+  background: rgba(7, 9, 13, 0.85);
+  backdrop-filter: blur(16px);
+  max-width: 100%;
+}
+.observation-destinations label { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.observation-destinations select {
+  width: min(220px, 48vw);
+  color: #f2efe8;
+  background: #10131a;
+  border: 0;
+  border-radius: 4px;
+  padding: 5px 7px;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.observation-destinations select:focus-visible { outline: 2px solid #f2efe8; outline-offset: 2px; }
+.observation-destinations button { min-width: 44px; min-height: 44px; justify-content: center; }
+.observation-destinations button:disabled { opacity: 0.35; cursor: default; }
+
+.observation-zoom { display: flex; align-items: center; gap: 14px; pointer-events: auto; }
+.observation-zoom label { display: flex; align-items: center; gap: 8px; }
+.observation-zoom input { width: 100px; min-height: 36px; accent-color: #eee9dc; cursor: pointer; }
+.observation-credit { display: block; max-width: 330px; margin-top: 5px; color: #9c9c9c; font-size: 10px; line-height: 1.5; pointer-events: auto; }
+.observation-credit:hover { color: #fff; }
+.observation-telemetry { padding: 8px 10px; margin: -8px -10px; border-radius: 8px; background: rgba(4, 6, 10, 0.72); }
+.observation-zoom label { padding: 0 7px; border-radius: 5px; background: rgba(4, 6, 10, 0.72); }
+.observation-solar-view { pointer-events: auto; display: flex; align-items: center; gap: 10px; padding: 5px 10px; border-radius: 6px; background: rgba(4, 6, 10, 0.82); }
+.observation-solar-view select { color: #f2efe8; background: #10131a; border: 1px solid #444; border-radius: 4px; padding: 5px; font-size: 12px; }
+
+.observation-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.observation-drift-btn {
+  pointer-events: auto;
+  padding: 8px 14px;
+  min-height: 44px;
+  border-radius: 6px;
+  border: 1px solid rgba(242, 239, 232, 0.2);
+  background: rgba(14, 17, 24, 0.85);
+  color: #f2efe8;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.observation-drift-btn:hover { border-color: #e05a3a; }
+.observation-drift-btn:disabled { opacity: 0.65; cursor: default; }
+.observation-hud:focus-visible { outline: none; }
+
+.observation-drift-btn:focus-visible,
+.observation-exit-btn:focus-visible,
+.observation-launch-trigger:focus-visible {
+  outline: 2px solid #f2efe8;
+  outline-offset: 4px;
+}
+
+@media (max-width: 600px) {
+  .observation-hud-top { flex-direction: column; gap: 18px; }
+  .observation-controls { justify-content: flex-start; }
+  .observation-exit-btn { min-height: 44px; }
+  .observation-telemetry { max-width: 100%; }
+  .observation-tag { font-size: 0.58rem; letter-spacing: 0.08em; }
+  .observation-target { overflow-wrap: anywhere; }
+  .observation-launch-trigger { right: 16px; bottom: 20px; max-width: calc(100vw - 32px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .observation-launch-trigger .pulse-dot { animation: none; }
+  body.observation-mode-active .team-page-content,
+  body.observation-mode-active header,
+  body.observation-mode-active nav,
+  body.observation-mode-active footer { transition: none !important; }
 }
 
 .observation-hint-pill {

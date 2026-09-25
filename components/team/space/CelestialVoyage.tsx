@@ -1,161 +1,131 @@
 'use client';
 
-/**
- * CelestialVoyage — Distance-Based Sector Architecture.
- *
- * Celestial bodies are placed EXTREMELY far apart in 3D space (2400+ unit gaps).
- * Only the active sector ± 1 neighbor are mounted (conditional rendering).
- * Bodies naturally emerge from vast distance as the camera approaches — no opacity
- * crossfading, no popping, no crowded clutter.
- *
- * 7 celestial encounters scattered across ~15,600 units of deep space:
- *   Earth → Mars → Asteroid Field → Jupiter → Black Hole → Saturn → Neptune
- */
-
-import { useState } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
+import { useFrame, useThree } from '@react-three/fiber';
+import { createEncounter } from './encounterCatalog';
+import { createEncounterObject } from './encounterObjects';
+import { EncounterStream } from './encounterStream';
 import { flightState } from './spaceFlightState';
-import { RealisticEarth } from './RealisticEarth';
-import { RealisticMars } from './RealisticMars';
-import { RealisticSpaceProbe } from './RealisticSpaceProbe';
-import { RogueMeteoroids } from './RogueMeteoroids';
-import { RealisticJupiter } from './RealisticJupiter';
-import { GargantuaBlackHole } from './GargantuaBlackHole';
-import { RealisticSaturn } from './RealisticSaturn';
-import { RealisticNeptune } from './RealisticNeptune';
+import { encounterPrefetch, encounterWorldDistance, openingPairReady } from './encounterPresentation';
+import { prepareEncounterShaders } from './shaderPreparation';
+import { SECTOR_LENGTH } from './spaceTypes';
 
-const SUN_POSITION: [number, number, number] = [400, 200, 300];
+type EncounterObject = ReturnType<typeof createEncounterObject>;
 
-/**
- * 7 sectors, each containing one celestial body.
- * The first 85% of the spline is the outbound journey through all sectors.
- * The last 15% is the return arc (camera far above everything, no bodies mounted).
- */
-const SECTOR_COUNT = 7;
+function scheduleIdle(work: () => void) {
+  if (typeof window.requestIdleCallback === 'function') {
+    const id = window.requestIdleCallback(work, { timeout: 180 });
+    return () => window.cancelIdleCallback(id);
+  }
+  const id = window.setTimeout(work, 32);
+  return () => window.clearTimeout(id);
+}
 
-const SECTOR_NAMES = [
-  'SECTOR 01 // EARTH & LUNA',
-  'SECTOR 02 // MARS & PHOBOS',
-  'SECTOR 03 // ASTEROID BELT & DEEP PROBE',
-  'SECTOR 04 // JUPITER & GALILEAN MOONS',
-  'SECTOR 05 // GARGANTUA SUPERMASSIVE BLACK HOLE',
-  'SECTOR 06 // SATURN RING SYSTEM',
-  'SECTOR 07 // NEPTUNE ICE GIANT',
-];
+/** No texture queue or entire-universe allocation: one encounter per idle task. */
+export function CelestialVoyage({ onOpeningReady }: { onOpeningReady: (ready: boolean) => void }) {
+  const { gl, scene, camera, invalidate } = useThree();
+  const pathname = usePathname();
+  const streamRef = useRef<EncounterStream<EncounterObject> | null>(null);
+  const clockRef = useRef(0);
+  const planRef = useRef({ key: -1, requested: [0] });
+  const telemetryTime = useRef(0);
+  const opened = useRef(false);
 
-export function CelestialVoyage() {
-  const [activeSector, setActiveSector] = useState(0);
+  useEffect(() => {
+    let retired = false;
+    const controller = new AbortController();
+    planRef.current.key = -1;
+    opened.current = false;
+    flightState.openingReady = false;
+    flightState.readyThroughDistance = 0;
+    onOpeningReady(false);
+    const stream = new EncounterStream<EncounterObject>({
+      create: (index) => createEncounterObject(createEncounter(index)),
+      prepare: async (object) => {
+        await object.prepare?.(controller.signal);
+        await prepareEncounterShaders(gl, object.group, camera, scene, controller.signal);
+      },
+      mount: (object, index) => {
+        const descriptor = createEncounter(index);
+        object.group.position.set(...descriptor.position);
+        object.group.position.z = -encounterWorldDistance(index) + flightState.origin;
+        object.group.name = `encounter-${index}-${descriptor.kind}`;
+        object.group.userData.encounterIndex = index;
+        object.group.visible = false;
+        scene.add(object.group);
+      },
+      unmount: (object) => {
+        scene.remove(object.group);
+      },
+      schedule: scheduleIdle,
+      changed: () => { if (!retired) invalidate(); },
+      error: (error) => { console.error('Space encounter preparation failed:', error); },
+    });
+    streamRef.current = stream;
+    invalidate();
+    const retire = () => {
+      retired = true;
+      streamRef.current = null;
+      stream.dispose();
+      controller.abort();
+      delete scene.userData.spaceVoyage;
+    };
+    // Retire before the preparation poller sees the same loss event. Abort
+    // cancels its timer, and a restored context gets a new scene subtree.
+    gl.domElement.addEventListener('webglcontextlost', retire);
+    return () => {
+      gl.domElement.removeEventListener('webglcontextlost', retire);
+      retire();
+    };
+  }, [gl, scene, camera, invalidate, pathname, onOpeningReady]);
 
-  useFrame(() => {
-    const u = flightState.progress;
-
-    // Map u to sector index.
-    // u in [0, 0.85) → sectors 0-6 (outbound journey through celestial bodies)
-    // u in [0.85, 1.0) → sector -1 (return arc, nothing mounted)
-    let sector: number;
-    if (u > 0.85) {
-      sector = -1;
-    } else {
-      sector = Math.min(
-        SECTOR_COUNT - 1,
-        Math.floor((u / 0.85) * SECTOR_COUNT),
-      );
+  useFrame((_, delta) => {
+    const stream = streamRef.current;
+    if (!stream) return;
+    if (!opened.current && openingPairReady(stream.live)) {
+      opened.current = true;
+      flightState.openingReady = true;
+      onOpeningReady(true);
     }
+    const sector = Math.max(0, Math.floor(flightState.distance / SECTOR_LENGTH));
+    const localDistance = flightState.distance - sector * SECTOR_LENGTH;
+    // The opening frames the actual next planet with the Sun. Prepare that
+    // existing encounter immediately after the Sun, still one job at a time.
+    const prepareAhead = encounterPrefetch(sector, localDistance);
+    const planKey = opened.current ? sector * 2 + Number(prepareAhead) : -2;
+    if (planRef.current.key !== planKey) {
+      const requested = opened.current ? [sector] : [0, 1];
+      if (opened.current && prepareAhead) requested.push(sector + 1);
+      if (opened.current && sector > 0) requested.push(sector - 1);
+      planRef.current = { key: planKey, requested };
+      stream.update(requested, opened.current ? [sector - 1, sector, sector + 1] : [0, 1]);
+    } else stream.tick();
 
-    if (sector !== activeSector) {
-      setActiveSector(sector);
-      if (sector >= 0 && sector < SECTOR_NAMES.length) {
-        flightState.activeSectorName = SECTOR_NAMES[sector];
-      } else {
-        flightState.activeSectorName = 'DEEP COSMIC VOID // RETURN ARC';
-      }
+    // Only the space camera waits for a cold GPU, never the page content.
+    let firstMissing = sector;
+    while (stream.live.has(firstMissing) || stream.exhausted.has(firstMissing)) firstMissing += 1;
+    // A cold destination mounts while still tens of thousands of units away.
+    // The camera then resumes through the same fixed world as the star field.
+    flightState.readyThroughDistance = opened.current ? firstMissing * SECTOR_LENGTH : 0;
+    flightState.generationState = planRef.current.requested.every((index) => stream.live.has(index)) ? 'ready' : 'preparing';
+
+    if (!flightState.reducedMotion) clockRef.current += Math.min(delta, 0.05);
+    for (const [index, object] of stream.live) {
+      object.group.position.z = -encounterWorldDistance(index) + flightState.origin;
+      object.group.visible = opened.current;
+      object.update(clockRef.current, flightState.reducedMotion ? 0 : Math.min(delta, 0.05));
     }
-  });
+    telemetryTime.current += delta;
+    if (process.env.NODE_ENV !== 'production' && telemetryTime.current > 0.5) {
+      telemetryTime.current = 0;
+      scene.userData.spaceVoyage = {
+        sector, distance: flightState.distance,
+        resident: Array.from(stream.live.keys()),
+        preparing: flightState.generationState,
+      };
+    }
+  }, -1);
 
-  /**
-   * Mount body at index `i` if it's within ±1 of the active sector.
-   * Since bodies are 2400+ units apart, two mounted neighbors are never
-   * simultaneously visible — the far one is a sub-pixel dot at most.
-   */
-  const mounted = (i: number): boolean => {
-    if (activeSector < 0) return false;
-    return Math.abs(activeSector - i) <= 1;
-  };
-
-  return (
-    <group name="celestial-voyage">
-      {/* Solar key light — primary illumination for all bodies */}
-      <directionalLight position={SUN_POSITION} intensity={3.5} color="#fff6ee" />
-      {/* Ambient fill — very subtle, prevents pure-black shadow regions */}
-      <ambientLight intensity={0.18} color="#1a2030" />
-      {/* Hemisphere light — sky-blue from above, warm earth-tone from below.
-          Simulates indirect starlight and reflected cosmic glow on shadow faces. */}
-      <hemisphereLight args={['#1a2844', '#0d0a06', 0.35]} />
-
-      {/* Sector 0: Earth & Luna — upper-right quadrant */}
-      {mounted(0) && (
-        <RealisticEarth
-          position={[120, 50, -1200]}
-          radius={14}
-          sunPosition={SUN_POSITION}
-        />
-      )}
-
-      {/* Sector 1: Mars & Phobos — lower-left quadrant */}
-      {mounted(1) && (
-        <RealisticMars
-          position={[-150, -30, -3600]}
-          radius={10}
-          sunPosition={SUN_POSITION}
-        />
-      )}
-
-      {/* Sector 2: Rogue Asteroid Belt & Deep Space Probe — upper center */}
-      {mounted(2) && (
-        <>
-          <RogueMeteoroids />
-          <RealisticSpaceProbe
-            position={[60, 90, -6100]}
-            scale={1.8}
-            rotationSpeed={0.03}
-          />
-        </>
-      )}
-
-      {/* Sector 3: Jupiter & Galilean Moons — lower-left, massive */}
-      {mounted(3) && (
-        <RealisticJupiter
-          position={[-120, -60, -8400]}
-          radius={24}
-          sunPosition={SUN_POSITION}
-        />
-      )}
-
-      {/* Sector 4: Gargantua Supermassive Black Hole — center-right */}
-      {mounted(4) && (
-        <GargantuaBlackHole
-          position={[80, 20, -10800]}
-          radius={18}
-        />
-      )}
-
-      {/* Sector 5: Saturn & Ring System — upper-left */}
-      {mounted(5) && (
-        <RealisticSaturn
-          position={[-100, 70, -13200]}
-          radius={18}
-          sunPosition={SUN_POSITION}
-        />
-      )}
-
-      {/* Sector 6: Neptune Ice Giant — lower-right */}
-      {mounted(6) && (
-        <RealisticNeptune
-          position={[140, -50, -15600]}
-          radius={16}
-          sunPosition={SUN_POSITION}
-        />
-      )}
-    </group>
-  );
+  return null;
 }

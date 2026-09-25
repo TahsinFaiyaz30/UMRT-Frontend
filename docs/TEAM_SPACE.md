@@ -1,0 +1,54 @@
+# Streamed Teams space
+
+All three `/team` routes share one progressively generated 3D scene. The opening follows the Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, and Pluto, then continues into procedurally varied astronomical classes. Database content and filtering can change page height without stretching a predefined animation: normal travel is based on pixels scrolled. **Observe universe** continues beyond the document using wheel, touch, arrow keys, or automatic drift. Its destination selector and previous/next buttons allow direct inspection; **Closer view** magnifies surface detail. Escape restores the team view and its original scroll position.
+
+The Sun and the actual Mercury encounter are both prepared before the opening canvas is revealed at its final framing. Mercury is never duplicated, and neither opening body animates from a dot. `data-space-ready` on `.team-space` and the `team-space-ready` window event (`detail.ready`) let a future page loader wait for this pair. Generation remains sequential on idle tasks; arriving at a later encounter starts preparing the next one's maps and GPU programs.
+
+All objects retain fixed positions and sizes in a shared 3D world. Empty corridors add 36,000 scene units between later encounters; scroll pacing smoothly accelerates the camera through them. Stars and eighteen instanced rocks occupy that same world, so camera travel produces real perspective parallax. There is no timed object approach, position retreat, scale animation, or loading-driven field-of-view change. The Explore selector starts at a distant corridor and moves the camera toward the chosen object. If preparation is delayed, travel waits there until the maps and shaders are ready. Opening Sun/Mercury framing and explicitly chosen inspection magnification remain separate camera controls.
+
+At most the previous, current, and next encounter are resident, plus one preparation in flight. Passing objects releases their owned geometry, materials, instance buffers, textures, and decoded bitmaps. Shared textures use reference counts, fetch/decode deadlines, and cancellation; even bitmaps that finish decoding after eviction are closed. Returning recreates an object from its sector seed. A floating origin keeps local geometry coordinates small on long journeys. No closed route, repeated seven-object playlist, or entire-universe texture load is involved.
+
+The same mesh resolution, shader sample counts, anti-aliasing, and effects are used on all devices. The canvas renders at device pixel ratio up to 2, uniformly. Work is bounded by residency, instancing, asynchronous compilation, and staged generation; slower graphics hardware can still have a lower frame rate. Reduced-motion preferences stop automatic drift and object animation while leaving manual travel available.
+
+## Rendering
+
+- Smooth three-dimensional Solar System spheres with observed surface mosaics, gas-giant oblateness, and custom lighting. Full provenance, resolutions, and coverage limitations: [surface map credits](../public/textures/solar/SOURCES.md).
+- Earth's separate cloud shell, ocean glint, historical NASA night lights, atmospheric rim, and Moon.
+- Fourteen selected major moons, parent/moon eclipses, and physically consistent tidal locking. Satellite radii retain actual parent-size ratios; small moons are correspondingly small.
+- A rotating 3D Sun using an 8K historical NASA/SDO AIA 304 Å composite. Observed active regions, loops and dark filaments replace uniform procedural noise. Three compact ray-integrated plasma volumes form flowing prominence sheets; a thin warm emitting atmosphere replaces the broad white halo. **Inspect plasma** follows measured bright regions. The view is labelled as an EUV composite, whose orange/red instrument palette is not naked-eye colour; representative 3D volumes are not a reconstruction of the observed plasma. A separate simulated white-light view remains available. [Atlas provenance and coverage](../public/textures/solar/SOURCES.md#sun-observation-rebuild-25-september-2026). Planet lighting is unchanged.
+- Mercury's 8K MESSENGER map and measured relief; Moon/Mars survey-derived relief; a 7200-pixel Hubble Jupiter mosaic. Pluto/Charon open on the detailed New Horizons encounter hemispheres; genuinely unobserved terrain stays neutral. Heights preserve measured scale, not invented craters from image brightness.
+- Thin 3D atmospheric shells integrate Rayleigh/Mie scattering; procedural terrain and integrated atmospheres appear on later generic encounters. Non-Earth haze parameters are illustrative fits, not retrieved weather.
+- Closed ring geometry and actual instanced ice/debris grains.
+- Irregular asteroid/comet nuclei, volumetric comet tails, and solid dust particles.
+- Black-hole horizon capture and curved-ray integration through a three-dimensional accretion volume.
+- A bounded population of distant stellar spheres, rather than point sprites or a panorama image.
+
+Solar System rotation and orbital motion share a clock of 3,600 simulated seconds per visible second. Kepler's equation drives eccentric moon orbits, while tilted spin axes retain Venus/Uranus/Pluto retrograde rotation and Triton's retrograde orbit. Sunlight changes with evaluated planetary orbital phase in these planet-centered inspection views. Ring grains shear at different orbital speeds; comet particles flow away from the Sun; asteroid fragments orbit and rotate independently. Reduced motion freezes this animation.
+
+The corridor is an outward guided tour, not simultaneous heliocentric positions. Object sizes and distances are independently compressed for navigation; initial phases are illustrative, not a current ephemeris. Surface maps combine different observation dates and resolutions. Venus and Titan show their opaque visible cloud/haze layers, not radar/infrared surface maps. Later procedural encounters represent real astronomical **classes**, not claimed discoveries. The black-hole shader integrates a bounded Schwarzschild null-orbit approximation, thermal emission, Doppler asymmetry and disk self-lensing. It does not solve accretion-fluid dynamics, include spin, or bend other scene meshes. Bloom and anti-aliasing are image processing passes, while every depicted space object has three-dimensional geometry or volume.
+
+White holes are excluded from the observed-object catalogue: [NASA describes them as hypothetical](https://imagine.gsfc.nasa.gov/ask_astro/black_holes.html). The scene does not claim that they have been observed.
+
+## Scientific references
+
+- [NASA: Solar system facts](https://science.nasa.gov/solar-system/solar-system-facts/): rocky planets, gas and ice giants, moons, and rings.
+- [NASA: Planet types](https://science.nasa.gov/exoplanets/planet-types/): observed planet classes.
+- [NASA: Asteroids, comets, and meteors](https://science.nasa.gov/asteroids-comets-meteors/): rock, metal, ice, and dust.
+- [NASA: Star types](https://science.nasa.gov/universe/stars/types/): stellar classes and temperatures.
+- [JPL: Planet physical parameters](https://ssd.jpl.nasa.gov/planets/phys_par.html) and [satellite elements](https://ssd.jpl.nasa.gov/sats/elem/): rotation, orbital elements, and body dimensions.
+- [NASA: Black-hole accretion disk visualization](https://svs.gsfc.nasa.gov/13326/): horizon, distorted disk, differential flow, and Doppler brightness asymmetry.
+
+## Checks
+
+Run `npm run test:space` for the 53 generation, flight-clearance, motion, streaming, and texture lifecycle regressions, followed by the project's typecheck and lint commands. Tests include a 5,000-sector pruning run, exact-once disposal, shared geometry lifetimes, GPU preparation cancellation, watchdog cleanup, retry limits, orbital closure/direction, parent-relative motion, stale bitmap disposal, and stalled fetch/decode deadlines. Opening continuity, a single actual Mercury, distant approach, physical relief decoding, and failed-map transaction cleanup are covered.
+
+All 53 tests, typecheck, lint, and the production build passed on 2026-09-25.
+
+Before the solar observation rebuild, desktop Chromium verification on 2026-09-25 traversed the ten Solar System destinations and reversed across sectors 0–1,000: at most three encounter groups and three star cells stayed resident. Collected JS heap stayed between 29.12 and 30.54 MiB (30.54 MiB on returning to the starting encounter). The heaviest sampled map window retained sixteen unique maps, about 361.6 MiB of decoded RGBA data and an estimated 482.1 MiB of mipmapped GPU texture data. Both returned to zero after leaving the Solar System for distant procedural sectors. GPU estimates exclude framebuffers/geometry/driver overhead and are not actual VRAM measurements. These are measurements from this test environment, not universal performance or zero-leak guarantees.
+
+Regression coverage now verifies the opening pair's shared readiness and the fixed world/camera mapping. A deliberately delayed Mercury download kept the entire opening canvas hidden; both full-size objects appeared together when ready. Selecting Earth through Explore traversed 30,612.9 scene units over 215 recorded frames with exactly zero change to Earth's world position/scale or camera field of view. Star cells advanced with actual camera travel. Earlier timed object approaches have been removed. Sun mode switching reuses its programs; the prominence and corona factories release their owned geometry and materials exactly once on retirement.
+
+Browser checks passed for all three team routes, observation entry/exit, wheel and touch travel, portrait framing, reduced motion, Core Team filtering, forced WebGL context recovery, and leaving the Teams route. Graphics recovery rebuilds scene resources and returns the visitor to the team page without leaving its content hidden. Post-processing explicitly owns and disposes its effects, framebuffers, and late-loading anti-aliasing lookup textures.
+
+The solar observation rebuild was additionally verified through the actual Explore selector (Sun → Earth → Sun → beyond the Solar System → Sun), with no browser or shader errors. The opening had exactly the prepared Sun and Mercury; the Sun map was 8192 pixels wide. Returning to the Sun consistently restored four unique maps, six GPU geometries, 31 GPU textures and 13 programs. The opening map window used 290 MiB decoded RGBA / an estimated 386.7 MiB with mipmaps. Collected JS heap ranged from 29.26 to 30.63 MiB during this short mixed-destination run. Sun filter switching retained the same program count. Tests separately assert that readiness waits for the solar bitmap and retirement closes it and disposes its texture exactly once.
+Leaving the Teams route also returned solar-map leases, decoded bytes and estimated map GPU bytes to zero after the canvas's deferred teardown.
